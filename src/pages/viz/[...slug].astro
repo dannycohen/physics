@@ -1,0 +1,23 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import VizLayout from '../../layouts/VizLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('viz', ({ data }) => data.status === 'live');
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+interface Props {
+  entry: CollectionEntry<'viz'>;
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+
+<VizLayout entry={entry}>
+  <Content />
+</VizLayout>

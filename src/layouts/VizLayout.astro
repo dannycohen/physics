@@ -1,0 +1,158 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import { renderLatex, renderLatexInline } from '../lib/renderLatex';
+
+interface Props {
+  entry: CollectionEntry<'viz'>;
+}
+
+const { entry } = Astro.props;
+const { title, claim, equationLatex, terms } = entry.data;
+
+// Named slots are optional: MDX bodies carry their own figure/controls markup
+// in the default slot; the named slots exist for future non-MDX pages.
+const hasHero = Astro.slots.has('hero');
+const hasControls = Astro.slots.has('controls');
+const hasGoDeeper = Astro.slots.has('go-deeper');
+const hasDataTable = Astro.slots.has('data-table');
+---
+
+<BaseLayout title={title} description={claim}>
+  <article class="viz-page">
+    <h1>{title}</h1>
+    <p class="claim">{claim}</p>
+
+    {
+      hasHero && (
+        <figure class="viz-hero">
+          <slot name="hero" />
+          <figcaption>Interactive figure. {claim}</figcaption>
+        </figure>
+      )
+    }
+
+    {
+      hasControls && (
+        <div class="viz-controls">
+          <slot name="controls" />
+        </div>
+      )
+    }
+
+    <div class="viz-prose">
+      <slot />
+    </div>
+
+    <details class="show-math">
+      <summary>Show the math</summary>
+      <div class="equation" set:html={renderLatex(equationLatex)} />
+      {
+        terms.length > 0 && (
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Symbol</th>
+                <th scope="col">Role</th>
+                <th scope="col">Effect on output</th>
+              </tr>
+            </thead>
+            <tbody>
+              {terms.map((t) => (
+                <tr>
+                  <td set:html={renderLatexInline(t.symbol)} />
+                  <td>{t.role}</td>
+                  <td>{t.effect}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
+      }
+    </details>
+
+    {
+      hasGoDeeper && (
+        <details class="go-deeper">
+          <summary>Go deeper</summary>
+          <slot name="go-deeper" />
+        </details>
+      )
+    }
+
+    {
+      hasDataTable && (
+        <details class="view-table">
+          <summary>View as table</summary>
+          <slot name="data-table" />
+        </details>
+      )
+    }
+  </article>
+</BaseLayout>
+
+<style>
+  .viz-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+  }
+
+  .viz-page > h1,
+  .viz-page > .claim {
+    margin: 0;
+  }
+
+  .claim {
+    font-size: 1.15rem;
+    color: var(--color-text-muted);
+  }
+
+  .viz-hero,
+  .viz-prose {
+    container-type: inline-size;
+  }
+
+  /* Aspect-ratio sizing keeps the hero below viewport height without 100vh. */
+  .viz-hero {
+    margin: 0;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    max-block-size: 75svh;
+  }
+
+  .viz-hero figcaption {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-top: var(--space-2);
+  }
+
+  details {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  details summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .show-math .equation {
+    overflow-x: auto;
+    padding-block: var(--space-2);
+  }
+
+  .show-math table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .show-math th,
+  .show-math td {
+    text-align: left;
+    padding: var(--space-1) var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+  }
+</style>

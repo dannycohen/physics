@@ -1,0 +1,74 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const all = (await getCollection('viz')).sort((a, b) => a.data.order - b.data.order);
+const categories = [...new Set(all.map((e) => e.data.category))];
+const categoryLabels: Record<string, string> = {
+  relativity: 'Relativity',
+  'classical-mechanics': 'Classical mechanics',
+  electromagnetism: 'Electromagnetism',
+  quantum: 'Quantum',
+  thermodynamics: 'Thermodynamics',
+  'waves-optics': 'Waves & optics',
+  foundations: 'Foundations',
+};
+const live = all.filter((e) => e.data.status === 'live');
+const hero = live[0];
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout
+  title="Physics, one equation at a time"
+  description="Interactive visualizations that explain the meaning and structure of the equations of physics."
+>
+  <h1>Physics, one equation at a time</h1>
+  <p>
+    Each page takes one governing equation of physics and makes it something you can
+    play with. Drag a slider, watch the equation respond, and see why it has the shape
+    it does.
+  </p>
+  {
+    hero && (
+      <p class="hero-link">
+        <strong>Start here:</strong>{' '}
+        <a href={`${base}viz/${hero.id}/`}>{hero.data.title}</a> — {hero.data.claim}
+      </p>
+    )
+  }
+  {
+    categories
+      .filter((cat) => all.some((e) => e.data.category === cat && e.data.status === 'live'))
+      .map((cat) => (
+        <section>
+          <h2>{categoryLabels[cat]}</h2>
+          <ul>
+            {all
+              .filter((e) => e.data.category === cat)
+              .map((e) =>
+                e.data.status === 'live' ? (
+                  <li>
+                    <a href={`${base}viz/${e.id}/`}>{e.data.title}</a> — {e.data.claim}
+                  </li>
+                ) : (
+                  <li>
+                    <span class="coming-soon">{e.data.title} (coming soon)</span>
+                  </li>
+                ),
+              )}
+          </ul>
+        </section>
+      ))
+  }
+</BaseLayout>
+
+<style>
+  .coming-soon {
+    color: var(--color-text-muted);
+  }
+  .hero-link {
+    background: var(--color-surface);
+    padding: var(--space-3);
+    border-radius: var(--radius);
+  }
+</style>

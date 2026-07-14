@@ -1,0 +1,226 @@
+---
+import { formatQuantity } from '../../lib/format';
+import { lorentzFactor } from '../../lib/physics/relativity';
+
+// Build-time snapshot at the default speed for reduced-motion / no-JS readers.
+const DEFAULT_BETA = 0.6;
+const defaultTick = formatQuantity(1 / lorentzFactor(DEFAULT_BETA), 's');
+const defaultSpeed = formatQuantity(DEFAULT_BETA, 'c');
+---
+
+<time-dilation-clocks>
+  <figure class="clocks-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Two analog clocks side by side. The moving clock's hand turns slower than the Earth-frame clock's hand."></canvas>
+    </div>
+    <figcaption class="clock-summary">
+      At the starting speed of {defaultSpeed}, the moving clock ticks {defaultTick} for every 1.00 s
+      on your clock, so its hand falls steadily behind yours.
+    </figcaption>
+  </figure>
+  <div class="clock-controls">
+    <button type="button" class="play-toggle" aria-pressed="false">Play</button>
+    <p class="tick-rate" aria-live="polite">
+      Moving clock ticks {defaultTick} for every 1.00 s on your clock
+    </p>
+  </div>
+</time-dilation-clocks>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { formatQuantity } from '../../lib/format';
+  import { lorentzFactor, BETA_MAX } from '../../lib/physics/relativity';
+  import { getVizStore } from '../../lib/vizStore';
+  import type { VizTheme } from '../../lib/theme';
+
+  const SLUG = 'relativity/time-dilation';
+  const DEFAULT_BETA = 0.6;
+  // One hand revolution per 10 s of Earth time. The reduced-motion static frame
+  // renders at tMs = 0, so a 5 s offset puts the two hands at clearly
+  // different angles even before any animation runs.
+  const REV_MS = 10_000;
+  const STATIC_OFFSET_MS = 5_000;
+
+  // Seed the shared store with the page default before any island connects.
+  const store = getVizStore(SLUG, { beta: DEFAULT_BETA });
+
+  function clampBeta(value: number | undefined): number {
+    const beta = value ?? DEFAULT_BETA;
+    return Math.min(Math.max(beta, 0), BETA_MAX);
+  }
+
+  function drawClock(
+    ctx: CanvasRenderingContext2D,
+    theme: VizTheme,
+    cx: number,
+    cy: number,
+    r: number,
+    tMs: number,
+    faceColor: string,
+    labelLines: string[],
+  ): void {
+    ctx.strokeStyle = faceColor;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 12; i++) {
+      const a = (i * Math.PI) / 6;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a) * r * 0.88, cy + Math.sin(a) * r * 0.88);
+      ctx.lineTo(cx + Math.cos(a) * r * 0.97, cy + Math.sin(a) * r * 0.97);
+      ctx.stroke();
+    }
+
+    const angle = (tMs / REV_MS) * Math.PI * 2 - Math.PI / 2;
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(angle) * r * 0.78, cy + Math.sin(angle) * r * 0.78);
+    ctx.stroke();
+
+    ctx.fillStyle = faceColor;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = theme.label;
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    labelLines.forEach((line, i) => {
+      ctx.fillText(line, cx, cy + r + 8 + i * 15);
+    });
+  }
+
+  class TimeDilationClocksElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      const button = this.querySelector<HTMLButtonElement>('.play-toggle');
+      const tickRate = this.querySelector('.tick-rate');
+      if (!canvas || !button || !tickRate) return;
+
+      // Integrate proper time (dtau = dt / gamma) so a speed change only alters
+      // the future tick rate; already-elapsed proper time never rewinds.
+      let tauMs = 0;
+      let lastTMs = 0;
+
+      const handle = createVizCanvas(
+        canvas,
+        (ctx, size, theme, tMs) => {
+          const beta = clampBeta(store.values.get()['beta']);
+          const gamma = lorentzFactor(beta);
+          const t = tMs + STATIC_OFFSET_MS;
+          if (tMs === 0) {
+            // Static/reduced-motion frame: fixed-t comparison, slider-responsive.
+            tauMs = t / gamma;
+          } else {
+            tauMs += (tMs - lastTMs) / gamma;
+          }
+          lastTMs = tMs;
+
+          ctx.fillStyle = theme.bg;
+          ctx.fillRect(0, 0, size.w, size.h);
+
+          const labelSpace = 42;
+          const cy = (size.h - labelSpace) / 2;
+          const r = Math.max(12, Math.min(size.w * 0.21, cy - 8));
+          const movingFace = beta > 0.95 ? theme.limit : theme.active;
+
+          drawClock(ctx, theme, size.w * 0.27, cy, r, t, theme.rest, [
+            'Your clock',
+            '(Earth frame)',
+          ]);
+          drawClock(ctx, theme, size.w * 0.73, cy, r, tauMs, movingFace, [
+            'Moving clock',
+            '(its own time, Δτ)',
+          ]);
+        },
+        { animate: true },
+      );
+
+      const syncButton = () => {
+        const playing = handle.isPlaying();
+        button.textContent = playing ? 'Pause' : 'Play';
+        button.setAttribute('aria-pressed', String(playing));
+      };
+      button.addEventListener('click', () => {
+        handle.setPlaying(!handle.isPlaying());
+        syncButton();
+      });
+      syncButton();
+
+      const renderRate = (values: Record<string, number>) => {
+        const gamma = lorentzFactor(clampBeta(values['beta']));
+        const text = `Moving clock ticks ${formatQuantity(1 / gamma, 's')} for every 1.00 s on your clock`;
+        // Skip identical writes so the SSR'd sentence is not re-announced on load.
+        if (tickRate.textContent?.trim() !== text) tickRate.textContent = text;
+      };
+      renderRate(store.values.get());
+      store.onSettled(renderRate);
+
+      // Keep the paused/static frame in sync while the slider moves.
+      store.values.subscribe(() => handle.redraw());
+    }
+  }
+
+  if (!customElements.get('time-dilation-clocks')) {
+    customElements.define('time-dilation-clocks', TimeDilationClocksElement);
+  }
+</script>
+
+<style>
+  .clocks-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+  }
+
+  .clock-summary {
+    margin-top: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .clock-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+
+  .play-toggle {
+    min-width: 5.5em;
+    min-height: 44px;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .play-toggle:hover {
+    border-color: var(--color-focus);
+  }
+
+  .tick-rate {
+    margin: 0;
+    min-height: 1.6em; /* reserve the line so announcements don't shift layout */
+    font-variant-numeric: tabular-nums;
+  }
+</style>

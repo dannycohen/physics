@@ -1,0 +1,165 @@
+---
+import { formatQuantity } from '../../lib/format';
+import { lorentzFactor } from '../../lib/physics/relativity';
+
+// Build-time samples so the table exists without JavaScript.
+const SAMPLE_BETAS = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.998, 0.999];
+const rows = SAMPLE_BETAS.map((beta) => {
+  const gamma = lorentzFactor(beta);
+  return {
+    beta: formatQuantity(beta, ''),
+    gamma: formatQuantity(gamma, ''),
+    tick: formatQuantity(1 / gamma, 's'),
+  };
+});
+const gammaAtMax = formatQuantity(lorentzFactor(0.999), '');
+---
+
+<gamma-curve>
+  <figure class="gamma-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Graph of the stretch factor γ against speed. The curve is flat near 1 at low speeds and rises steeply as speed approaches c. A dashed line at 1 marks the Newtonian prediction of no dilation."></canvas>
+    </div>
+    <figcaption>
+      The vertical axis is cut off at γ = 8, so whenever γ exceeds 8 (speeds above about 0.992 c)
+      the marker sits on that top edge. At the slider's top speed of 0.999 c, γ is about {
+        gammaAtMax
+      } and the curve is nearly vertical.
+    </figcaption>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>γ stays near 1 until about half the speed of light, then rises steeply.</p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">v/c (speed as a fraction of c)</th>
+          <th scope="col">γ</th>
+          <th scope="col">Moving clock seconds per Earth second</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.beta}</td>
+              <td>{row.gamma}</td>
+              <td>{row.tick}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</gamma-curve>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { plotCurve, type Series } from '../../lib/plotCurve';
+  import { lorentzFactor, BETA_MAX } from '../../lib/physics/relativity';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'relativity/time-dilation';
+  const DEFAULT_BETA = 0.6;
+  const X_DOMAIN: [number, number] = [0, BETA_MAX];
+  const Y_DOMAIN: [number, number] = [1, 8]; // gamma exceeds 8 past beta ~0.992; plotCurve clips
+
+  const gammaPoints: Array<[number, number]> = [];
+  const STEPS = 240;
+  for (let i = 0; i <= STEPS; i++) {
+    const beta = (i / STEPS) * BETA_MAX;
+    gammaPoints.push([beta, lorentzFactor(beta)]);
+  }
+
+  const newtonianPoints: Array<[number, number]> = [
+    [0, 1],
+    [BETA_MAX, 1],
+  ];
+
+  const store = getVizStore(SLUG, { beta: DEFAULT_BETA });
+
+  class GammaCurveElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const series: Series[] = [
+          { points: gammaPoints, color: theme.curve, label: 'γ' },
+          {
+            points: newtonianPoints,
+            color: theme.curveSecondary,
+            label: 'Newtonian (no dilation)',
+            dashed: true,
+          },
+        ];
+        // The marker tracks true beta on the x-axis (not slider position).
+        const beta = Math.min(Math.max(store.values.get()['beta'] ?? DEFAULT_BETA, 0), BETA_MAX);
+        const gamma = lorentzFactor(beta);
+        plotCurve(ctx, size, theme, {
+          series,
+          xLabel: 'speed v as a fraction of c',
+          yLabel: 'γ',
+          xDomain: X_DOMAIN,
+          yDomain: Y_DOMAIN,
+          marker: { x: beta, y: Math.min(gamma, Y_DOMAIN[1]) },
+        });
+      });
+
+      store.values.subscribe(() => handle.redraw());
+    }
+  }
+
+  if (!customElements.get('gamma-curve')) {
+    customElements.define('gamma-curve', GammaCurveElement);
+  }
+</script>
+
+<style>
+  .gamma-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+  }
+
+  .gamma-figure figcaption {
+    margin-top: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+
+  .view-table {
+    margin-top: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .view-table summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .view-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .view-table th,
+  .view-table td {
+    text-align: left;
+    padding: var(--space-1) var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

@@ -1,0 +1,120 @@
+---
+title: 'Time dilation'
+category: relativity
+layoutArchetype: comparison
+status: live
+order: 1
+equationLatex: '\Delta t = \gamma\,\Delta\tau = \frac{\Delta\tau}{\sqrt{1 - v^2/c^2}}'
+equationPlain: 'Δt = γ·Δτ'
+claim: 'A moving clock ticks slower than yours. Drag the speed slider and watch it happen.'
+defaults:
+  beta: 0.6
+terms:
+  - symbol: '\Delta\tau'
+    role: 'the time between two ticks measured by the moving clock itself'
+    effect: 'fixed by the clock itself; always shorter than Δt once v > 0'
+  - symbol: '\Delta t'
+    role: 'the time you measure between the same two ticks'
+    effect: 'grows as v grows'
+  - symbol: 'v'
+    role: 'how fast the clock moves relative to you'
+    effect: 'faster -> more dilation, but only noticeably past about half of c'
+  - symbol: 'c'
+    role: 'the speed of light - the scale that decides what counts as fast'
+    effect: 'v/c is what matters, not v alone'
+  - symbol: '\gamma'
+    role: "the conversion factor from the moving clock's time to yours"
+    effect: 'always at least 1 - exactly 1 at rest, grows without limit as v nears c'
+presets:
+  - label: 'Muon in the atmosphere'
+    caption: 'Muons made high in the atmosphere live, on average, just 2.2 microseconds, yet they reach the ground because at this speed that lifetime stretches about 15-fold.'
+    values:
+      beta: 0.998
+  - label: 'Twin paradox cruise'
+    caption: 'At 80% of light speed, gamma = 5/3: five years pass on Earth for every three aboard the ship.'
+    values:
+      beta: 0.8
+  - label: 'GPS satellite'
+    caption: 'Orbital speed alone slows a GPS clock by about 7 microseconds a day - roughly 2 km of position error if uncorrected. Weaker gravity in orbit speeds the clock up even more (+45 microseconds/day), so GPS clocks actually run fast overall; engineers correct for both effects.'
+    values:
+      beta: 0.0000129
+limits:
+  - label: 'v → 0'
+    collapse: 'gamma ~ 1: both clocks agree - this is the everyday world, where relativity is invisible'
+    values:
+      beta: 0
+  - label: 'v → c'
+    collapse: 'gamma blows up: the moving clock nearly freezes'
+    values:
+      beta: 0.999
+prerequisites: []
+related: []
+---
+
+import TimeDilationClocks from '../../../components/viz/TimeDilationClocks.astro';
+import GammaCurve from '../../../components/viz/GammaCurve.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+
+<TimeDilationClocks />
+
+<div class="viz-controls">
+  <SliderField
+    label="Speed"
+    unit="c"
+    slug="relativity/time-dilation"
+    storeKey="beta"
+    min={0}
+    max={0.999}
+    scale="beta"
+    sigFigs={3}
+    value={frontmatter.defaults.beta}
+  />
+  <PresetButtons slug="relativity/time-dilation" presets={frontmatter.presets} />
+  <LimitSnaps slug="relativity/time-dilation" limits={frontmatter.limits} />
+</div>
+
+## Why does moving change time?
+
+Imagine the simplest clock you can build: two mirrors facing each other, with a
+flash of light bouncing between them. Every bounce is one tick. Nothing about
+this clock is special: any clock riding along with it - a wristwatch, your
+heartbeat - stays in step with it.
+
+Now put that clock on a fast-moving ship and watch it from the ground. Between
+one bounce and the next, the mirrors slide sideways, so from where you stand
+the flash travels a diagonal - a longer path than the straight up-and-down hop
+it makes on the ship.
+
+Here is the strange part, confirmed by every experiment ever done: light always
+moves at the same speed, no matter who measures it. A longer path at the same
+speed takes more time. So you see the ship's clock tick slower than your own.
+The clock is not broken and nothing on the ship feels different. From your
+point of view, each tick simply takes longer.
+
+At everyday speeds the diagonal is barely longer than the vertical hop, which
+is why you have never noticed this. The effect only becomes visible when the
+sideways motion is a decent fraction of the speed of light - roughly half of c
+before it amounts to much.
+
+<details class="misconception">
+  <summary>Doesn't the moving clock just <em>look</em> slow?</summary>
+
+  No - this is not an optical illusion or a trick of signal delay. The moving
+  clock really does tick slower as measured in your frame. Stranger still, an
+  observer riding with that clock measures <em>your</em> clock running slow,
+  and both of you are right, because you disagree about which distant events
+  happen at the same time.
+
+  The muon preset above is physical proof. Muons created by cosmic rays high in
+  the atmosphere decay so fast that, without time dilation, almost none would
+  survive the trip down. They reach the ground in huge numbers anyway - their
+  internal clock genuinely runs slow in our frame.
+</details>
+
+How fast does the slowdown grow with speed? The curve below shows the stretch
+factor (the γ in the equation below) for every speed on the slider - drag it
+and watch the marker climb.
+
+<GammaCurve />

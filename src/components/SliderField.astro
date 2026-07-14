@@ -1,0 +1,194 @@
+---
+import { formatQuantity } from '../lib/format';
+import { sliderScales, type ScaleName } from '../lib/sliderScales';
+
+interface Props {
+  label: string;
+  unit: string;
+  slug: string;
+  storeKey: string;
+  min: number;
+  max: number;
+  step?: number;
+  scale?: ScaleName;
+  sigFigs?: number;
+  /** Initial value for the SSR snapshot; should match the page default. */
+  value?: number;
+}
+
+const {
+  label,
+  unit,
+  slug,
+  storeKey,
+  min,
+  max,
+  step,
+  scale = 'linear',
+  sigFigs,
+  value = min,
+} = Astro.props;
+
+const nonlinear = scale !== 'linear';
+const inputId = `slider-${slug.replace(/[^a-zA-Z0-9-]/g, '-')}-${storeKey}`;
+const outputId = `${inputId}-output`;
+
+// SSR snapshot at the page default; the custom element syncs to the shared store on connect.
+const initialValue = value;
+const initialPos = sliderScales[scale].toPos(initialValue, min, max);
+const initialText = formatQuantity(initialValue, unit, { sigFigs });
+---
+
+<slider-field
+  data-slug={slug}
+  data-store-key={storeKey}
+  data-min={min}
+  data-max={max}
+  data-scale={scale}
+  data-unit={unit}
+  data-sig-figs={sigFigs}
+>
+  <div class="slider-field">
+    <label for={inputId}>{label}</label>
+    <input
+      type="range"
+      id={inputId}
+      aria-describedby={outputId}
+      aria-valuetext={initialText}
+      min={nonlinear ? 0 : min}
+      max={nonlinear ? 1000 : max}
+      step={nonlinear ? 1 : (step ?? 'any')}
+      value={nonlinear ? Math.round(initialPos * 1000) : initialValue}
+    />
+    <output id={outputId} for={inputId} aria-live="off">{initialText}</output>
+  </div>
+</slider-field>
+
+<script>
+  import { formatQuantity } from '../lib/format';
+  import { sliderScales, type ScaleName } from '../lib/sliderScales';
+  import { getVizStore } from '../lib/vizStore';
+
+  class SliderFieldElement extends HTMLElement {
+    #unsubscribe: (() => void) | undefined;
+    #bound = false;
+
+    connectedCallback() {
+      const input = this.querySelector<HTMLInputElement>('input[type="range"]');
+      const output = this.querySelector('output');
+      if (!input || !output) return;
+
+      const slug = this.dataset.slug ?? '';
+      const key = this.dataset.storeKey ?? '';
+      const min = Number(this.dataset.min);
+      const max = Number(this.dataset.max);
+      const scaleName = (this.dataset.scale ?? 'linear') as ScaleName;
+      const unit = this.dataset.unit ?? '';
+      const sigFigs = this.dataset.sigFigs === undefined ? undefined : Number(this.dataset.sigFigs);
+      const scale = sliderScales[scaleName];
+      const nonlinear = scaleName !== 'linear';
+      const store = getVizStore(slug);
+
+      const inputToValue = () =>
+        nonlinear ? scale.toValue(input.valueAsNumber / 1000, min, max) : input.valueAsNumber;
+
+      const setThumb = (value: number) => {
+        input.valueAsNumber = nonlinear
+          ? Math.round(scale.toPos(value, min, max) * 1000)
+          : value;
+      };
+
+      const render = (value: number) => {
+        const text = formatQuantity(value, unit, { sigFigs });
+        output.textContent = text;
+        input.setAttribute('aria-valuetext', text);
+      };
+
+      if (!this.#bound) {
+        this.#bound = true;
+        input.addEventListener('input', () => {
+          store.set(key, inputToValue());
+        });
+      }
+
+      this.#unsubscribe = store.values.subscribe((values) => {
+        const value = values[key];
+        if (value === undefined) return;
+        setThumb(value);
+        render(value);
+      });
+
+      // No island has seeded this key yet: publish the slider's own position.
+      if (store.values.get()[key] === undefined) {
+        store.set(key, inputToValue());
+      }
+    }
+
+    disconnectedCallback() {
+      this.#unsubscribe?.();
+      this.#unsubscribe = undefined;
+    }
+  }
+
+  if (!customElements.get('slider-field')) {
+    customElements.define('slider-field', SliderFieldElement);
+  }
+</script>
+
+<style>
+  .slider-field {
+    display: grid;
+    gap: var(--space-1);
+    margin-block: var(--space-3);
+  }
+
+  label {
+    font-weight: 600;
+  }
+
+  output {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type='range'] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 44px; /* full-height hit area over the track */
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  input[type='range']::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--viz-axis); /* >= 3:1 against --color-bg (WCAG 1.4.11) */
+  }
+
+  input[type='range']::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--viz-axis); /* >= 3:1 against --color-bg (WCAG 1.4.11) */
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 44px;
+    height: 44px;
+    margin-top: -18px; /* center 44px thumb on 8px track */
+    border: 2px solid var(--color-bg);
+    border-radius: 50%;
+    background: var(--color-focus);
+  }
+
+  input[type='range']::-moz-range-thumb {
+    width: 44px;
+    height: 44px;
+    border: 2px solid var(--color-bg);
+    border-radius: 50%;
+    background: var(--color-focus);
+  }
+</style>

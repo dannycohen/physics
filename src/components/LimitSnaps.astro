@@ -1,0 +1,83 @@
+---
+interface Props {
+  slug: string;
+  limits: Array<{ label: string; collapse: string; values: Record<string, number> }>;
+}
+
+const { slug, limits } = Astro.props;
+---
+
+<limit-snaps data-slug={slug}>
+  <div class="limit-group" role="group" aria-label="Limiting cases">
+    {
+      limits.map((limit) => (
+        <button type="button" data-values={JSON.stringify(limit.values)} data-collapse={limit.collapse}>
+          {limit.label}
+        </button>
+      ))
+    }
+  </div>
+  <p class="limit-collapse" aria-live="polite"></p>
+</limit-snaps>
+
+<script>
+  import { getVizStore } from '../lib/vizStore';
+
+  class LimitSnapsElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const store = getVizStore(this.dataset.slug ?? '');
+      const collapse = this.querySelector('.limit-collapse');
+
+      for (const button of this.querySelectorAll<HTMLButtonElement>('button[data-values]')) {
+        button.addEventListener('click', () => {
+          const values = JSON.parse(button.dataset.values ?? '{}') as Record<string, number>;
+          for (const [key, value] of Object.entries(values)) {
+            store.set(key, value);
+          }
+          if (collapse) collapse.textContent = button.dataset.collapse ?? '';
+        });
+      }
+    }
+  }
+
+  if (!customElements.get('limit-snaps')) {
+    customElements.define('limit-snaps', LimitSnapsElement);
+  }
+</script>
+
+<style>
+  .limit-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  button {
+    min-width: 24px;
+    min-height: 24px;
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  button:hover {
+    border-color: var(--color-focus);
+  }
+
+  .limit-collapse {
+    min-height: 1.6em; /* reserve the line so announcements don't shift layout */
+    margin-block: var(--space-2) 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+  }
+</style>

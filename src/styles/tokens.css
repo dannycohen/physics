@@ -1,0 +1,122 @@
+/* Design tokens. Canvas widgets read the --viz-* custom properties through the
+   cached theming contract in src/lib/canvas.ts - never hardcode these in draw code. */
+:root {
+  color-scheme: light;
+
+  /* Neutral palette */
+  --color-bg: oklch(99% 0.002 250);
+  --color-surface: oklch(96.5% 0.004 250);
+  --color-text: oklch(25% 0.015 260);
+  --color-text-muted: oklch(45% 0.02 260);
+  --color-border: oklch(88% 0.008 250);
+  --color-link: oklch(48% 0.14 255);
+  --color-focus: oklch(55% 0.2 255);
+
+  /* Archetype accents (contrast-checked as a set against --color-bg) */
+  --accent-field-space: oklch(52% 0.16 150);
+  --accent-time-series: oklch(52% 0.15 250);
+  --accent-comparison: oklch(50% 0.17 300);
+  --accent-distribution: oklch(55% 0.15 60);
+
+  /* Semantic viz mapping (shared DOM/canvas) */
+  --viz-rest: oklch(55% 0.02 260); /* rest frame: cool gray */
+  --viz-active: oklch(55% 0.17 40); /* moving/active: warm accent */
+  --viz-limit: oklch(55% 0.21 25); /* v->c limit: red */
+  --viz-grid: oklch(90% 0.005 250);
+  --viz-axis: oklch(55% 0.015 260);
+  --viz-curve: oklch(48% 0.14 255);
+  --viz-curve-secondary: oklch(52% 0.09 150);
+  --viz-label: oklch(35% 0.015 260);
+  --viz-bg: oklch(99% 0.002 250);
+
+  /* Type & spacing */
+  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2.5rem;
+  --radius: 8px;
+  --content-width: 44rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--color-surface);
+  padding: var(--space-2) var(--space-3);
+}
+
+.skip-link:focus {
+  left: 0;
+  z-index: 10;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+a {
+  color: var(--color-link);
+}
+
+.site-header nav,
+.site-footer,
+main {
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding-inline: var(--space-3);
+}
+
+.site-header {
+  border-bottom: 1px solid var(--color-border);
+  padding-block: var(--space-3);
+}
+
+.site-header a {
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.site-footer {
+  margin-top: var(--space-5);
+  padding-block: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* Controls panel: global because viz MDX bodies author this markup themselves,
+   outside any component's scoped styles. */
+.viz-controls {
+  container-type: inline-size;
+  background: var(--color-surface);
+  padding: var(--space-3);
+  border-radius: var(--radius);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
