@@ -1,33 +1,36 @@
 /* Design tokens. Canvas widgets read the --viz-* custom properties through the
-   cached theming contract in src/lib/canvas.ts - never hardcode these in draw code. */
+   cached theming contract in src/lib/canvas.ts - never hardcode these in draw code.
+   Dark palette; contrast targets: text 4.5:1, graphical/UI 3:1 against --color-bg. */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
   /* Neutral palette */
-  --color-bg: oklch(99% 0.002 250);
-  --color-surface: oklch(96.5% 0.004 250);
-  --color-text: oklch(25% 0.015 260);
-  --color-text-muted: oklch(45% 0.02 260);
-  --color-border: oklch(88% 0.008 250);
-  --color-link: oklch(48% 0.14 255);
-  --color-focus: oklch(55% 0.2 255);
+  --color-bg: oklch(17% 0.025 270);
+  --color-surface: oklch(22% 0.03 268);
+  --color-surface-raised: oklch(26% 0.035 266);
+  --color-text: oklch(93% 0.01 260);
+  --color-text-muted: oklch(74% 0.02 260);
+  --color-border: oklch(35% 0.03 265);
+  --color-link: oklch(80% 0.11 210);
+  --color-focus: oklch(82% 0.14 195);
+  --color-glow: oklch(82% 0.14 195 / 0.25);
 
   /* Archetype accents (contrast-checked as a set against --color-bg) */
-  --accent-field-space: oklch(52% 0.16 150);
-  --accent-time-series: oklch(52% 0.15 250);
-  --accent-comparison: oklch(50% 0.17 300);
-  --accent-distribution: oklch(55% 0.15 60);
+  --accent-field-space: oklch(76% 0.14 160);
+  --accent-time-series: oklch(76% 0.11 240);
+  --accent-comparison: oklch(76% 0.13 305);
+  --accent-distribution: oklch(80% 0.13 80);
 
   /* Semantic viz mapping (shared DOM/canvas) */
-  --viz-rest: oklch(55% 0.02 260); /* rest frame: cool gray */
-  --viz-active: oklch(55% 0.17 40); /* moving/active: warm accent */
-  --viz-limit: oklch(55% 0.21 25); /* v->c limit: red */
-  --viz-grid: oklch(90% 0.005 250);
-  --viz-axis: oklch(55% 0.015 260);
-  --viz-curve: oklch(48% 0.14 255);
-  --viz-curve-secondary: oklch(52% 0.09 150);
-  --viz-label: oklch(35% 0.015 260);
-  --viz-bg: oklch(99% 0.002 250);
+  --viz-rest: oklch(76% 0.02 260); /* rest frame: cool light gray */
+  --viz-active: oklch(76% 0.15 45); /* moving/active: hot orange */
+  --viz-limit: oklch(70% 0.19 25); /* v->c limit: red */
+  --viz-grid: oklch(29% 0.02 265);
+  --viz-axis: oklch(56% 0.02 262);
+  --viz-curve: oklch(80% 0.12 220); /* electric cyan */
+  --viz-curve-secondary: oklch(76% 0.11 150);
+  --viz-label: oklch(86% 0.015 260);
+  --viz-bg: oklch(17% 0.025 270);
 
   /* Type & spacing */
   --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -37,7 +40,8 @@
   --space-3: 1rem;
   --space-4: 1.5rem;
   --space-5: 2.5rem;
-  --radius: 8px;
+  --radius: 10px;
+  --radius-pill: 999px;
   --content-width: 44rem;
 }
 
@@ -49,8 +53,25 @@ body {
   margin: 0;
   font-family: var(--font-body);
   color: var(--color-text);
-  background: var(--color-bg);
+  background:
+    radial-gradient(120rem 40rem at 50% -20rem, oklch(28% 0.06 280 / 0.5), transparent),
+    var(--color-bg);
   line-height: 1.6;
+}
+
+canvas {
+  display: block; /* inline canvases feed back into ResizeObserver sizing */
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .skip-link {
@@ -75,6 +96,16 @@ a {
   color: var(--color-link);
 }
 
+h1 {
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  background: linear-gradient(100deg, var(--color-text), var(--viz-curve));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .site-header nav,
 .site-footer,
 main {
@@ -90,7 +121,7 @@ main {
 
 .site-header a {
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-text);
 }
 
@@ -107,8 +138,37 @@ main {
 .viz-controls {
   container-type: inline-size;
   background: var(--color-surface);
-  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius);
+}
+
+/* Shared chip-style button for presets, limits, play/pause. */
+.chip {
+  min-height: 44px;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px var(--color-glow);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chip {
+    transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+  }
+
+  .chip:hover {
+    transform: translateY(-1px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

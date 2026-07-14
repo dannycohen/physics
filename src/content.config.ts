@@ -15,12 +15,14 @@ const term = z.object({
 
 const preset = z.object({
   label: z.string(),
+  icon: z.string().optional(), // decorative emoji, kept out of the accessible name
   caption: z.string().optional(),
   values: z.record(z.string(), z.number()),
 });
 
 const limit = z.object({
   label: z.string(), // e.g. "v → 0"
+  icon: z.string().optional(), // decorative emoji, kept out of the accessible name
   collapse: z.string(), // what the equation collapses to, in plain language
   values: z.record(z.string(), z.number()),
 });

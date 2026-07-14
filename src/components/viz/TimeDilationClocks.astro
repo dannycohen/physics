@@ -6,6 +6,9 @@ import { lorentzFactor } from '../../lib/physics/relativity';
 const DEFAULT_BETA = 0.6;
 const defaultTick = formatQuantity(1 / lorentzFactor(DEFAULT_BETA), 's');
 const defaultSpeed = formatQuantity(DEFAULT_BETA, 'c');
+const defaultGamma = formatQuantity(lorentzFactor(DEFAULT_BETA), '');
+const oneSecond = formatQuantity(1, 's');
+const defaultSentence = `Moving clock ticks ${defaultTick} for every ${oneSecond} on your clock`;
 ---
 
 <time-dilation-clocks>
@@ -16,14 +19,18 @@ const defaultSpeed = formatQuantity(DEFAULT_BETA, 'c');
         aria-label="Two analog clocks side by side. The moving clock's hand turns slower than the Earth-frame clock's hand."></canvas>
     </div>
     <figcaption class="clock-summary">
-      At the starting speed of {defaultSpeed}, the moving clock ticks {defaultTick} for every 1.00 s
-      on your clock, so its hand falls steadily behind yours.
+      At the starting speed of {defaultSpeed}, the moving clock ticks {defaultTick} for every{' '}
+      {oneSecond} on your clock, so its hand falls steadily behind yours.
     </figcaption>
   </figure>
   <div class="clock-controls">
-    <button type="button" class="play-toggle" aria-pressed="false">Play</button>
-    <p class="tick-rate" aria-live="polite">
-      Moving clock ticks {defaultTick} for every 1.00 s on your clock
+    <p class="gamma-stat" aria-hidden="true">γ&nbsp;=&nbsp;<span class="gamma-value">{defaultGamma}</span></p>
+    <!-- SSR matches the hydrated default (autoplay); syncButton corrects to
+         "Play" for reduced-motion users at hydration. -->
+    <button type="button" class="play-toggle chip" aria-pressed="true">Pause</button>
+    <p class="tick-rate">
+      <span class="tick-visible" aria-hidden="true">{defaultSentence}</span>
+      <span class="visually-hidden" aria-live="polite">{defaultSentence}</span>
     </p>
   </div>
 </time-dilation-clocks>
@@ -60,12 +67,16 @@ const defaultSpeed = formatQuantity(DEFAULT_BETA, 'c');
     tMs: number,
     faceColor: string,
     labelLines: string[],
+    glowScale: number,
   ): void {
+    ctx.shadowColor = faceColor;
+    ctx.shadowBlur = 12 * glowScale;
     ctx.strokeStyle = faceColor;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
     ctx.lineWidth = 1.5;
     for (let i = 0; i < 12; i++) {
@@ -77,12 +88,15 @@ const defaultSpeed = formatQuantity(DEFAULT_BETA, 'c');
     }
 
     const angle = (tMs / REV_MS) * Math.PI * 2 - Math.PI / 2;
+    ctx.shadowColor = faceColor;
+    ctx.shadowBlur = 8 * glowScale;
     ctx.lineWidth = 3;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + Math.cos(angle) * r * 0.78, cy + Math.sin(angle) * r * 0.78);
     ctx.stroke();
+    ctx.shadowBlur = 0;
 
     ctx.fillStyle = faceColor;
     ctx.beginPath();
@@ -107,8 +121,9 @@ const defaultSpeed = formatQuantity(DEFAULT_BETA, 'c');
 
       const canvas = this.querySelector('canvas');
       const button = this.querySelector<HTMLButtonElement>('.play-toggle');
-      const tickRate = this.querySelector('.tick-rate');
-      if (!canvas || !button || !tickRate) return;
+      const tickVisible = this.querySelector('.tick-visible');
+      const tickLive = this.querySelector('.tick-rate .visually-hidden');
+      if (!canvas || !button || !tickVisible || !tickLive) return;
 
       // Integrate proper time (dtau = dt / gamma) so a speed change only alters
       // the future tick rate; already-elapsed proper time never rewinds.
@@ -136,15 +151,32 @@ const defaultSpeed = formatQuantity(DEFAULT_BETA, 'c');
           const cy = (size.h - labelSpace) / 2;
           const r = Math.max(12, Math.min(size.w * 0.21, cy - 8));
           const movingFace = beta > 0.95 ? theme.limit : theme.active;
+          // shadowBlur ignores the DPR transform, so scale it to keep the glow
+          // radius visually constant across 1x/2x displays.
+          const glowScale = ctx.canvas.width / Math.max(size.w, 1);
 
-          drawClock(ctx, theme, size.w * 0.27, cy, r, t, theme.rest, [
-            'Your clock',
-            '(Earth frame)',
-          ]);
-          drawClock(ctx, theme, size.w * 0.73, cy, r, tauMs, movingFace, [
-            'Moving clock',
-            '(its own time, Δτ)',
-          ]);
+          drawClock(
+            ctx,
+            theme,
+            size.w * 0.27,
+            cy,
+            r,
+            t,
+            theme.rest,
+            ['Your clock', '(Earth frame)'],
+            glowScale,
+          );
+          drawClock(
+            ctx,
+            theme,
+            size.w * 0.73,
+            cy,
+            r,
+            tauMs,
+            movingFace,
+            ['Moving clock', '(its own time, Δτ)'],
+            glowScale,
+          );
         },
         { animate: true },
       );
@@ -160,17 +192,30 @@ const defaultSpeed = formatQuantity(DEFAULT_BETA, 'c');
       });
       syncButton();
 
-      const renderRate = (values: Record<string, number>) => {
+      const sentence = (values: Record<string, number>) => {
         const gamma = lorentzFactor(clampBeta(values['beta']));
-        const text = `Moving clock ticks ${formatQuantity(1 / gamma, 's')} for every 1.00 s on your clock`;
-        // Skip identical writes so the SSR'd sentence is not re-announced on load.
-        if (tickRate.textContent?.trim() !== text) tickRate.textContent = text;
+        return `Moving clock ticks ${formatQuantity(1 / gamma, 's')} for every ${formatQuantity(1, 's')} on your clock`;
       };
-      renderRate(store.values.get());
-      store.onSettled(renderRate);
+      // The visible sentence tracks the drag live (aria-hidden, so no flood);
+      // the screen-reader copy updates only once the value settles.
+      store.onSettled((values) => {
+        const text = sentence(values);
+        // Skip identical writes so the SSR'd sentence is not re-announced on load.
+        if (tickLive.textContent?.trim() !== text) tickLive.textContent = text;
+      });
 
-      // Keep the paused/static frame in sync while the slider moves.
-      store.values.subscribe(() => handle.redraw());
+      // Keep the paused/static frame, the gamma stat, and the visible sentence
+      // in sync while the slider moves. All three are aria-hidden or non-live
+      // (the settled region above is the screen-reader channel), so
+      // unthrottled updates are safe.
+      const gammaValue = this.querySelector('.gamma-value');
+      store.values.subscribe((values) => {
+        if (gammaValue) {
+          gammaValue.textContent = formatQuantity(lorentzFactor(clampBeta(values['beta'])), '');
+        }
+        tickVisible.textContent = sentence(values);
+        handle.redraw();
+      });
     }
   }
 
@@ -198,24 +243,23 @@ const defaultSpeed = formatQuantity(DEFAULT_BETA, 'c');
   .clock-controls {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-3);
     margin-top: var(--space-2);
   }
 
-  .play-toggle {
-    min-width: 5.5em;
-    min-height: 44px;
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: var(--color-surface);
-    color: var(--color-text);
-    font: inherit;
-    cursor: pointer;
+  .gamma-stat {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--viz-curve);
+    text-shadow: 0 0 16px var(--color-glow);
   }
 
-  .play-toggle:hover {
-    border-color: var(--color-focus);
+  .play-toggle {
+    min-width: 5.5em;
   }
 
   .tick-rate {

@@ -1,7 +1,12 @@
 ---
 interface Props {
   slug: string;
-  presets: Array<{ label: string; caption?: string; values: Record<string, number> }>;
+  presets: Array<{
+    label: string;
+    icon?: string;
+    caption?: string;
+    values: Record<string, number>;
+  }>;
 }
 
 const { slug, presets } = Astro.props;
@@ -11,7 +16,13 @@ const { slug, presets } = Astro.props;
   <div class="preset-group" role="group" aria-label="Presets">
     {
       presets.map((preset) => (
-        <button type="button" data-values={JSON.stringify(preset.values)} data-caption={preset.caption}>
+        <button
+          type="button"
+          class="chip"
+          data-values={JSON.stringify(preset.values)}
+          data-caption={preset.caption}
+        >
+          {preset.icon && <span aria-hidden="true">{preset.icon} </span>}
           {preset.label}
         </button>
       ))
@@ -32,6 +43,9 @@ const { slug, presets } = Astro.props;
 
       const store = getVizStore(this.dataset.slug ?? '');
       const caption = this.querySelector('.preset-caption');
+      // The values the visible caption describes; cleared once the store
+      // diverges (slider drag, limit snap) so a stale caption never lingers.
+      let active: Record<string, number> | null = null;
 
       for (const button of this.querySelectorAll<HTMLButtonElement>('button[data-values]')) {
         button.addEventListener('click', () => {
@@ -39,9 +53,18 @@ const { slug, presets } = Astro.props;
           for (const [key, value] of Object.entries(values)) {
             store.set(key, value);
           }
+          active = values;
           if (caption) caption.textContent = button.dataset.caption ?? '';
         });
       }
+
+      store.values.subscribe((values) => {
+        if (!active || !caption) return;
+        if (Object.entries(active).some(([key, value]) => values[key] !== value)) {
+          active = null;
+          caption.textContent = '';
+        }
+      });
     }
   }
 
@@ -57,24 +80,8 @@ const { slug, presets } = Astro.props;
     gap: var(--space-2);
   }
 
-  button {
-    min-width: 24px;
-    min-height: 24px;
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: var(--color-surface);
-    color: var(--color-text);
-    font: inherit;
-    cursor: pointer;
-  }
-
-  button:hover {
-    border-color: var(--color-focus);
-  }
-
   .preset-caption {
-    min-height: 1.6em; /* reserve the line so announcements don't shift layout */
+    min-height: 3.2em; /* two lines: captions are kept short enough to fit */
     margin-block: var(--space-2) 0;
     color: var(--color-text-muted);
     font-size: 0.9rem;

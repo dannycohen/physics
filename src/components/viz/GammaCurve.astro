@@ -23,10 +23,8 @@ const gammaAtMax = formatQuantity(lorentzFactor(0.999), '');
         aria-label="Graph of the stretch factor γ against speed. The curve is flat near 1 at low speeds and rises steeply as speed approaches c. A dashed line at 1 marks the Newtonian prediction of no dilation."></canvas>
     </div>
     <figcaption>
-      The vertical axis is cut off at γ = 8, so whenever γ exceeds 8 (speeds above about 0.992 c)
-      the marker sits on that top edge. At the slider's top speed of 0.999 c, γ is about {
-        gammaAtMax
-      } and the curve is nearly vertical.
+      At the slider's top speed of 0.999 c the curve tops out at γ ≈ {gammaAtMax}: the moving
+      clock runs at less than a twentieth of normal speed.
     </figcaption>
   </figure>
   <details class="view-table">
@@ -63,8 +61,11 @@ const gammaAtMax = formatQuantity(lorentzFactor(0.999), '');
 
   const SLUG = 'relativity/time-dilation';
   const DEFAULT_BETA = 0.6;
-  const X_DOMAIN: [number, number] = [0, BETA_MAX];
-  const Y_DOMAIN: [number, number] = [1, 8]; // gamma exceeds 8 past beta ~0.992; plotCurve clips
+  // x runs to 1 so axis ticks land on 0.25/0.5/0.75/1 (curve data stops at BETA_MAX).
+  // y covers the full range up to gamma(BETA_MAX) ~ 22.4 so the marker rides the
+  // curve all the way to the top instead of detaching at a clipped edge.
+  const X_DOMAIN: [number, number] = [0, 1];
+  const Y_DOMAIN: [number, number] = [1, 23];
 
   const gammaPoints: Array<[number, number]> = [];
   const STEPS = 240;
@@ -96,7 +97,7 @@ const gammaAtMax = formatQuantity(lorentzFactor(0.999), '');
           {
             points: newtonianPoints,
             color: theme.curveSecondary,
-            label: 'Newtonian (no dilation)',
+            label: 'Newtonian',
             dashed: true,
           },
         ];
@@ -109,7 +110,7 @@ const gammaAtMax = formatQuantity(lorentzFactor(0.999), '');
           yLabel: 'γ',
           xDomain: X_DOMAIN,
           yDomain: Y_DOMAIN,
-          marker: { x: beta, y: Math.min(gamma, Y_DOMAIN[1]) },
+          marker: { x: beta, y: gamma },
         });
       });
 

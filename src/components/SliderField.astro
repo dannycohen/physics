@@ -59,6 +59,7 @@ const initialText = formatQuantity(initialValue, unit, { sigFigs });
       max={nonlinear ? 1000 : max}
       step={nonlinear ? 1 : (step ?? 'any')}
       value={nonlinear ? Math.round(initialPos * 1000) : initialValue}
+      style={`--slider-pos: ${(initialPos * 100).toFixed(2)}%`}
     />
     <output id={outputId} for={inputId} aria-live="off">{initialText}</output>
   </div>
@@ -102,6 +103,10 @@ const initialText = formatQuantity(initialValue, unit, { sigFigs });
         const text = formatQuantity(value, unit, { sigFigs });
         output.textContent = text;
         input.setAttribute('aria-valuetext', text);
+        const pos = nonlinear
+          ? input.valueAsNumber / 1000
+          : (input.valueAsNumber - min) / (max - min);
+        input.style.setProperty('--slider-pos', `${(pos * 100).toFixed(2)}%`);
       };
 
       if (!this.#bound) {
@@ -109,6 +114,23 @@ const initialText = formatQuantity(initialValue, unit, { sigFigs });
         input.addEventListener('input', () => {
           store.set(key, inputToValue());
         });
+        // Nonlinear tracks span 1000 positions; a native arrow press moves one
+        // (0.1% of travel). Boost arrows to 1% so keyboard travel is usable
+        // while pointer drags keep full resolution.
+        if (nonlinear) {
+          input.addEventListener('keydown', (event) => {
+            const dir =
+              event.key === 'ArrowRight' || event.key === 'ArrowUp'
+                ? 1
+                : event.key === 'ArrowLeft' || event.key === 'ArrowDown'
+                  ? -1
+                  : 0;
+            if (dir === 0) return;
+            event.preventDefault();
+            input.valueAsNumber = Math.min(1000, Math.max(0, input.valueAsNumber + dir * 10));
+            store.set(key, inputToValue());
+          });
+        }
       }
 
       this.#unsubscribe = store.values.subscribe((values) => {
@@ -149,6 +171,9 @@ const initialText = formatQuantity(initialValue, unit, { sigFigs });
   output {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-focus);
   }
 
   input[type='range'] {
@@ -161,16 +186,29 @@ const initialText = formatQuantity(initialValue, unit, { sigFigs });
     cursor: pointer;
   }
 
+  /* Track: filled portion in accent, rest in --viz-axis (>= 3:1 vs --color-bg, WCAG 1.4.11).
+     WebKit has no progress pseudo-element, so the fill is a gradient stopped at
+     --slider-pos (kept current by render()). */
   input[type='range']::-webkit-slider-runnable-track {
     height: 8px;
     border-radius: 4px;
-    background: var(--viz-axis); /* >= 3:1 against --color-bg (WCAG 1.4.11) */
+    background: linear-gradient(
+      90deg,
+      var(--color-focus) var(--slider-pos, 0%),
+      var(--viz-axis) var(--slider-pos, 0%)
+    );
   }
 
   input[type='range']::-moz-range-track {
     height: 8px;
     border-radius: 4px;
-    background: var(--viz-axis); /* >= 3:1 against --color-bg (WCAG 1.4.11) */
+    background: var(--viz-axis);
+  }
+
+  input[type='range']::-moz-range-progress {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--color-focus);
   }
 
   input[type='range']::-webkit-slider-thumb {
@@ -179,16 +217,18 @@ const initialText = formatQuantity(initialValue, unit, { sigFigs });
     width: 44px;
     height: 44px;
     margin-top: -18px; /* center 44px thumb on 8px track */
-    border: 2px solid var(--color-bg);
+    border: 3px solid var(--color-bg);
     border-radius: 50%;
     background: var(--color-focus);
+    box-shadow: 0 0 12px var(--color-glow);
   }
 
   input[type='range']::-moz-range-thumb {
     width: 44px;
     height: 44px;
-    border: 2px solid var(--color-bg);
+    border: 3px solid var(--color-bg);
     border-radius: 50%;
     background: var(--color-focus);
+    box-shadow: 0 0 12px var(--color-glow);
   }
 </style>

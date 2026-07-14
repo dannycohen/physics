@@ -1,7 +1,12 @@
 ---
 interface Props {
   slug: string;
-  limits: Array<{ label: string; collapse: string; values: Record<string, number> }>;
+  limits: Array<{
+    label: string;
+    icon?: string;
+    collapse: string;
+    values: Record<string, number>;
+  }>;
 }
 
 const { slug, limits } = Astro.props;
@@ -11,7 +16,13 @@ const { slug, limits } = Astro.props;
   <div class="limit-group" role="group" aria-label="Limiting cases">
     {
       limits.map((limit) => (
-        <button type="button" data-values={JSON.stringify(limit.values)} data-collapse={limit.collapse}>
+        <button
+          type="button"
+          class="chip"
+          data-values={JSON.stringify(limit.values)}
+          data-collapse={limit.collapse}
+        >
+          {limit.icon && <span aria-hidden="true">{limit.icon} </span>}
           {limit.label}
         </button>
       ))
@@ -32,6 +43,8 @@ const { slug, limits } = Astro.props;
 
       const store = getVizStore(this.dataset.slug ?? '');
       const collapse = this.querySelector('.limit-collapse');
+      // The values the visible text describes; cleared once the store diverges.
+      let active: Record<string, number> | null = null;
 
       for (const button of this.querySelectorAll<HTMLButtonElement>('button[data-values]')) {
         button.addEventListener('click', () => {
@@ -39,9 +52,18 @@ const { slug, limits } = Astro.props;
           for (const [key, value] of Object.entries(values)) {
             store.set(key, value);
           }
+          active = values;
           if (collapse) collapse.textContent = button.dataset.collapse ?? '';
         });
       }
+
+      store.values.subscribe((values) => {
+        if (!active || !collapse) return;
+        if (Object.entries(active).some(([key, value]) => values[key] !== value)) {
+          active = null;
+          collapse.textContent = '';
+        }
+      });
     }
   }
 
@@ -57,24 +79,8 @@ const { slug, limits } = Astro.props;
     gap: var(--space-2);
   }
 
-  button {
-    min-width: 24px;
-    min-height: 24px;
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    background: var(--color-surface);
-    color: var(--color-text);
-    font: inherit;
-    cursor: pointer;
-  }
-
-  button:hover {
-    border-color: var(--color-focus);
-  }
-
   .limit-collapse {
-    min-height: 1.6em; /* reserve the line so announcements don't shift layout */
+    min-height: 3.2em; /* two lines: collapse text is kept short enough to fit */
     margin-block: var(--space-2) 0;
     color: var(--color-text-muted);
     font-family: var(--font-mono);

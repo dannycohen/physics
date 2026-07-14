@@ -6,7 +6,7 @@ status: live
 order: 1
 equationLatex: '\Delta t = \gamma\,\Delta\tau = \frac{\Delta\tau}{\sqrt{1 - v^2/c^2}}'
 equationPlain: 'Δt = γ·Δτ'
-claim: 'A moving clock ticks slower than yours. Drag the speed slider and watch it happen.'
+claim: 'Moving clocks run slow. Crank the slider toward light speed and watch time itself stretch.'
 defaults:
   beta: 0.6
 terms:
@@ -27,24 +27,29 @@ terms:
     effect: 'always at least 1 - exactly 1 at rest, grows without limit as v nears c'
 presets:
   - label: 'Muon in the atmosphere'
-    caption: 'Muons made high in the atmosphere live, on average, just 2.2 microseconds, yet they reach the ground because at this speed that lifetime stretches about 15-fold.'
+    icon: '☄️'
+    caption: 'Muons live, on average, just 2.2 microseconds, yet they reach the ground because at this speed that lifetime stretches about 15-fold.'
     values:
       beta: 0.998
   - label: 'Twin paradox cruise'
+    icon: '🚀'
     caption: 'At 80% of light speed, gamma = 5/3: five years pass on Earth for every three aboard the ship.'
     values:
       beta: 0.8
   - label: 'GPS satellite'
-    caption: 'Orbital speed alone slows a GPS clock by about 7 microseconds a day - roughly 2 km of position error if uncorrected. Weaker gravity in orbit speeds the clock up even more (+45 microseconds/day), so GPS clocks actually run fast overall; engineers correct for both effects.'
+    icon: '🛰️'
+    caption: 'Barely moves the slider, yet it costs a GPS clock 7 microseconds a day, kilometers of error if uncorrected. (Weaker gravity up there pushes harder the other way; engineers correct both.)'
     values:
       beta: 0.0000129
 limits:
   - label: 'v → 0'
-    collapse: 'gamma ~ 1: both clocks agree - this is the everyday world, where relativity is invisible'
+    icon: '🐌'
+    collapse: 'gamma ~ 1: both clocks agree. This is the everyday world, where relativity hides.'
     values:
       beta: 0
   - label: 'v → c'
-    collapse: 'gamma blows up: the moving clock nearly freezes'
+    icon: '⚡'
+    collapse: 'gamma blows up: the moving clock all but freezes'
     values:
       beta: 0.999
 prerequisites: []
@@ -56,6 +61,7 @@ import GammaCurve from '../../../components/viz/GammaCurve.astro';
 import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
 
 <TimeDilationClocks />
 
@@ -73,9 +79,10 @@ import LimitSnaps from '../../../components/LimitSnaps.astro';
   />
   <PresetButtons slug="relativity/time-dilation" presets={frontmatter.presets} />
   <LimitSnaps slug="relativity/time-dilation" limits={frontmatter.limits} />
+  <ResetButton slug="relativity/time-dilation" label="Reset to 0.6 c" />
 </div>
 
-## Why does moving change time?
+## Blame the light clock
 
 Imagine the simplest clock you can build: two mirrors facing each other, with a
 flash of light bouncing between them. Every bounce is one tick. Nothing about
@@ -113,8 +120,8 @@ before it amounts to much.
   internal clock genuinely runs slow in our frame.
 </details>
 
-How fast does the slowdown grow with speed? The curve below shows the stretch
-factor (the γ in the equation below) for every speed on the slider - drag it
-and watch the marker climb.
+So how bad does it get? The curve below shows the stretch factor γ for every
+speed on the slider. Drag the slider and watch the marker ride the curve: flat
+and boring for half the track, then a wall.
 
 <GammaCurve />

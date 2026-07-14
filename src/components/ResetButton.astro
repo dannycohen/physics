@@ -1,0 +1,34 @@
+---
+interface Props {
+  slug: string;
+  label?: string;
+}
+
+const { slug, label = 'Reset' } = Astro.props;
+---
+
+<reset-button data-slug={slug}>
+  <button type="button" class="chip">
+    <span aria-hidden="true">↺ </span>
+    {label}
+  </button>
+</reset-button>
+
+<script>
+  import { getVizStore } from '../lib/vizStore';
+
+  class ResetButtonElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+      const store = getVizStore(this.dataset.slug ?? '');
+      this.querySelector('button')?.addEventListener('click', () => store.reset());
+    }
+  }
+
+  if (!customElements.get('reset-button')) {
+    customElements.define('reset-button', ResetButtonElement);
+  }
+</script>
