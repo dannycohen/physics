@@ -60,7 +60,10 @@ const hasDataTable = Astro.slots.has('data-table');
             <tbody>
               {terms.map((t) => (
                 <tr>
-                  <td set:html={renderLatexInline(t.symbol)} />
+                  <td title={t.name}>
+                    <Fragment set:html={renderLatexInline(t.symbol)} />
+                    {t.name && <span class="visually-hidden">{t.name}</span>}
+                  </td>
                   <td>{t.role}</td>
                   <td>{t.effect}</td>
                 </tr>
@@ -156,5 +159,9 @@ const hasDataTable = Astro.slots.has('data-table');
     text-align: left;
     padding: var(--space-1) var(--space-2);
     border-bottom: 1px solid var(--color-border);
+  }
+
+  .show-math td[title] {
+    cursor: help;
   }
 </style>

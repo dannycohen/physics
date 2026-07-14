@@ -8,6 +8,7 @@ const latex = z.string().brand<'LaTeX'>();
 
 const term = z.object({
   symbol: latex,
+  name: z.string().optional(), // human-readable name of the symbol, e.g. the Greek letter's name
   role: z.string(), // plain-language role, not a glossary definition
   effect: z.string(), // direction of effect on the output
   unit: z.string().optional(),

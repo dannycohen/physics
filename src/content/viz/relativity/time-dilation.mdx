@@ -11,18 +11,23 @@ defaults:
   beta: 0.6
 terms:
   - symbol: '\Delta\tau'
+    name: 'Delta tau: Greek capital delta and lowercase tau'
     role: 'the time between two ticks measured by the moving clock itself'
     effect: 'fixed by the clock itself; always shorter than Δt once v > 0'
   - symbol: '\Delta t'
+    name: 'Delta t: Greek capital delta and Latin t'
     role: 'the time you measure between the same two ticks'
     effect: 'grows as v grows'
   - symbol: 'v'
+    name: 'v: Latin letter vee, the speed'
     role: 'how fast the clock moves relative to you'
     effect: 'faster -> more dilation, but only noticeably past about half of c'
   - symbol: 'c'
+    name: 'c: Latin letter c, the speed of light'
     role: 'the speed of light - the scale that decides what counts as fast'
     effect: 'v/c is what matters, not v alone'
   - symbol: '\gamma'
+    name: 'Gamma: Greek lowercase gamma'
     role: "the conversion factor from the moving clock's time to yours"
     effect: 'always at least 1 - exactly 1 at rest, grows without limit as v nears c'
 presets:
@@ -82,6 +87,11 @@ import ResetButton from '../../../components/ResetButton.astro';
   <ResetButton slug="relativity/time-dilation" label="Reset to 0.6 c" />
 </div>
 
+So how bad does it get? The curve below tracks the stretch factor γ as you drag
+the slider above: flat and boring for half the track, then a wall.
+
+<GammaCurve />
+
 ## Blame the light clock
 
 Imagine the simplest clock you can build: two mirrors facing each other, with a
@@ -119,9 +129,3 @@ before it amounts to much.
   survive the trip down. They reach the ground in huge numbers anyway - their
   internal clock genuinely runs slow in our frame.
 </details>
-
-So how bad does it get? The curve below shows the stretch factor γ for every
-speed on the slider. Drag the slider and watch the marker ride the curve: flat
-and boring for half the track, then a wall.
-
-<GammaCurve />
