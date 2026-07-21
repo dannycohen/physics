@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   BETA_MAX,
   betaToSliderPos,
+  contractedLength,
   dilatedTime,
   lorentzFactor,
   sliderPosToBeta,
@@ -83,5 +84,27 @@ describe('taylorGamma2', () => {
   it('is exactly 1 + beta^2/2', () => {
     expect(taylorGamma2(0.2)).toBe(1.02);
     expect(taylorGamma2(0)).toBe(1);
+  });
+});
+
+describe('contractedLength', () => {
+  it('is the full rest length at rest', () => {
+    expect(contractedLength(100, 0)).toBe(100);
+  });
+
+  it('is L0 / gamma (80 m at beta = 0.6, 60 m at beta = 0.8)', () => {
+    expect(contractedLength(100, 0.6)).toBeCloseTo(80, 10);
+    expect(contractedLength(100, 0.8)).toBeCloseTo(60, 10);
+  });
+
+  it('equals L0 * sqrt(1 - beta^2)', () => {
+    for (const beta of [0.1, 0.5, 0.87, 0.99]) {
+      expect(contractedLength(100, beta)).toBeCloseTo(100 * Math.sqrt(1 - beta * beta), 10);
+    }
+  });
+
+  it('shrinks toward zero as beta grows', () => {
+    expect(contractedLength(100, 0.999)).toBeLessThan(contractedLength(100, 0.5));
+    expect(contractedLength(100, 0.999)).toBeGreaterThan(0);
   });
 });

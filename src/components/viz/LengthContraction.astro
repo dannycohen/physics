@@ -1,0 +1,210 @@
+---
+import { contractedLength } from '../../lib/physics/relativity';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const REST_LENGTH = 100; // metres (a fixed "ship")
+const DEFAULT_BETA = 0.6;
+const len = (beta: number) => formatQuantity(contractedLength(REST_LENGTH, beta), 'm', { sigFigs: 3 });
+const pct = (beta: number) =>
+  formatQuantity((contractedLength(REST_LENGTH, beta) / REST_LENGTH) * 100, '%', { sigFigs: 2 });
+
+const SAMPLE_BETAS = [0, 0.3, 0.5, 0.6, 0.8, 0.866, 0.95, 0.99, 0.999];
+const rows = SAMPLE_BETAS.map((beta) => ({
+  beta: formatQuantity(beta, ''),
+  length: len(beta),
+  pct: pct(beta),
+}));
+---
+
+<length-contraction>
+  <figure class="rod-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Two rods drawn one above the other with the same left edge. The top rod is the object at rest at its full length; the bottom rod is the same object moving, drawn shorter. As the speed rises the moving rod shrinks toward the left, while its height stays the same."
+      ></canvas>
+    </div>
+    <p class="length-stat" aria-hidden="true">
+      The moving {REST_LENGTH} m ship measures <b class="len-val">{len(DEFAULT_BETA)}</b>
+      <span class="pct-val">({pct(DEFAULT_BETA)} of its rest length)</span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      At this speed the {REST_LENGTH} m ship measures {len(DEFAULT_BETA)}, {pct(DEFAULT_BETA)} of its rest length.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>Length of a {REST_LENGTH} m object measured while it moves, along its direction of travel.</p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">v/c (speed as a fraction of c)</th>
+          <th scope="col">Measured length (m)</th>
+          <th scope="col">Fraction of rest length</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.beta}</td>
+              <td>{row.length}</td>
+              <td>{row.pct}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</length-contraction>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { contractedLength, lorentzFactor } from '../../lib/physics/relativity';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+  import type { VizTheme } from '../../lib/theme';
+
+  const SLUG = 'relativity/length-contraction';
+  const REST_LENGTH = 100;
+  const DEFAULT_BETA = 0.6;
+
+  const store = getVizStore(SLUG, { beta: DEFAULT_BETA });
+
+  const clampBeta = (b: number | undefined) => Math.min(Math.max(b ?? DEFAULT_BETA, 0), 0.999);
+  const len = (beta: number) => formatQuantity(contractedLength(REST_LENGTH, beta), 'm', { sigFigs: 3 });
+  const pct = (beta: number) =>
+    formatQuantity((contractedLength(REST_LENGTH, beta) / REST_LENGTH) * 100, '%', { sigFigs: 2 });
+
+  function rod(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    fill: string | null,
+    stroke: string,
+  ): void {
+    const r = Math.min(h / 3, 10);
+    ctx.beginPath();
+    ctx.roundRect(x, y - h / 2, Math.max(w, 2), h, r);
+    if (fill) {
+      ctx.fillStyle = fill;
+      ctx.fill();
+    }
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  class LengthContractionElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const lenVal = this.querySelector('.len-val');
+      const pctVal = this.querySelector('.pct-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const beta = clampBeta(store.values.get()['beta']);
+        const gamma = lorentzFactor(beta);
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        const marginX = size.w * 0.08;
+        const fullW = size.w * 0.84;
+        const rodH = Math.min(size.h * 0.18, 44);
+        const yRest = size.h * 0.32;
+        const yMove = size.h * 0.68;
+        const movingW = fullW / gamma;
+        const movingColor = beta > 0.95 ? theme.limit : theme.active;
+
+        // Reference line at the rest length's right edge, so the gap is visible.
+        ctx.strokeStyle = theme.grid;
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(marginX + fullW, yRest - rodH);
+        ctx.lineTo(marginX + fullW, yMove + rodH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Motion streaks trailing the moving rod, longer with speed.
+        ctx.strokeStyle = movingColor;
+        ctx.globalAlpha = 0.35;
+        for (let i = 0; i < 3; i++) {
+          const sy = yMove - rodH / 3 + (i * rodH) / 3;
+          ctx.beginPath();
+          ctx.moveTo(marginX - 4, sy);
+          ctx.lineTo(marginX - 4 - beta * size.w * 0.06 * (i + 1), sy);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+
+        rod(ctx, marginX, yRest, fullW, rodH, null, theme.rest);
+        rod(ctx, marginX, yMove, movingW, rodH, movingColor, movingColor);
+
+        ctx.fillStyle = theme.label;
+        ctx.font = '13px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('At rest — 100 m', marginX, yRest - rodH / 2 - 6);
+        ctx.textBaseline = 'top';
+        ctx.fillText(`Moving — ${len(beta)}`, marginX, yMove + rodH / 2 + 6);
+      });
+
+      const renderStat = (values: Record<string, number>) => {
+        const beta = clampBeta(values['beta']);
+        if (lenVal) lenVal.textContent = len(beta);
+        if (pctVal) pctVal.textContent = `(${pct(beta)} of its rest length)`;
+      };
+
+      store.values.subscribe((values) => {
+        renderStat(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const beta = clampBeta(values['beta']);
+        const text = `At this speed the ${REST_LENGTH} m ship measures ${len(beta)}, ${pct(beta)} of its rest length.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('length-contraction')) {
+    customElements.define('length-contraction', LengthContractionElement);
+  }
+</script>
+
+<style>
+  .rod-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 2 / 1;
+  }
+
+  .length-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .length-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .pct-val {
+    color: var(--color-text-muted);
+  }
+</style>

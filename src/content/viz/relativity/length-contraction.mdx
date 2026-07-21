@@ -1,0 +1,116 @@
+---
+title: 'Length contraction'
+category: relativity
+layoutArchetype: comparison
+status: live
+order: 1.5
+equationLatex: 'L = L_0\sqrt{1 - v^2/c^2} = \frac{L_0}{\gamma}'
+equationPlain: 'L = L₀√(1 − v²/c²) = L₀/γ'
+claim: 'A moving object is shorter along its direction of travel. Push toward light speed and watch the ship squeeze.'
+defaults:
+  beta: 0.6
+terms:
+  - symbol: 'L'
+    name: 'L: Latin capital ell, the measured length'
+    role: 'the length you measure for the moving object'
+    effect: 'shrinks as the speed rises'
+  - symbol: 'L_0'
+    name: 'L-zero: the proper (rest) length'
+    role: "the length in the object's own frame — its true, longest length"
+    effect: 'the full length you start from at rest'
+  - symbol: 'v'
+    name: 'v: Latin letter vee, the speed'
+    role: 'how fast the object moves relative to you'
+    effect: 'faster means shorter'
+  - symbol: 'c'
+    name: 'c: the speed of light in vacuum, 299,792,458 m/s'
+    role: 'the scale that decides what counts as fast'
+    effect: 'only the ratio v/c matters'
+  - symbol: '\sqrt{1 - v^2/c^2}'
+    name: 'the contraction factor'
+    role: 'a number between 0 and 1'
+    effect: 'multiplies the rest length; heads toward 0 as v approaches c'
+presets:
+  - label: 'Half light speed'
+    caption: 'At half the speed of light the ship is only about 13% shorter.'
+    values:
+      beta: 0.5
+  - label: 'Half length (0.866c)'
+    caption: 'At 0.866 c the ship measures exactly half its rest length (γ = 2).'
+    values:
+      beta: 0.866
+  - label: '0.99 c'
+    caption: 'At 0.99 c the 100 m ship is squeezed to about 14 m.'
+    values:
+      beta: 0.99
+limits:
+  - label: 'v → 0'
+    icon: '🐢'
+    collapse: 'no contraction: the object is its full rest length'
+    values:
+      beta: 0
+  - label: 'v → c'
+    icon: '⚡'
+    collapse: 'length shrinks toward zero'
+    values:
+      beta: 0.999
+prerequisites: []
+related:
+  - foundations/lorentz-factor
+  - relativity/time-dilation
+---
+
+import LengthContraction from '../../../components/viz/LengthContraction.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<LengthContraction />
+
+<div class="viz-controls">
+  <SliderField
+    label="Speed"
+    unit="c"
+    slug="relativity/length-contraction"
+    storeKey="beta"
+    min={0}
+    max={0.999}
+    scale="beta"
+    sigFigs={3}
+    value={frontmatter.defaults.beta}
+  />
+  <PresetButtons slug="relativity/length-contraction" presets={frontmatter.presets} />
+  <LimitSnaps slug="relativity/length-contraction" limits={frontmatter.limits} />
+  <ResetButton slug="relativity/length-contraction" label="Reset to 0.6 c" />
+</div>
+
+## Shorter, but only in one direction
+
+Length contraction squeezes a moving object along the direction it travels, and
+only that direction. A ship flying past you nose-first looks shorter from front
+to back, but just as tall and just as wide as ever. Turn the speed up and the
+squeeze grows; at everyday speeds it is far too small to notice.
+
+The effect is real, not a trick of the light or a delay in when signals reach
+you. If you could lay a tape measure along the moving ship as it passed, you
+would genuinely record a shorter number. And it is mutual: someone riding on the
+ship measures *your* ruler as the contracted one, because each of you sees the
+other rushing past.
+
+## Same γ, working the other way
+
+The contraction factor is `1/γ`, built from the very same Lorentz factor that
+stretches time. Time dilation multiplies by γ; length contraction divides by it.
+One number, two mirror-image effects. See γ on its own on the{' '}
+<a href={`${import.meta.env.BASE_URL}viz/foundations/lorentz-factor/`}>Lorentz factor page</a>.
+
+<details class="misconception">
+  <summary>Does the object get crushed or squished?</summary>
+
+  No. Nothing is compressed and no force acts on the ship — its crew feels
+  perfectly normal and measures the ship at its full 100 m. Length itself is what
+  depends on who is measuring. In the frame where the ship moves, the distance
+  between its nose and tail is simply smaller. Slow back down and the measured
+  length returns to normal, with nothing bent or broken.
+</details>

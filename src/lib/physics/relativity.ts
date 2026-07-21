@@ -32,3 +32,9 @@ export function betaToSliderPos(beta: number): number {
 export function taylorGamma2(beta: number): number {
   return 1 + (beta * beta) / 2;
 }
+
+/** Contracted length seen for a moving object: L = L0 / gamma = L0 * sqrt(1 - beta^2).
+ *  L0 is the proper (rest) length. Contraction is along the direction of motion only. */
+export function contractedLength(properLength: number, beta: number): number {
+  return properLength / lorentzFactor(beta);
+}
