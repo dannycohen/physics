@@ -1,0 +1,202 @@
+---
+import { ELECTRON_REST_ENERGY_MEV } from '../../lib/physics/constants';
+import { kineticEnergy, momentumEnergy, totalEnergy } from '../../lib/physics/relativity';
+import { formatQuantity } from '../../lib/format';
+
+// Fixed rest mass (an electron); the slider varies speed. Everything is in MeV.
+const E0 = ELECTRON_REST_ENERGY_MEV;
+const DEFAULT_BETA = 0.6;
+const mev = (x: number) => formatQuantity(x, 'MeV', { sigFigs: 3 });
+
+const SAMPLE_BETAS = [0, 0.3, 0.6, 0.866, 0.95, 0.99, 0.999];
+const rows = SAMPLE_BETAS.map((beta) => ({
+  beta: formatQuantity(beta, ''),
+  total: mev(totalEnergy(E0, beta)),
+  pc: mev(momentumEnergy(E0, beta)),
+  ke: mev(kineticEnergy(E0, beta)),
+}));
+---
+
+<mass-energy>
+  <figure class="triangle-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A right triangle. The upright leg is the rest energy m c squared, fixed in length. The base leg is the momentum term p c, which grows as the speed rises. The hypotenuse is the total energy E. As speed increases the base and hypotenuse stretch while the upright leg stays the same, so E climbs and the rest energy becomes a smaller share."
+      ></canvas>
+    </div>
+    <p class="energy-stat" aria-hidden="true">
+      Total energy <b class="e-val">{mev(totalEnergy(E0, DEFAULT_BETA))}</b>
+      <span class="parts-val">= rest {mev(E0)} + kinetic {mev(kineticEnergy(E0, DEFAULT_BETA))}</span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      Total energy {mev(totalEnergy(E0, DEFAULT_BETA))}: rest energy {mev(E0)} plus kinetic energy {mev(kineticEnergy(E0, DEFAULT_BETA))}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>Energy of an electron (rest energy {mev(E0)}) at different speeds.</p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">v/c</th>
+          <th scope="col">Total energy E</th>
+          <th scope="col">Momentum term pc</th>
+          <th scope="col">Kinetic energy</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.beta}</td>
+              <td>{row.total}</td>
+              <td>{row.pc}</td>
+              <td>{row.ke}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</mass-energy>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { ELECTRON_REST_ENERGY_MEV } from '../../lib/physics/constants';
+  import {
+    kineticEnergy,
+    lorentzFactor,
+    momentumEnergy,
+    totalEnergy,
+  } from '../../lib/physics/relativity';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'relativity/mass-energy';
+  const E0 = ELECTRON_REST_ENERGY_MEV;
+  const DEFAULT_BETA = 0.6;
+
+  const store = getVizStore(SLUG, { beta: DEFAULT_BETA });
+  const clampBeta = (b: number | undefined) => Math.min(Math.max(b ?? DEFAULT_BETA, 0), 0.999);
+  const mev = (x: number) => formatQuantity(x, 'MeV', { sigFigs: 3 });
+
+  class MassEnergyElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const eVal = this.querySelector('.e-val');
+      const partsVal = this.querySelector('.parts-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const beta = clampBeta(store.values.get()['beta']);
+        const gamma = lorentzFactor(beta);
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        // Triangle in units of the rest energy: upright leg = 1, base = gamma*beta,
+        // hypotenuse = gamma. Scale to fit, height-bound at low speed and width-bound
+        // once the base grows past the canvas.
+        const pad = 46;
+        const availW = size.w - pad * 2;
+        const availH = size.h - pad * 2;
+        const legPc = gamma * beta;
+        let s = availH;
+        if (legPc > 0 && legPc * s > availW) s = availW / legPc;
+
+        const ox = pad;
+        const oy = size.h - pad;
+        const topY = oy - s; // top of the upright (rest-energy) leg
+        const rightX = ox + s * legPc; // end of the base (momentum) leg
+
+        // Right-angle marker, scaled so it never exceeds the (short) upright leg.
+        const mark = Math.min(10, s * 0.4);
+        ctx.strokeStyle = theme.axis;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(ox, oy - mark, mark, mark);
+
+        const leg = (x1: number, y1: number, x2: number, y2: number, color: string) => {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 4;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        };
+
+        leg(ox, oy, ox, topY, theme.rest); // mc^2 (fixed)
+        leg(ox, oy, rightX, oy, theme.active); // pc (grows)
+        ctx.shadowColor = theme.curve;
+        ctx.shadowBlur = 10;
+        leg(ox, topY, rightX, oy, theme.curve); // E (hypotenuse)
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = theme.label;
+        ctx.font = 'bold 14px system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('mc²', ox - 8, (oy + topY) / 2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('pc', (ox + rightX) / 2, oy + 8);
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('E', (ox + rightX) / 2 + 6, (topY + oy) / 2 - 6);
+      });
+
+      const renderStat = (values: Record<string, number>) => {
+        const beta = clampBeta(values['beta']);
+        if (eVal) eVal.textContent = mev(totalEnergy(E0, beta));
+        if (partsVal) partsVal.textContent = `= rest ${mev(E0)} + kinetic ${mev(kineticEnergy(E0, beta))}`;
+      };
+
+      store.values.subscribe((values) => {
+        renderStat(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const beta = clampBeta(values['beta']);
+        const text = `Total energy ${mev(totalEnergy(E0, beta))}: rest energy ${mev(E0)} plus kinetic energy ${mev(kineticEnergy(E0, beta))}.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('mass-energy')) {
+    customElements.define('mass-energy', MassEnergyElement);
+  }
+</script>
+
+<style>
+  .triangle-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 16 / 10;
+  }
+
+  .energy-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .energy-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .parts-val {
+    color: var(--color-text-muted);
+  }
+</style>

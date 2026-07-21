@@ -38,3 +38,21 @@ export function taylorGamma2(beta: number): number {
 export function contractedLength(properLength: number, beta: number): number {
   return properLength / lorentzFactor(beta);
 }
+
+// Relativistic energy, all expressed in units of the rest energy E0 = m*c^2, so
+// pass E0 and get the pieces of E^2 = (pc)^2 + (mc^2)^2 back in the same unit.
+
+/** Total energy E = gamma * E0. */
+export function totalEnergy(restEnergy: number, beta: number): number {
+  return lorentzFactor(beta) * restEnergy;
+}
+
+/** Momentum term pc = gamma * beta * E0 (the leg of the energy triangle that grows with speed). */
+export function momentumEnergy(restEnergy: number, beta: number): number {
+  return lorentzFactor(beta) * beta * restEnergy;
+}
+
+/** Kinetic energy KE = (gamma - 1) * E0. */
+export function kineticEnergy(restEnergy: number, beta: number): number {
+  return (lorentzFactor(beta) - 1) * restEnergy;
+}

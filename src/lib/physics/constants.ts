@@ -10,3 +10,6 @@ export const DALTON = 1.66053906660e-27;
 
 /** Coulomb constant k = 1 / (4*pi*epsilon_0), N*m^2/C^2 (CODATA 2018). */
 export const COULOMB_CONSTANT = 8.9875517873681764e9;
+
+/** Electron rest energy m_e*c^2, in MeV (CODATA 2018). */
+export const ELECTRON_REST_ENERGY_MEV = 0.51099895;

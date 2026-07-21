@@ -1,0 +1,122 @@
+---
+title: 'Mass–energy'
+category: relativity
+layoutArchetype: comparison
+status: live
+order: 1.7
+equationLatex: 'E^2 = (pc)^2 + (mc^2)^2'
+equationPlain: 'E² = (pc)² + (mc²)²'
+claim: 'Energy, momentum, and mass form a right triangle. E = mc² is just one corner of it — the corner where nothing moves.'
+defaults:
+  beta: 0.6
+terms:
+  - symbol: 'E'
+    name: 'E: Latin capital ee, total energy'
+    role: "the object's total energy"
+    effect: 'the hypotenuse of the triangle; always the largest of the three'
+  - symbol: 'p'
+    name: 'p: Latin letter pee, momentum'
+    role: 'the momentum of the object'
+    effect: 'grows without limit as the speed approaches c'
+  - symbol: 'm'
+    name: 'm: Latin letter em, rest mass'
+    role: 'the invariant mass, the same in every frame'
+    effect: 'sets the rest energy; it is zero for light'
+  - symbol: 'c'
+    name: 'c: the speed of light in vacuum, 299,792,458 m/s'
+    role: 'the conversion factor between mass, momentum, and energy'
+    effect: 'turns mass and momentum into energy units'
+  - symbol: 'mc^2'
+    name: 'm c squared: the rest energy'
+    role: 'the energy locked in mass, there even at rest'
+    effect: 'the fixed upright leg of the triangle'
+  - symbol: 'pc'
+    name: 'p c: the momentum energy'
+    role: 'the contribution of motion'
+    effect: 'the growing base leg of the triangle'
+presets:
+  - label: 'At rest'
+    caption: 'Nothing moving: E = mc² = 0.511 MeV, pure rest energy. This is the famous corner of the equation.'
+    values:
+      beta: 0
+  - label: 'γ = 2 (0.866c)'
+    caption: 'Total energy is now twice the rest energy; half of it is kinetic.'
+    values:
+      beta: 0.866
+  - label: 'Ultra-relativistic (0.999c)'
+    caption: 'Almost all the energy is motion. The mc² leg is a rounding error and E ≈ pc, just like a particle of light.'
+    values:
+      beta: 0.999
+limits:
+  - label: 'p → 0 (at rest)'
+    icon: '🅿️'
+    collapse: 'E = mc²: the rest energy alone, the equation everyone knows'
+    values:
+      beta: 0
+  - label: 'v → c (massless-like)'
+    icon: '⚡'
+    collapse: 'E ≈ pc: the mass term vanishes, as it does for light'
+    values:
+      beta: 0.999
+prerequisites: []
+related:
+  - foundations/lorentz-factor
+  - relativity/time-dilation
+---
+
+import MassEnergy from '../../../components/viz/MassEnergy.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<MassEnergy />
+
+<div class="viz-controls">
+  <SliderField
+    label="Speed"
+    unit="c"
+    slug="relativity/mass-energy"
+    storeKey="beta"
+    min={0}
+    max={0.999}
+    scale="beta"
+    sigFigs={3}
+    value={frontmatter.defaults.beta}
+  />
+  <PresetButtons slug="relativity/mass-energy" presets={frontmatter.presets} />
+  <LimitSnaps slug="relativity/mass-energy" limits={frontmatter.limits} />
+  <ResetButton slug="relativity/mass-energy" label="Reset to 0.6 c" />
+</div>
+
+## Energy is a triangle
+
+The equation looks like the Pythagorean theorem because it is one. Rest energy
+`mc²` and the momentum term `pc` are the two perpendicular legs of a right
+triangle, and the total energy `E` is the hypotenuse. That single picture holds
+the whole idea.
+
+Two corners of the triangle are famous in their own right. Stop the object dead:
+`pc` drops to zero, the triangle collapses onto its upright leg, and `E = mc²` —
+the equation everyone has seen on a T-shirt. Now take a particle of light, which
+has no mass: the upright leg vanishes and `E = pc`, pure energy of motion. Every
+real massive particle lives somewhere between those two corners, and the slider
+walks it from one toward the other.
+
+## The same γ again
+
+Written out, the total energy is `E = γmc²` and the momentum term is `pc =
+γβmc²`, both carrying the same Lorentz factor that stretches time and shrinks
+length. As the speed climbs, γ climbs, the triangle grows, and reaching `c`
+would demand infinite energy. See γ by itself on the{' '}
+<a href={`${import.meta.env.BASE_URL}viz/foundations/lorentz-factor/`}>Lorentz factor page</a>.
+
+<details class="misconception">
+  <summary>Isn't E = mc² the energy of a moving object?</summary>
+
+  No. `E = mc²` is only the *rest* energy — the value when the object is not
+  moving and `pc` is zero. A moving object carries more: `E = γmc²`, which is
+  always larger than `mc²`. The extra part, `(γ − 1)mc²`, is its kinetic energy.
+  So `E = mc²` is not the whole story of energy, just the special corner of the
+  triangle where the momentum leg has shrunk to nothing.
+</details>

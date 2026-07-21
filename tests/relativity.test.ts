@@ -4,9 +4,12 @@ import {
   betaToSliderPos,
   contractedLength,
   dilatedTime,
+  kineticEnergy,
   lorentzFactor,
+  momentumEnergy,
   sliderPosToBeta,
   taylorGamma2,
+  totalEnergy,
 } from '../src/lib/physics/relativity';
 
 describe('lorentzFactor', () => {
@@ -106,5 +109,32 @@ describe('contractedLength', () => {
   it('shrinks toward zero as beta grows', () => {
     expect(contractedLength(100, 0.999)).toBeLessThan(contractedLength(100, 0.5));
     expect(contractedLength(100, 0.999)).toBeGreaterThan(0);
+  });
+});
+
+describe('relativistic energy', () => {
+  it('total energy is mc^2 at rest and gamma*mc^2 moving', () => {
+    expect(totalEnergy(0.511, 0)).toBe(0.511);
+    expect(totalEnergy(2, 0.6)).toBeCloseTo(2.5, 10); // gamma 1.25
+  });
+
+  it('kinetic energy is (gamma - 1) mc^2', () => {
+    expect(kineticEnergy(1, 0)).toBe(0);
+    expect(kineticEnergy(1, 0.6)).toBeCloseTo(0.25, 10);
+  });
+
+  it('satisfies E^2 = (pc)^2 + (mc^2)^2', () => {
+    const m = 0.511;
+    for (const beta of [0, 0.3, 0.6, 0.87, 0.99]) {
+      const e = totalEnergy(m, beta);
+      const pc = momentumEnergy(m, beta);
+      expect(e * e).toBeCloseTo(pc * pc + m * m, 8);
+    }
+  });
+
+  it('approaches the massless limit pc/E -> beta (exactly)', () => {
+    for (const beta of [0.1, 0.5, 0.999]) {
+      expect(momentumEnergy(3, beta) / totalEnergy(3, beta)).toBeCloseTo(beta, 12);
+    }
   });
 });
