@@ -1,0 +1,296 @@
+---
+import { coulombForce } from '../../lib/physics/electrostatics';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const DEFAULT_Q1 = 3; // microcoulombs
+const DEFAULT_Q2 = -3;
+const DEFAULT_R = 6; // centimetres
+
+const force = (q1: number, q2: number, rCm: number) =>
+  coulombForce(q1 * 1e-6, q2 * 1e-6, rCm / 100);
+const forceText = (f: number) => formatQuantity(Math.abs(f), 'N', { sigFigs: 3 });
+const direction = (f: number) => (f > 0 ? 'push apart' : f < 0 ? 'pull together' : 'no force');
+
+const defaultForce = force(DEFAULT_Q1, DEFAULT_Q2, DEFAULT_R);
+const SAMPLE_R = [1, 2, 3, 4, 6, 9, 12, 16, 20];
+const rows = SAMPLE_R.map((rCm) => ({
+  r: formatQuantity(rCm, ''),
+  force: forceText(force(DEFAULT_Q1, DEFAULT_Q2, rCm)),
+}));
+---
+
+<coulomb-field>
+  <figure class="field-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Two electric charges on a horizontal line, drawn over a grid of small arrows showing the electric field. A bold arrow on each charge shows the Coulomb force. Like charges push apart; opposite charges pull together, and the force grows quickly as they move closer."
+      ></canvas>
+    </div>
+    <p class="force-stat" aria-hidden="true">
+      Force on each charge: <b class="force-val">{forceText(defaultForce)}</b>
+      <span class="dir-val">({direction(defaultForce)})</span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      The two charges {direction(defaultForce)} with a force of {forceText(defaultForce)} on each.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      Force between a +{DEFAULT_Q1} and a {DEFAULT_Q2} microcoulomb charge as the gap changes.
+      Halving the distance roughly quadruples the force.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Separation (cm)</th>
+          <th scope="col">Force on each charge (N)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.r}</td>
+              <td>{row.force}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</coulomb-field>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { coulombForce, fieldContribution } from '../../lib/physics/electrostatics';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+  import type { VizTheme } from '../../lib/theme';
+
+  const SLUG = 'electromagnetism/coulomb';
+  const DEFAULT_Q1 = 3;
+  const DEFAULT_Q2 = -3;
+  const DEFAULT_R = 6;
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, { q1: DEFAULT_Q1, q2: DEFAULT_Q2, r: DEFAULT_R });
+
+  const num = (values: Record<string, number>, key: string, fallback: number) =>
+    values[key] ?? fallback;
+  const chargeRadius = (q: number) => (q === 0 ? 9 : 9 + 13 * Math.sqrt(Math.min(Math.abs(q), 5) / 5));
+  const forceText = (f: number) => formatQuantity(Math.abs(f), 'N', { sigFigs: 3 });
+  const direction = (f: number) => (f > 0 ? 'push apart' : f < 0 ? 'pull together' : 'no force');
+
+  function arrow(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    angle: number,
+    length: number,
+    width: number,
+    color: string,
+  ): void {
+    const hx = x + Math.cos(angle) * length;
+    const hy = y + Math.sin(angle) * length;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(hx, hy);
+    ctx.stroke();
+    const head = Math.min(6 + width, length);
+    ctx.beginPath();
+    ctx.moveTo(hx, hy);
+    ctx.lineTo(hx - Math.cos(angle - 0.4) * head, hy - Math.sin(angle - 0.4) * head);
+    ctx.lineTo(hx - Math.cos(angle + 0.4) * head, hy - Math.sin(angle + 0.4) * head);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawCharge(
+    ctx: CanvasRenderingContext2D,
+    theme: VizTheme,
+    x: number,
+    y: number,
+    q: number,
+    label: string,
+  ): void {
+    const radius = chargeRadius(q);
+    const color = q > 0 ? theme.active : q < 0 ? theme.curve : theme.rest;
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    if (q !== 0) {
+      ctx.fillStyle = theme.bg;
+      ctx.font = `bold ${Math.round(radius * 1.3)}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(q > 0 ? '+' : '−', x, y + 1);
+    }
+
+    ctx.fillStyle = theme.label;
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(label, x, y + radius + 6);
+  }
+
+  class CoulombFieldElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const forceVal = this.querySelector('.force-val');
+      const dirVal = this.querySelector('.dir-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const v = store.values.get();
+        const q1 = num(v, 'q1', DEFAULT_Q1);
+        const q2 = num(v, 'q2', DEFAULT_Q2);
+        const rCm = num(v, 'r', DEFAULT_R);
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        const cy = size.h * 0.5;
+        const cx = size.w * 0.5;
+        const gap = size.w * (0.16 + 0.56 * ((rCm - 1) / 19));
+        const x1 = cx - gap / 2;
+        const x2 = cx + gap / 2;
+        const rad1 = chargeRadius(q1);
+        const rad2 = chargeRadius(q2);
+
+        // Electric field: a grid of short arrows showing the net field direction.
+        const step = Math.max(30, size.w / 16);
+        ctx.save();
+        ctx.globalAlpha = 0.4;
+        for (let px = step / 2; px < size.w; px += step) {
+          for (let py = step / 2; py < size.h; py += step) {
+            const [e1x, e1y] = fieldContribution(q1, px - x1, py - cy);
+            const [e2x, e2y] = fieldContribution(q2, px - x2, py - cy);
+            const ex = e1x + e2x;
+            const ey = e1y + e2y;
+            const mag = Math.hypot(ex, ey);
+            if (mag === 0) continue;
+            const d1 = Math.hypot(px - x1, py - cy);
+            const d2 = Math.hypot(px - x2, py - cy);
+            if (d1 < rad1 + 8 || d2 < rad2 + 8) continue;
+            arrow(ctx, px, py, Math.atan2(ey, ex), 9, 1.25, theme.axis);
+          }
+        }
+        ctx.restore();
+
+        // Coulomb force: equal and opposite arrows (Newton's third law), length on
+        // a log scale so the huge dynamic range stays on screen.
+        const f = coulombForce(q1 * 1e-6, q2 * 1e-6, rCm / 100);
+        if (f !== 0) {
+          const len = Math.min(10 + 8 * Math.log10(1 + Math.abs(f)), size.w * 0.24);
+          const repel = f > 0;
+          const a1 = repel ? Math.PI : 0; // charge 1 pushed left when repelling
+          const a2 = repel ? 0 : Math.PI; // charge 2 pushed right when repelling
+          arrow(ctx, x1 + Math.cos(a1) * rad1, cy, a1, len, 3, theme.label);
+          arrow(ctx, x2 + Math.cos(a2) * rad2, cy, a2, len, 3, theme.label);
+        }
+
+        drawCharge(ctx, theme, x1, cy, q1, 'q₁');
+        drawCharge(ctx, theme, x2, cy, q2, 'q₂');
+      });
+
+      const renderStat = (values: Record<string, number>) => {
+        const f = coulombForce(
+          num(values, 'q1', DEFAULT_Q1) * 1e-6,
+          num(values, 'q2', DEFAULT_Q2) * 1e-6,
+          num(values, 'r', DEFAULT_R) / 100,
+        );
+        if (forceVal) forceVal.textContent = forceText(f);
+        if (dirVal) dirVal.textContent = `(${direction(f)})`;
+      };
+
+      store.values.subscribe((values) => {
+        renderStat(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const f = coulombForce(
+          num(values, 'q1', DEFAULT_Q1) * 1e-6,
+          num(values, 'q2', DEFAULT_Q2) * 1e-6,
+          num(values, 'r', DEFAULT_R) / 100,
+        );
+        const text = `The two charges ${direction(f)} with a force of ${forceText(f)} on each.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('coulomb-field')) {
+    customElements.define('coulomb-field', CoulombFieldElement);
+  }
+</script>
+
+<style>
+  .field-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    width: 100%;
+    aspect-ratio: 3 / 2;
+  }
+
+  .force-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .force-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .dir-val {
+    color: var(--color-text-muted);
+  }
+
+  .view-table {
+    margin-top: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .view-table summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .view-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .view-table th,
+  .view-table td {
+    text-align: left;
+    padding: var(--space-1) var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

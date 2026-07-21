@@ -1,0 +1,148 @@
+---
+title: "Coulomb's law"
+category: electromagnetism
+layoutArchetype: field-space
+status: live
+order: 3
+equationLatex: 'F = k\,\frac{q_1 q_2}{r^2}'
+equationPlain: 'F = k · q₁q₂ / r²'
+claim: 'Two charges push or pull with a force that explodes as they close in. Slide them together and watch the inverse-square law bite.'
+defaults:
+  q1: 3
+  q2: -3
+  r: 6
+terms:
+  - symbol: 'F'
+    name: 'F: Latin capital eff, the force'
+    role: 'the push or pull each charge feels'
+    effect: 'what we solve for; the two charges always feel equal and opposite forces'
+  - symbol: 'k'
+    name: 'k: the Coulomb constant'
+    role: 'sets how strong the electric force is'
+    effect: 'a huge number, which is why even tiny charges shove hard'
+  - symbol: 'q_1'
+    name: 'q-one: the first charge'
+    role: 'how much charge the first object carries'
+    effect: 'double it and the force doubles; flip its sign to switch push and pull'
+  - symbol: 'q_2'
+    name: 'q-two: the second charge'
+    role: 'how much charge the second object carries'
+    effect: 'double it and the force doubles; flip its sign to switch push and pull'
+  - symbol: 'r'
+    name: 'r: the separation'
+    role: 'the distance between the two charges'
+    effect: 'enters squared, so halving it quadruples the force'
+  - symbol: 'r^2'
+    name: 'r squared: the inverse-square factor'
+    role: 'distance appears as its square in the denominator'
+    effect: 'the reason the force drops off so fast as the charges separate'
+presets:
+  - label: 'Opposite charges'
+    caption: 'Unlike charges pull toward each other; the field points from the positive charge to the negative one.'
+    values:
+      q1: 3
+      q2: -3
+  - label: 'Like charges'
+    caption: 'Like charges push apart; the field streams away from both.'
+    values:
+      q1: 3
+      q2: 3
+  - label: 'Lopsided pair'
+    caption: 'A strong positive and a weak negative still feel exactly equal and opposite forces — that is Newton''s third law.'
+    values:
+      q1: 5
+      q2: -1
+limits:
+  - label: 'r → close'
+    icon: '💥'
+    collapse: 'force rockets up: closing the gap by half quadruples the pull'
+    values:
+      r: 1
+  - label: 'r → far'
+    icon: '🌌'
+    collapse: 'force fades toward zero as one over distance squared'
+    values:
+      r: 20
+  - label: 'q → 0'
+    icon: '⚪'
+    collapse: 'zero charge on one object means no force at all'
+    values:
+      q2: 0
+prerequisites: []
+related: []
+---
+
+import CoulombField from '../../../components/viz/CoulombField.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<CoulombField />
+
+<div class="viz-controls">
+  <SliderField
+    label="First charge"
+    unit="µC"
+    slug="electromagnetism/coulomb"
+    storeKey="q1"
+    min={-5}
+    max={5}
+    step={0.5}
+    sigFigs={2}
+    value={frontmatter.defaults.q1}
+  />
+  <SliderField
+    label="Second charge"
+    unit="µC"
+    slug="electromagnetism/coulomb"
+    storeKey="q2"
+    min={-5}
+    max={5}
+    step={0.5}
+    sigFigs={2}
+    value={frontmatter.defaults.q2}
+  />
+  <SliderField
+    label="Separation"
+    unit="cm"
+    slug="electromagnetism/coulomb"
+    storeKey="r"
+    min={1}
+    max={20}
+    step={0.5}
+    sigFigs={3}
+    value={frontmatter.defaults.r}
+  />
+  <PresetButtons slug="electromagnetism/coulomb" presets={frontmatter.presets} />
+  <LimitSnaps slug="electromagnetism/coulomb" limits={frontmatter.limits} />
+  <ResetButton slug="electromagnetism/coulomb" label="Reset" />
+</div>
+
+## Why do charges push and pull?
+
+Electric charge comes in two kinds, which we label positive and negative. Two
+charges of the same kind push each other away; two of opposite kinds pull
+together. The grid of arrows above is the electric field: it shows which way a
+tiny positive test charge would be shoved at each point in space.
+
+## The inverse-square law
+
+Read the equation as a fraction. The charges sit on top: double either one and
+the force doubles, so the strength scales with how much charge is in play. The
+distance sits on the bottom, and it is squared. That square is the whole story
+of how the force fades. Move the charges twice as far apart and the force does
+not drop to a half, it drops to a quarter. Slide them half as far apart and the
+force does not double, it quadruples. The constant `k` out front is enormous,
+which is why a few millionths of a coulomb already produce a force you could
+feel in your hand.
+
+<details class="misconception">
+  <summary>Does the bigger charge push harder on the smaller one?</summary>
+
+  No. The two charges always feel forces of exactly the same size, in opposite
+  directions, no matter how lopsided they are. The equation is symmetric in
+  `q₁` and `q₂`: swap them and `F` is unchanged. Try the lopsided preset above,
+  a strong positive next to a weak negative, and watch both force arrows stay
+  the same length. That is Newton's third law showing up in electricity.
+</details>
