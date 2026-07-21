@@ -32,6 +32,12 @@ content plus its island(s); `VizLayout` is not edited per page.
   for screen readers, on the symbol itself. `name` is a **required** field in the Zod term
   schema, so the build fails if any symbol is missing its tooltip. This is a hard rule: no
   equation ships with an unexplained symbol.
+- **Kelvin always shows Celsius and Fahrenheit.** Any page with a temperature in
+  kelvin must display a live Celsius/Fahrenheit translation beside the reading.
+  Drop `<TempConversions slug={...} value={defaultTempK} />`
+  (`src/components/viz/TempConversions.astro`) right after the temperature
+  `SliderField`; it binds to the same `tempK` store key and updates as the slider
+  moves. Both the Maxwell–Boltzmann and Planck pages follow this.
 - **No physical-constant literals in pages or components.** Constants live only in
   `src/lib/physics/constants.ts` (CODATA/SI values, each commented with source and units).
   Pure physics functions live in `src/lib/physics/` and are covered by Vitest anchors in

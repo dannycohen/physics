@@ -72,6 +72,7 @@ related:
 ---
 
 import PlanckSpectrum from '../../../components/viz/PlanckSpectrum.astro';
+import TempConversions from '../../../components/viz/TempConversions.astro';
 import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
@@ -92,6 +93,7 @@ import ResetButton from '../../../components/ResetButton.astro';
     value={frontmatter.defaults.tempK}
     scale="linear"
   />
+  <TempConversions slug="thermodynamics/planck-blackbody" value={frontmatter.defaults.tempK} />
   <PresetButtons slug="thermodynamics/planck-blackbody" presets={frontmatter.presets} />
   <LimitSnaps slug="thermodynamics/planck-blackbody" limits={frontmatter.limits} />
   <ResetButton slug="thermodynamics/planck-blackbody" label="Reset to the Sun, 5778 K" />
