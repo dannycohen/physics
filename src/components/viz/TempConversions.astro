@@ -1,0 +1,69 @@
+---
+import { formatQuantity } from '../../lib/format';
+
+interface Props {
+  slug: string;
+  storeKey?: string;
+  /** Initial temperature (K) for the SSR snapshot; should match the page default. */
+  value: number;
+}
+
+const { slug, storeKey = 'tempK', value } = Astro.props;
+
+const toCelsius = (k: number) => Math.round(k - 273.15) || 0;
+const toFahrenheit = (k: number) => Math.round((k - 273.15) * (9 / 5) + 32) || 0;
+const celsius = formatQuantity(toCelsius(value), '°C', { sigFigs: 4 });
+const fahrenheit = formatQuantity(toFahrenheit(value), '°F', { sigFigs: 4 });
+---
+
+<temp-conversions data-slug={slug} data-store-key={storeKey}>
+  <p class="temp-conversions">
+    <span class="visually-hidden">Same temperature in other scales: </span>
+    <span class="c-val">{celsius}</span>
+    <span aria-hidden="true"> · </span>
+    <span class="f-val">{fahrenheit}</span>
+  </p>
+</temp-conversions>
+
+<script>
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const toCelsius = (k: number) => Math.round(k - 273.15) || 0;
+  const toFahrenheit = (k: number) => Math.round((k - 273.15) * (9 / 5) + 32) || 0;
+
+  class TempConversionsElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const key = this.dataset.storeKey ?? 'tempK';
+      const store = getVizStore(this.dataset.slug ?? '');
+      const cEl = this.querySelector('.c-val');
+      const fEl = this.querySelector('.f-val');
+
+      store.values.subscribe((values) => {
+        const k = values[key];
+        if (k === undefined) return;
+        if (cEl) cEl.textContent = formatQuantity(toCelsius(k), '°C', { sigFigs: 4 });
+        if (fEl) fEl.textContent = formatQuantity(toFahrenheit(k), '°F', { sigFigs: 4 });
+      });
+    }
+  }
+
+  if (!customElements.get('temp-conversions')) {
+    customElements.define('temp-conversions', TempConversionsElement);
+  }
+</script>
+
+<style>
+  .temp-conversions {
+    margin: calc(-1 * var(--space-2)) 0 var(--space-3);
+    color: var(--color-text-muted);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.95rem;
+  }
+</style>

@@ -72,6 +72,7 @@ related: []
 ---
 
 import MaxwellDistribution from '../../../components/viz/MaxwellDistribution.astro';
+import TempConversions from '../../../components/viz/TempConversions.astro';
 import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
@@ -91,6 +92,7 @@ import ResetButton from '../../../components/ResetButton.astro';
     sigFigs={4}
     value={frontmatter.defaults.tempK}
   />
+  <TempConversions slug="thermodynamics/maxwell-boltzmann" value={frontmatter.defaults.tempK} />
   <PresetButtons slug="thermodynamics/maxwell-boltzmann" presets={frontmatter.presets} />
   <LimitSnaps slug="thermodynamics/maxwell-boltzmann" limits={frontmatter.limits} />
   <ResetButton slug="thermodynamics/maxwell-boltzmann" label="Reset to N₂, 300 K" />
