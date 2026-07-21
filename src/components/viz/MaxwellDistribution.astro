@@ -194,7 +194,6 @@ const rows = SAMPLE_SPEEDS.map((v) => ({
   }
 
   .canvas-box {
-    width: 100%;
     aspect-ratio: 16 / 10;
   }
 
@@ -236,28 +235,4 @@ const rows = SAMPLE_SPEEDS.map((v) => ({
     border-top: 3px solid var(--viz-limit);
   }
 
-  .view-table {
-    margin-top: var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius);
-    padding: var(--space-2) var(--space-3);
-  }
-
-  .view-table summary {
-    cursor: pointer;
-    font-weight: 600;
-  }
-
-  .view-table table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .view-table th,
-  .view-table td {
-    text-align: left;
-    padding: var(--space-1) var(--space-2);
-    border-bottom: 1px solid var(--color-border);
-    font-variant-numeric: tabular-nums;
-  }
 </style>

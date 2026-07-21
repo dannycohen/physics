@@ -10,35 +10,17 @@ interface Props {
 const { entry } = Astro.props;
 const { title, claim, equationLatex, terms } = entry.data;
 
-// Named slots are optional: MDX bodies carry their own figure/controls markup
-// in the default slot; the named slots exist for future non-MDX pages.
-const hasHero = Astro.slots.has('hero');
-const hasControls = Astro.slots.has('controls');
-const hasGoDeeper = Astro.slots.has('go-deeper');
-const hasDataTable = Astro.slots.has('data-table');
+// Frozen page contract (validated across the comparison, distribution, and
+// field-space archetypes): title + claim, then the MDX body (its viz island(s),
+// a .viz-controls block, and prose), then an auto-generated "Show the math"
+// panel from the frontmatter equation and terms. Islands emit their own
+// "View as table" fallback. See AGENTS.md.
 ---
 
 <BaseLayout title={title} description={claim}>
   <article class="viz-page">
     <h1>{title}</h1>
     <p class="claim">{claim}</p>
-
-    {
-      hasHero && (
-        <figure class="viz-hero">
-          <slot name="hero" />
-          <figcaption>Interactive figure. {claim}</figcaption>
-        </figure>
-      )
-    }
-
-    {
-      hasControls && (
-        <div class="viz-controls">
-          <slot name="controls" />
-        </div>
-      )
-    }
 
     <div class="viz-prose">
       <slot />
@@ -73,24 +55,6 @@ const hasDataTable = Astro.slots.has('data-table');
         )
       }
     </details>
-
-    {
-      hasGoDeeper && (
-        <details class="go-deeper">
-          <summary>Go deeper</summary>
-          <slot name="go-deeper" />
-        </details>
-      )
-    }
-
-    {
-      hasDataTable && (
-        <details class="view-table">
-          <summary>View as table</summary>
-          <slot name="data-table" />
-        </details>
-      )
-    }
   </article>
 </BaseLayout>
 
@@ -114,23 +78,8 @@ const hasDataTable = Astro.slots.has('data-table');
     font-weight: 500;
   }
 
-  .viz-hero,
   .viz-prose {
     container-type: inline-size;
-  }
-
-  /* Aspect-ratio sizing keeps the hero below viewport height without 100vh. */
-  .viz-hero {
-    margin: 0;
-    width: 100%;
-    aspect-ratio: 16 / 10;
-    max-block-size: 75svh;
-  }
-
-  .viz-hero figcaption {
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-    margin-top: var(--space-2);
   }
 
   details {

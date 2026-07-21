@@ -6,10 +6,22 @@ the build enforces the required parts.
 ## Anatomy of a page
 
 Each visualization is one MDX file under `src/content/viz/<category>/<slug>.mdx`, validated
-against the Zod schema in `src/content.config.ts`. The frontmatter carries the metadata and
-the equation; the body imports the interactive island(s) and writes the prose. `VizLayout`
-renders the title, claim, hero figure, controls, prose, a "Show the math" panel, and (from
-the island) a "View as table" fallback.
+against the Zod schema in `src/content.config.ts`. The frontmatter carries the metadata,
+equation, and terms; the body writes the interactive content.
+
+The page layout is **frozen** (validated across the comparison, distribution, and
+field-space archetypes — time dilation, Maxwell–Boltzmann, Coulomb). `VizLayout` renders,
+in order: the title, the `claim`, the MDX body, and an auto-generated "Show the math" panel
+built from `equationLatex` and `terms`. The MDX body is always structured the same way:
+
+1. the interactive island(s) — the hero canvas first (it seeds the shared store);
+2. a `<div class="viz-controls">` holding `SliderField`/`PresetButtons`/`LimitSnaps`/`ResetButton`;
+3. prose sections and a `<details class="misconception">`.
+
+An island that has a canvas emits its own `<details class="view-table">` fallback; the
+shared styles for `.canvas-box` and `.view-table` live in `src/styles/viz.css` (do not
+re-declare them per component — only set the canvas `aspect-ratio`). Adding a page is pure
+content plus its island(s); `VizLayout` is not edited per page.
 
 ## Required features (enforced or checked)
 
