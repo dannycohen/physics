@@ -1,0 +1,263 @@
+---
+import { DALTON } from '../../lib/physics/constants';
+import {
+  meanSpeed,
+  mostProbableSpeed,
+  rmsSpeed,
+  speedDistribution,
+} from '../../lib/physics/maxwell';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and the default stats.
+const DEFAULT_MASS_U = 28.0134; // nitrogen (air)
+const DEFAULT_TEMP = 300;
+const massKg = DEFAULT_MASS_U * DALTON;
+
+const vp = mostProbableSpeed(massKg, DEFAULT_TEMP);
+const vbar = meanSpeed(massKg, DEFAULT_TEMP);
+const vrms = rmsSpeed(massKg, DEFAULT_TEMP);
+const speed = (v: number) => formatQuantity(v, 'm/s', { sigFigs: 3 });
+
+const peak = speedDistribution(vp, massKg, DEFAULT_TEMP);
+const SAMPLE_SPEEDS = [0, 100, 200, 300, 422, 476, 517, 600, 800, 1000, 1200];
+const rows = SAMPLE_SPEEDS.map((v) => ({
+  speed: formatQuantity(v, ''),
+  relative: formatQuantity(speedDistribution(v, massKg, DEFAULT_TEMP) / peak, '', { sigFigs: 2 }),
+}));
+---
+
+<maxwell-distribution>
+  <figure class="dist-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Graph of the number of gas molecules at each speed. The curve starts at zero, rises to a peak at the most probable speed, then falls off in a long tail toward higher speeds. Raising the temperature moves the peak to the right and flattens the curve."
+      ></canvas>
+    </div>
+    <p class="speed-stats" aria-hidden="true">
+      <span class="stat"><span class="swatch swatch-vp"></span>most probable <b class="vp-val">{speed(vp)}</b></span>
+      <span class="stat"><span class="swatch swatch-mean"></span>average <b class="mean-val">{speed(vbar)}</b></span>
+      <span class="stat"><span class="swatch swatch-rms"></span>rms <b class="rms-val">{speed(vrms)}</b></span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      At {DEFAULT_TEMP} K, molecules of this gas most likely move at {speed(vp)}, average {speed(vbar)},
+      root-mean-square {speed(vrms)}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      The count starts at zero, peaks near {speed(vp)} (nitrogen at {DEFAULT_TEMP} K), then tails off.
+      The most probable, average, and rms speeds are {speed(vp)}, {speed(vbar)}, and {speed(vrms)}.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Speed (m/s)</th>
+          <th scope="col">Relative number of molecules (peak = 1)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.speed}</td>
+              <td>{row.relative}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</maxwell-distribution>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { plotCurve, type Series } from '../../lib/plotCurve';
+  import { DALTON } from '../../lib/physics/constants';
+  import {
+    meanSpeed,
+    mostProbableSpeed,
+    rmsSpeed,
+    speedDistribution,
+  } from '../../lib/physics/maxwell';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'thermodynamics/maxwell-boltzmann';
+  const DEFAULT_MASS_U = 28.0134;
+  const DEFAULT_TEMP = 300;
+  const T_MIN = 100;
+  const T_MAX = 1200;
+  const STEPS = 200;
+
+  // This island seeds the shared store (mass has no slider to republish it, and
+  // reset() restores whatever defaults the store was created with). It must run
+  // before the controls connect; the MDX places <MaxwellDistribution /> ahead of
+  // the controls, and module scripts execute in document order, so it does.
+  const store = getVizStore(SLUG, { tempK: DEFAULT_TEMP, massU: DEFAULT_MASS_U });
+
+  const fmt = (v: number) => formatQuantity(v, 'm/s', { sigFigs: 3 });
+  const readMass = (values: Record<string, number>) => (values['massU'] ?? DEFAULT_MASS_U) * DALTON;
+  const readTemp = (values: Record<string, number>) => values['tempK'] ?? DEFAULT_TEMP;
+
+  class MaxwellDistributionElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const vpVal = this.querySelector('.vp-val');
+      const meanVal = this.querySelector('.mean-val');
+      const rmsVal = this.querySelector('.rms-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const massKg = readMass(store.values.get());
+        const tempK = readTemp(store.values.get());
+
+        // Axis sized to the hottest case for this gas so the peak visibly marches
+        // right and flattens as temperature rises (area under the curve is
+        // conserved). Normalised to the coldest peak so the axis reads 0..1.
+        const xMax = 2.5 * rmsSpeed(massKg, T_MAX);
+        const normRef = speedDistribution(mostProbableSpeed(massKg, T_MIN), massKg, T_MIN);
+
+        const curve: Array<[number, number]> = [];
+        for (let i = 0; i <= STEPS; i++) {
+          const v = (i / STEPS) * xMax;
+          curve.push([v, speedDistribution(v, massKg, tempK) / normRef]);
+        }
+
+        // Distinct dash patterns (not just colour) so the three speed markers stay
+        // tellable apart for colour-blind readers; the legend swatches match.
+        const marker = (v: number, color: string, dash: number[]): Series => ({
+          points: [
+            [v, 0],
+            [v, 1.05],
+          ],
+          color,
+          label: '',
+          dash,
+        });
+
+        const series: Series[] = [
+          marker(mostProbableSpeed(massKg, tempK), theme.active, [2, 3]),
+          marker(meanSpeed(massKg, tempK), theme.curveSecondary, [7, 4]),
+          marker(rmsSpeed(massKg, tempK), theme.limit, []),
+          { points: curve, color: theme.curve, label: '' },
+        ];
+
+        plotCurve(ctx, size, theme, {
+          series,
+          xLabel: 'molecular speed (m/s)',
+          yLabel: 'relative number of molecules',
+          xDomain: [0, xMax],
+          yDomain: [0, 1.05],
+        });
+      });
+
+      const renderStats = (values: Record<string, number>) => {
+        const m = readMass(values);
+        const t = readTemp(values);
+        if (vpVal) vpVal.textContent = fmt(mostProbableSpeed(m, t));
+        if (meanVal) meanVal.textContent = fmt(meanSpeed(m, t));
+        if (rmsVal) rmsVal.textContent = fmt(rmsSpeed(m, t));
+      };
+
+      store.values.subscribe((values) => {
+        renderStats(values);
+        handle.redraw();
+      });
+
+      // Screen-reader summary only once the value settles, so a drag does not flood.
+      store.onSettled((values) => {
+        const m = readMass(values);
+        const t = readTemp(values);
+        const text = `At ${formatQuantity(t, 'K', { sigFigs: 4 })}, molecules of this gas most likely move at ${fmt(mostProbableSpeed(m, t))}, average ${fmt(meanSpeed(m, t))}, root-mean-square ${fmt(rmsSpeed(m, t))}.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('maxwell-distribution')) {
+    customElements.define('maxwell-distribution', MaxwellDistributionElement);
+  }
+</script>
+
+<style>
+  .dist-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+  }
+
+  .speed-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-block: var(--space-2) 0;
+    font-size: 0.95rem;
+  }
+
+  .stat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .stat b {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Swatches echo each marker's dash pattern so colour is never the only cue. */
+  .swatch {
+    display: inline-block;
+    width: 20px;
+    height: 0;
+    border-top-width: 3px;
+  }
+
+  .swatch-vp {
+    border-top: 3px dotted var(--viz-active);
+  }
+
+  .swatch-mean {
+    border-top: 3px dashed var(--viz-curve-secondary);
+  }
+
+  .swatch-rms {
+    border-top: 3px solid var(--viz-limit);
+  }
+
+  .view-table {
+    margin-top: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .view-table summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .view-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .view-table th,
+  .view-table td {
+    text-align: left;
+    padding: var(--space-1) var(--space-2);
+    border-bottom: 1px solid var(--color-border);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

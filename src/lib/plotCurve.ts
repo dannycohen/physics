@@ -6,6 +6,9 @@ export interface Series {
   color: string;
   label: string;
   dashed?: boolean;
+  /** Explicit dash pattern; overrides `dashed`. Use to distinguish lines by more
+   *  than colour (WCAG 1.4.1) when several share a plot. */
+  dash?: number[];
 }
 
 const PAD = { top: 14, right: 76, bottom: 44, left: 60 };
@@ -92,7 +95,7 @@ export function plotCurve(
     if (s.points.length < 2) continue;
     ctx.strokeStyle = s.color;
     ctx.lineWidth = 2;
-    ctx.setLineDash(s.dashed ? [6, 4] : []);
+    ctx.setLineDash(s.dash ?? (s.dashed ? [6, 4] : []));
     ctx.beginPath();
     s.points.forEach(([px, py], i) => {
       if (i === 0) ctx.moveTo(sx(px), sy(py));

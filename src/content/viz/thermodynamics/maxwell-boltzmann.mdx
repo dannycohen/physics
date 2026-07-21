@@ -1,0 +1,130 @@
+---
+title: 'Maxwell–Boltzmann distribution'
+category: thermodynamics
+layoutArchetype: distribution
+status: live
+order: 2
+equationLatex: 'f(v) = 4\pi \left(\frac{m}{2\pi k_B T}\right)^{3/2} v^2\, e^{-\frac{m v^2}{2 k_B T}}'
+equationPlain: 'f(v) ∝ v² · e^(−mv²/2k_BT)'
+claim: 'The molecules in a gas do not all move at one speed. Heat it up and watch the whole spread of speeds slide and stretch.'
+defaults:
+  tempK: 300
+  massU: 28.0134
+terms:
+  - symbol: 'v'
+    name: 'v: Latin letter vee, molecular speed'
+    role: 'the speed we are asking about'
+    effect: 'the curve tells you how common each speed is'
+  - symbol: 'm'
+    name: 'm: Latin letter em, molecular mass'
+    role: 'the mass of a single gas molecule'
+    effect: 'heavier molecules move slower, so the curve shifts toward lower speeds'
+  - symbol: 'T'
+    name: 'T: Latin capital tee, absolute temperature'
+    role: 'the temperature of the gas, in kelvin'
+    effect: 'hotter gas shifts the curve right and flattens it'
+  - symbol: 'k_B'
+    name: 'k-B: the Boltzmann constant'
+    role: 'the fixed conversion between temperature and energy per molecule'
+    effect: 'sets how much a degree of temperature is worth in energy'
+  - symbol: 'v^2'
+    name: 'v squared: the low-speed factor'
+    role: 'counts how many directions a given speed can point'
+    effect: 'grows from zero, so almost no molecules sit near zero speed'
+  - symbol: 'e^{-\frac{m v^2}{2 k_B T}}'
+    name: 'the exponential, or Boltzmann, factor'
+    role: 'how rare a given kinetic energy is'
+    effect: 'shrinks fast at high speed, giving the long thin tail'
+presets:
+  - label: 'Hydrogen (H₂)'
+    caption: 'The lightest gas, so the fastest at any temperature. That speed is why hydrogen leaks out of Earth''s gravity over millions of years.'
+    values:
+      massU: 2.016
+  - label: 'Helium'
+    caption: 'Light and quick, and like hydrogen it slowly escapes into space.'
+    values:
+      massU: 4.0026
+  - label: 'Nitrogen (N₂)'
+    caption: 'The main gas in the air around you.'
+    values:
+      massU: 28.0134
+  - label: 'Carbon dioxide'
+    caption: 'Heavier than air; its molecules are noticeably slower at the same temperature.'
+    values:
+      massU: 44.009
+  - label: 'Xenon'
+    caption: 'A heavy noble gas. Sluggish molecules bunch the curve down at low speed.'
+    values:
+      massU: 131.29
+limits:
+  - label: 'T → cold'
+    icon: '🧊'
+    collapse: 'molecules crawl: a tall, narrow spike close to zero speed'
+    values:
+      tempK: 100
+  - label: 'T → hot'
+    icon: '🔥'
+    collapse: 'molecules race: a low, broad curve with a long fast tail'
+    values:
+      tempK: 1200
+prerequisites: []
+related: []
+---
+
+import MaxwellDistribution from '../../../components/viz/MaxwellDistribution.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<MaxwellDistribution />
+
+<div class="viz-controls">
+  <SliderField
+    label="Temperature"
+    unit="K"
+    slug="thermodynamics/maxwell-boltzmann"
+    storeKey="tempK"
+    min={100}
+    max={1200}
+    step={10}
+    sigFigs={4}
+    value={frontmatter.defaults.tempK}
+  />
+  <PresetButtons slug="thermodynamics/maxwell-boltzmann" presets={frontmatter.presets} />
+  <LimitSnaps slug="thermodynamics/maxwell-boltzmann" limits={frontmatter.limits} />
+  <ResetButton slug="thermodynamics/maxwell-boltzmann" label="Reset to N₂, 300 K" />
+</div>
+
+## Why don't all the molecules move at the same speed?
+
+Drop a billion molecules in a box and let them bounce off each other. Every
+collision trades a bit of speed from one molecule to another: one comes away
+faster, the other slower. After countless collisions the gas settles into a
+steady spread of speeds, not a single value. That spread is the curve above,
+and it depends only on the temperature and the mass of the molecules.
+
+## The shape is a tug of war
+
+The curve is a product of two competing factors. Slide the temperature and
+watch which one wins at each end.
+
+At low speeds the `v²` factor dominates: there are very few ways to move slowly,
+so the count climbs from zero. At high speeds the exponential factor takes over:
+fast molecules carry a lot of energy, and high energy is rare, so the count
+falls away in a long thin tail. The peak sits where the two effects balance,
+which is why the most probable speed is neither zero nor the fastest.
+
+Because the tail leans to the right, the average speed and the root-mean-square
+speed both sit a bit above the peak. That order never changes: most probable,
+then average, then rms.
+
+<details class="misconception">
+  <summary>Is the peak the average speed?</summary>
+
+  No. The peak marks the *most probable* speed, the one the largest group of
+  molecules happens to have. The average is higher, because the long fast tail
+  drags it upward, and the root-mean-square speed is higher still. All three
+  scale with the square root of temperature, so heating the gas moves every one
+  of them to the right together.
+</details>
