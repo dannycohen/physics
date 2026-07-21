@@ -1,0 +1,118 @@
+---
+title: 'Relativistic Doppler effect'
+category: relativity
+layoutArchetype: comparison
+status: live
+order: 1.8
+equationLatex: 'f_{obs} = f_{src}\sqrt{\dfrac{1+\beta}{1-\beta}}'
+equationPlain: 'f_obs = f_src·√((1+β)/(1−β))'
+claim: 'Light from something rushing toward you shifts bluer; light from something racing away shifts redder — and how much is fixed entirely by its speed.'
+defaults:
+  beta: 0.5
+terms:
+  - symbol: 'f_{obs}'
+    name: 'f-obs: the observed frequency'
+    role: 'the frequency you actually measure'
+    effect: 'rises above the source frequency when approaching, falls below it when receding'
+  - symbol: 'f_{src}'
+    name: 'f-src: the source frequency'
+    role: 'the frequency the light is emitted at, in the source frame'
+    effect: 'sets the baseline the shift is measured against'
+  - symbol: '\beta'
+    name: 'beta: Greek lowercase beta, the speed as a fraction of c, v over c'
+    role: 'the closing speed as a fraction of the speed of light'
+    effect: 'positive shifts the frequency up (bluer), negative shifts it down (redder)'
+  - symbol: '\sqrt{\dfrac{1+\beta}{1-\beta}}'
+    name: 'the square root of one plus beta over one minus beta: the Doppler factor'
+    role: 'the factor that multiplies the source frequency'
+    effect: 'greater than 1 approaching, less than 1 receding; it blows up as the speed nears c'
+presets:
+  - label: 'Approaching (0.5c)'
+    caption: 'Coming at you at half light speed: the frequency is pushed up, the light looks bluer.'
+    values:
+      beta: 0.5
+  - label: 'Receding (−0.5c)'
+    caption: 'Racing away at half light speed: the frequency drops, the light looks redder.'
+    values:
+      beta: -0.5
+  - label: 'Galaxy redshift'
+    caption: 'Distant galaxies recede as space expands, so their light reddens — the redshift astronomers measure.'
+    values:
+      beta: -0.1
+limits:
+  - label: 'v → +c'
+    icon: '🔵'
+    collapse: 'frequency soars: extreme blueshift'
+    values:
+      beta: 0.9
+  - label: 'v → −c'
+    icon: '🔴'
+    collapse: 'frequency → 0: extreme redshift'
+    values:
+      beta: -0.9
+prerequisites: []
+related:
+  - relativity/time-dilation
+  - foundations/lorentz-factor
+---
+
+import DopplerShift from '../../../components/viz/DopplerShift.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<DopplerShift />
+
+<div class="viz-controls">
+  <SliderField
+    label="Speed toward you"
+    unit="c"
+    slug="relativity/relativistic-doppler"
+    storeKey="beta"
+    min={-0.9}
+    max={0.9}
+    step={0.01}
+    sigFigs={2}
+    value={frontmatter.defaults.beta}
+    scale="linear"
+  />
+  <PresetButtons slug="relativity/relativistic-doppler" presets={frontmatter.presets} />
+  <LimitSnaps slug="relativity/relativistic-doppler" limits={frontmatter.limits} />
+  <ResetButton slug="relativity/relativistic-doppler" label="Reset to 0.5 c" />
+</div>
+
+## Approaching makes it bluer, receding makes it redder
+
+Slide the speed and watch the bottom wave. It is the same light as the top wave,
+seen from a different place. When the source moves toward you the crests pile up,
+the wavelength shrinks, the frequency climbs, and the colour slides toward blue.
+When the source moves away the crests spread out, the wavelength grows, the
+frequency drops, and the colour slides toward red. The number in the readout is
+the observed frequency written as a multiple of the source's: `2×` means twice as
+high, `0.5×` means half.
+
+This is the **longitudinal** version, the shift along the line of sight — the
+source coming straight at you or going straight away. It is the shift that lets
+astronomers read how fast a galaxy is receding straight from the reddening of its
+light.
+
+## What about moving sideways?
+
+If the source flies past you at the closest point of its path, moving neither
+toward nor away in that instant, there is still a shift — but a smaller one, and
+always toward the red. That transverse case is pure time dilation: the source's
+clock runs slow, so its light arrives at a lower frequency, `f_obs = f_src / γ`.
+The formula on this page is the head-on case, where that time-dilation slowdown
+is combined with the crest-piling of ordinary motion.
+
+<details class="misconception">
+  <summary>Is this just the ambulance-siren Doppler?</summary>
+
+  It is the same idea — approaching raises the pitch, receding lowers it — but not
+  the same formula. The siren travels through air, a medium, so the shift depends
+  on whether it is the source or the listener that moves relative to that air.
+  Light in a vacuum has no medium, so only the *relative* speed matters and the
+  two observers agree symmetrically. The relativistic formula also folds in time
+  dilation, which the everyday sound version has no reason to include.
+</details>

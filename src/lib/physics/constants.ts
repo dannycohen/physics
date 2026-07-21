@@ -13,3 +13,10 @@ export const COULOMB_CONSTANT = 8.9875517873681764e9;
 
 /** Electron rest energy m_e*c^2, in MeV (CODATA 2018). */
 export const ELECTRON_REST_ENERGY_MEV = 0.51099895;
+
+/** Planck constant, J*s (exact SI definition since the 2019 redefinition). */
+export const PLANCK_CONSTANT = 6.62607015e-34;
+
+/** Wien's displacement-law constant b, m*K (CODATA). The wavelength of peak
+ *  spectral radiance is b / T. */
+export const WIEN_WAVELENGTH_B = 2.897771955e-3;

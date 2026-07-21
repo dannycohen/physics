@@ -1,0 +1,143 @@
+---
+title: "Planck's blackbody radiation"
+category: thermodynamics
+layoutArchetype: distribution
+status: live
+order: 2.5
+equationLatex: 'B_\lambda(\lambda,T) = \dfrac{2hc^2}{\lambda^5}\,\dfrac{1}{e^{hc/\lambda k_B T} - 1}'
+equationPlain: 'B_λ ∝ (1/λ⁵) / (e^(hc/λk_BT) − 1)'
+claim: 'Heat anything up and it glows. Hotter means brighter, and the colour of that glow slides from red toward blue.'
+defaults:
+  tempK: 5778
+terms:
+  - symbol: 'B_\lambda'
+    name: 'B-lambda: capital B with subscript lambda, spectral radiance'
+    role: 'how brightly the object glows at one wavelength'
+    effect: 'the height of the curve; sums over all wavelengths to give total brightness'
+  - symbol: '\lambda'
+    name: 'lambda: Greek lowercase lambda, wavelength'
+    role: 'the wavelength (colour) of light we are asking about'
+    effect: 'the horizontal axis; short is blue/ultraviolet, long is red/infrared'
+  - symbol: 'T'
+    name: 'T: Latin capital tee, absolute temperature'
+    role: 'the temperature of the object, in kelvin'
+    effect: 'hotter raises the whole curve and slides its peak toward shorter, bluer wavelengths'
+  - symbol: 'h'
+    name: 'h: Latin letter aitch, the Planck constant'
+    role: 'the fixed size of a quantum of light energy'
+    effect: 'ties energy to frequency; its smallness is why the glow is quantised'
+  - symbol: 'k_B'
+    name: 'k-B: the Boltzmann constant'
+    role: 'the fixed conversion between temperature and energy'
+    effect: 'sets the thermal energy scale in the exponential'
+  - symbol: 'c'
+    name: 'c: Latin letter cee, the speed of light'
+    role: 'the speed light travels through vacuum'
+    effect: 'links wavelength to the photon energy in the exponent'
+  - symbol: '\lambda^5'
+    name: 'lambda to the fifth: the short-wavelength factor'
+    role: 'divides the radiance by wavelength raised to the fifth power'
+    effect: 'grows huge as λ shrinks, forcing the curve back toward zero in the ultraviolet'
+  - symbol: 'e^{hc/\lambda k_B T}'
+    name: 'the exponential factor'
+    role: 'how rare a photon of that energy is at temperature T'
+    effect: 'blows up at short λ, killing the ultraviolet and capping the peak'
+presets:
+  - label: 'Sun (5778 K)'
+    caption: 'The Sun peaks in the middle of the visible band, near 500 nm, which is why sunlight looks white and our eyes evolved to see it.'
+    values:
+      tempK: 5778
+  - label: 'Incandescent bulb (2700 K)'
+    caption: 'A tungsten filament peaks deep in the infrared. Most of its output is heat you cannot see, so the visible light it does give off looks warm and yellow. That wasted heat is why these bulbs are inefficient.'
+    values:
+      tempK: 2700
+  - label: 'Blue-white star (8000 K)'
+    caption: 'Hotter than the Sun, so the peak pushes toward blue and the star looks blue-white.'
+    values:
+      tempK: 8000
+limits:
+  - label: 'T low'
+    icon: '🔥'
+    collapse: 'peak slides into the infrared — you feel heat but see little'
+    values:
+      tempK: 1000
+  - label: 'T high'
+    icon: '⭐'
+    collapse: 'peak pushes toward blue/ultraviolet'
+    values:
+      tempK: 8000
+prerequisites: []
+related:
+  - 'thermodynamics/maxwell-boltzmann'
+---
+
+import PlanckSpectrum from '../../../components/viz/PlanckSpectrum.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<PlanckSpectrum />
+
+<div class="viz-controls">
+  <SliderField
+    label="Temperature"
+    unit="K"
+    slug="thermodynamics/planck-blackbody"
+    storeKey="tempK"
+    min={1000}
+    max={8000}
+    step={50}
+    sigFigs={4}
+    value={frontmatter.defaults.tempK}
+    scale="linear"
+  />
+  <PresetButtons slug="thermodynamics/planck-blackbody" presets={frontmatter.presets} />
+  <LimitSnaps slug="thermodynamics/planck-blackbody" limits={frontmatter.limits} />
+  <ResetButton slug="thermodynamics/planck-blackbody" label="Reset to the Sun, 5778 K" />
+</div>
+
+## Why hot things glow, and change colour as they heat up
+
+Every object gives off light just because it is warm. A cool object glows only
+in the far infrared, which you feel as heat but cannot see. Heat it up and two
+things happen at once: the glow gets brighter at every wavelength, and the
+wavelength it glows most strongly at gets shorter. Short means bluer. That is
+why an iron bar goes from dull red to orange to yellow-white as it heats.
+
+## Wien's law: bluer when hotter
+
+The peak of the curve sits at a wavelength that is inversely proportional to
+temperature. Double the temperature and the peak wavelength halves. Slide the
+temperature and watch the dashed peak marker march to the left as the gas heats.
+The Sun, at about 5778 K, peaks near 500 nm, right in the middle of the range
+your eyes can see. A cooler filament peaks off to the right, in the infrared;
+a hotter star peaks off to the left, toward the blue.
+
+## No ultraviolet catastrophe
+
+Classical physics predicted that a hot object should pour out ever more energy
+at shorter and shorter wavelengths, without limit. It does not. The exponential
+denominator, `e^{hc/λk_BT}`, blows up as the wavelength shrinks, so the radiance
+falls back to zero on the short-wavelength side instead of running away. The
+`λ⁵` in the front pushes it down further. Planck had to assume light comes in
+discrete quanta to get this right, and that assumption started quantum physics.
+
+## Brightness climbs steeply
+
+The total brightness is the area under the whole curve, and it rises with the
+fourth power of temperature. So a body twice as hot is not twice as bright: it
+is about sixteen times brighter. The real curves span so many orders of
+magnitude that a cool one would vanish next to a hot one, so the plot rescales
+each temperature to its own peak — you are seeing the shape and the colour
+shift, while this fourth-power growth in true brightness happens off the chart.
+
+<details class="misconception">
+  <summary>Does a hotter object just get brighter?</summary>
+
+  No. It gets brighter *and* bluer. The whole spectrum shifts, not just its
+  height. If temperature only scaled the brightness, a heated bar would stay red
+  and simply glow more intensely. Instead its peak wavelength slides toward the
+  blue, so the colour you see changes from red to orange to white as it climbs.
+  Wien's law tracks that shift; the fourth-power growth tracks the brightness.
+</details>

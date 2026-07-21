@@ -1,0 +1,121 @@
+---
+title: 'Exponential decay'
+category: foundations
+layoutArchetype: time-series
+status: live
+order: 0.5
+equationLatex: 'N(t) = N_0\,e^{-t/\tau} = N_0\,2^{-t/t_{1/2}}'
+equationPlain: 'N(t) = N₀·2^(−t/t½)'
+claim: 'The same fraction disappears every half-life, so the amount keeps halving but never quite hits zero.'
+defaults:
+  halfLife: 10
+terms:
+  - symbol: 'N(t)'
+    name: 'N of t: Latin capital N of t, the amount at time t'
+    role: 'how much is left at time t'
+    effect: 'starts at N₀ and shrinks toward zero without ever reaching it'
+  - symbol: 'N_0'
+    name: 'N-nought: Latin capital N with subscript zero'
+    role: 'the amount you start with, at t = 0'
+    effect: 'sets the scale; the curve is the same shape whatever this is'
+  - symbol: 't'
+    name: 't: Latin letter t, the elapsed time'
+    role: 'time since you started counting'
+    effect: 'more time -> less left, halving once per half-life'
+  - symbol: '\tau'
+    name: 'tau: Greek lowercase tau, the mean lifetime'
+    role: 'the average time a single item survives, and the time constant of the exponential'
+    effect: 'after one τ, a fraction 1/e (about 37%) is left; τ = t½ / ln2 ≈ 1.44·t½'
+  - symbol: 't_{1/2}'
+    name: 't-one-half: Latin letter t with subscript one-half, the half-life'
+    role: 'the time for exactly half of what is present to disappear'
+    effect: 'smaller half-life -> faster decay; each t½ halves whatever remains'
+presets:
+  - label: 'Fast (2 s)'
+    icon: '⚡'
+    caption: 'A short-lived isotope: half is gone in 2 seconds, and after 20 seconds only about a thousandth is left.'
+    values:
+      halfLife: 2
+  - label: 'Medium (10 s)'
+    icon: '⏱️'
+    caption: 'A middling decay: 50% left at 10 s, 25% at 20 s, 12.5% at 30 s.'
+    values:
+      halfLife: 10
+  - label: 'Slow (25 s)'
+    icon: '🐢'
+    caption: 'A long-lived isotope: even after the full 60-second window, just under a fifth of it is left.'
+    values:
+      halfLife: 25
+limits:
+  - label: 't½ → small'
+    icon: '💨'
+    collapse: 'decays almost instantly: half-life 1 s empties the window in a few seconds'
+    values:
+      halfLife: 1
+  - label: 't½ → large'
+    icon: '🧊'
+    collapse: 'slow decay: with a 30 s half-life, 60 s is two half-lives, so a quarter is left'
+    values:
+      halfLife: 30
+prerequisites: []
+related: []
+---
+
+import DecayCurve from '../../../components/viz/DecayCurve.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<DecayCurve />
+
+<div class="viz-controls">
+  <SliderField
+    label="Half-life"
+    unit="s"
+    slug="foundations/exponential-decay"
+    storeKey="halfLife"
+    min={1}
+    max={30}
+    step={0.5}
+    scale="linear"
+    sigFigs={3}
+    value={frontmatter.defaults.halfLife}
+  />
+  <PresetButtons slug="foundations/exponential-decay" presets={frontmatter.presets} />
+  <LimitSnaps slug="foundations/exponential-decay" limits={frontmatter.limits} />
+  <ResetButton slug="foundations/exponential-decay" label="Reset to 10 s" />
+</div>
+
+## A constant fraction, not a constant amount
+
+The defining feature of exponential decay is that the same *fraction* vanishes in
+every equal stretch of time, no matter how much is there to begin with. Pick the
+half-life: after that long, exactly half is gone. Wait the same time again and half
+of what remains is gone, leaving a quarter. Again, an eighth. The amount lost each
+step shrinks because there is less to lose, but the fraction never changes.
+
+That is why the curve falls fast at first and then trails off, hugging the axis. It
+approaches zero but never arrives: half of something is still something.
+
+## Half-life versus mean lifetime
+
+Two numbers describe the same curve. The half-life t½ is the time for half of what
+is present to disappear. The mean lifetime τ is the average time a single item
+survives, and it is the time constant in the tidy form N = N₀·e^(−t/τ). They are not
+the same: τ = t½ / ln2 ≈ 1.44·t½, so the average life is a little longer than the
+half-life. After one mean lifetime a fraction 1/e (about 37%) is left, not half.
+
+This one shape governs far more than radioactivity. A capacitor discharging through
+a resistor (the RC circuit) loses voltage the same way, with τ = RC. A drug clears
+from the bloodstream on the same curve, which is why doctors talk about its half-life.
+Same maths, different N₀ and τ.
+
+<details class="misconception">
+  <summary>After two half-lives, is it all gone?</summary>
+
+  No. After one half-life, 50% is left; after two, 25%; after three, 12.5%. Each
+  half-life removes half of *what is left*, not half of the original amount, so the
+  total never reaches zero. It keeps halving forever, getting arbitrarily close to
+  zero while always leaving a little behind.
+</details>

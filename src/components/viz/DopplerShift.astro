@@ -1,0 +1,188 @@
+---
+import { dopplerFactor } from '../../lib/physics/doppler';
+import { formatQuantity } from '../../lib/format';
+
+const DEFAULT_BETA = 0.5;
+const factorText = (b: number) => formatQuantity(dopplerFactor(b), '', { sigFigs: 3 });
+const shiftWord = (b: number) => (b > 0 ? 'blueshift' : b < 0 ? 'redshift' : 'no shift');
+
+const SAMPLE_BETAS = [-0.9, -0.5, -0.1, 0, 0.1, 0.5, 0.9];
+const rows = SAMPLE_BETAS.map((beta) => ({
+  beta: formatQuantity(beta, ''),
+  factor: factorText(beta),
+}));
+---
+
+<doppler-shift>
+  <figure class="wave-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Two stacked wave trains sharing the same width. The top wave is the light as emitted at the source, at a fixed wavelength. The bottom wave is the light as observed. When the source approaches, the observed wave is squeezed to a shorter wavelength and tinted blue; when it recedes, the observed wave is stretched to a longer wavelength and tinted red. At rest the two waves match."
+      ></canvas>
+    </div>
+    <p class="shift-stat" aria-hidden="true">
+      Observed frequency = <b class="factor-val">{factorText(DEFAULT_BETA)}×</b> the source
+      <span class="shift-word">({shiftWord(DEFAULT_BETA)})</span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      Observed frequency is {factorText(DEFAULT_BETA)} times the source frequency: {shiftWord(DEFAULT_BETA)}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>Observed frequency as a multiple of the source frequency at different closing speeds.</p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">v/c</th>
+          <th scope="col">Observed ÷ source frequency</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.beta}</td>
+              <td>{row.factor}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</doppler-shift>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { dopplerFactor } from '../../lib/physics/doppler';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'relativity/relativistic-doppler';
+  const DEFAULT_BETA = 0.5;
+
+  const store = getVizStore(SLUG, { beta: DEFAULT_BETA });
+  const clampBeta = (b: number | undefined) => Math.min(Math.max(b ?? DEFAULT_BETA, -0.9), 0.9);
+  const factorText = (b: number) => formatQuantity(dopplerFactor(b), '', { sigFigs: 3 });
+  const shiftWord = (b: number) => (b > 0 ? 'blueshift' : b < 0 ? 'redshift' : 'no shift');
+
+  class DopplerShiftElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const factorVal = this.querySelector('.factor-val');
+      const shiftSpan = this.querySelector('.shift-word');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(
+        canvas,
+        (ctx, size, theme) => {
+          const beta = clampBeta(store.values.get()['beta']);
+          const factor = dopplerFactor(beta);
+
+          ctx.fillStyle = theme.bg;
+          ctx.fillRect(0, 0, size.w, size.h);
+
+          const padX = 20;
+          const labelW = 76; // room for the on-canvas labels on the left
+          const x0 = padX + labelW;
+          const x1 = size.w - padX;
+          const span = x1 - x0;
+          const amp = Math.min(size.h * 0.16, 46);
+          const topY = size.h * 0.33;
+          const botY = size.h * 0.72;
+
+          // Emitted wave: a fixed reference count of cycles across the span.
+          const refCycles = 6;
+          // Observed spatial frequency scales with the Doppler factor: squeezed
+          // (more cycles) when approaching, stretched (fewer) when receding.
+          const obsCycles = refCycles * factor;
+          const obsColor = beta > 0 ? theme.curve : beta < 0 ? theme.limit : theme.rest;
+
+          const wave = (
+            y: number,
+            cycles: number,
+            color: string,
+            label: string,
+          ) => {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            const steps = Math.max(120, Math.ceil(span));
+            for (let i = 0; i <= steps; i++) {
+              const t = i / steps;
+              const x = x0 + t * span;
+              const yy = y - Math.sin(t * cycles * 2 * Math.PI) * amp;
+              if (i === 0) ctx.moveTo(x, yy);
+              else ctx.lineTo(x, yy);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = theme.label;
+            ctx.font = 'bold 14px system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x0 - 12, y);
+          };
+
+          wave(topY, refCycles, theme.rest, 'emitted');
+          wave(botY, obsCycles, obsColor, 'observed');
+        },
+        { animate: false },
+      );
+
+      const render = (values: Record<string, number>) => {
+        const beta = clampBeta(values['beta']);
+        if (factorVal) factorVal.textContent = `${factorText(beta)}×`;
+        if (shiftSpan) shiftSpan.textContent = `(${shiftWord(beta)})`;
+      };
+
+      store.values.subscribe((values) => {
+        render(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const beta = clampBeta(values['beta']);
+        const text = `Observed frequency is ${factorText(beta)} times the source frequency: ${shiftWord(beta)}.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('doppler-shift')) {
+    customElements.define('doppler-shift', DopplerShiftElement);
+  }
+</script>
+
+<style>
+  .wave-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 16 / 10;
+  }
+
+  .shift-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .shift-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .shift-word {
+    color: var(--color-text-muted);
+  }
+</style>
