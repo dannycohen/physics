@@ -2,6 +2,14 @@
 import { formatQuantity } from '../../lib/format';
 import { lorentzFactor } from '../../lib/physics/relativity';
 
+interface Props {
+  /** Store slug to bind to; lets the shared curve be reused on any page whose
+   *  slider publishes a `beta` key. */
+  slug?: string;
+}
+
+const { slug = 'relativity/time-dilation' } = Astro.props;
+
 // Build-time samples so the table exists without JavaScript.
 const SAMPLE_BETAS = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.99, 0.998, 0.999];
 const rows = SAMPLE_BETAS.map((beta) => {
@@ -15,7 +23,7 @@ const rows = SAMPLE_BETAS.map((beta) => {
 const gammaAtMax = formatQuantity(lorentzFactor(0.999), '');
 ---
 
-<gamma-curve>
+<gamma-curve data-slug={slug}>
   <figure class="gamma-figure">
     <div class="canvas-box">
       <canvas
@@ -59,7 +67,6 @@ const gammaAtMax = formatQuantity(lorentzFactor(0.999), '');
   import { lorentzFactor, BETA_MAX } from '../../lib/physics/relativity';
   import { getVizStore } from '../../lib/vizStore';
 
-  const SLUG = 'relativity/time-dilation';
   const DEFAULT_BETA = 0.6;
   // x runs to 1 so axis ticks land on 0.25/0.5/0.75/1 (curve data stops at BETA_MAX).
   // y covers the full range up to gamma(BETA_MAX) ~ 22.4 so the marker rides the
@@ -79,8 +86,6 @@ const gammaAtMax = formatQuantity(lorentzFactor(0.999), '');
     [BETA_MAX, 1],
   ];
 
-  const store = getVizStore(SLUG, { beta: DEFAULT_BETA });
-
   class GammaCurveElement extends HTMLElement {
     #bound = false;
 
@@ -90,6 +95,10 @@ const gammaAtMax = formatQuantity(lorentzFactor(0.999), '');
 
       const canvas = this.querySelector('canvas');
       if (!canvas) return;
+
+      const store = getVizStore(this.dataset.slug ?? 'relativity/time-dilation', {
+        beta: DEFAULT_BETA,
+      });
 
       const handle = createVizCanvas(canvas, (ctx, size, theme) => {
         const series: Series[] = [

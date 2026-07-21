@@ -1,0 +1,119 @@
+---
+title: 'The Lorentz factor'
+category: foundations
+layoutArchetype: distribution
+status: live
+order: 0
+equationLatex: '\gamma = \frac{1}{\sqrt{1 - v^2/c^2}}'
+equationPlain: 'γ = 1 / √(1 − v²/c²)'
+claim: 'One number runs all of special relativity. Below half light speed it is barely above 1; near light speed it rockets toward infinity. Drag the speed and watch γ climb.'
+defaults:
+  beta: 0.6
+terms:
+  - symbol: '\gamma'
+    name: 'Gamma: Greek lowercase gamma'
+    role: 'the factor everything relativistic gets multiplied by'
+    effect: 'always at least 1; this is the number that grows as you approach light speed'
+  - symbol: 'v'
+    name: 'v: Latin letter vee, the speed'
+    role: 'how fast something moves relative to you'
+    effect: 'the closer to c, the bigger γ becomes'
+  - symbol: 'c'
+    name: 'c: the speed of light in vacuum, 299,792,458 m/s'
+    role: 'the cosmic speed limit that sets the scale'
+    effect: 'only the ratio v/c matters, never v on its own'
+  - symbol: 'v^2/c^2'
+    name: 'v squared over c squared: the speed fraction, squared'
+    role: 'how close to light speed you are'
+    effect: 'climbs toward 1 as v approaches c'
+  - symbol: '\sqrt{1 - v^2/c^2}'
+    name: 'the square root in the denominator'
+    role: 'shrinks from 1 toward 0 as v approaches c'
+    effect: 'as this shrinks, one divided by it (γ) blows up'
+presets:
+  - label: 'Half light speed'
+    caption: 'γ ≈ 1.15: even at half the speed of light the stretch is only about 15%.'
+    values:
+      beta: 0.5
+  - label: 'γ = 2'
+    caption: 'At 0.866 c, γ is exactly 2 — time runs half as fast, lengths halve.'
+    values:
+      beta: 0.866
+  - label: 'γ ≈ 7'
+    caption: 'At 0.99 c, γ is about 7. The last sliver of speed is where γ explodes.'
+    values:
+      beta: 0.99
+limits:
+  - label: 'v → 0'
+    icon: '🐢'
+    collapse: 'γ → 1: relativity switches off and Newton takes over'
+    values:
+      beta: 0
+  - label: 'v → c'
+    icon: '⚡'
+    collapse: 'γ → ∞: the time, length, and energy factors all run away'
+    values:
+      beta: 0.999
+prerequisites: []
+related:
+  - relativity/time-dilation
+---
+
+import GammaCurve from '../../../components/viz/GammaCurve.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<GammaCurve slug="foundations/lorentz-factor" />
+
+<div class="viz-controls">
+  <SliderField
+    label="Speed"
+    unit="c"
+    slug="foundations/lorentz-factor"
+    storeKey="beta"
+    min={0}
+    max={0.999}
+    scale="beta"
+    sigFigs={3}
+    value={frontmatter.defaults.beta}
+  />
+  <PresetButtons slug="foundations/lorentz-factor" presets={frontmatter.presets} />
+  <LimitSnaps slug="foundations/lorentz-factor" limits={frontmatter.limits} />
+  <ResetButton slug="foundations/lorentz-factor" label="Reset to 0.6 c" />
+</div>
+
+## One factor behind it all
+
+The Lorentz factor γ is the single number that turns Newton's physics into
+Einstein's. It is built from just one ingredient: how fast you are going as a
+fraction of the speed of light. Square that fraction, subtract it from 1, take
+the square root, and flip it over. That is the whole recipe.
+
+The shape of the curve is the point. For everyday speeds, even a fast jet, v/c
+is so tiny that γ sits at 1.000 and relativity is invisible. Push past about
+half the speed of light and γ starts to climb. In the last few percent before c
+it shoots up without limit, because the square root in the denominator is racing
+toward zero.
+
+## Where γ shows up
+
+The same γ multiplies several different quantities, which is why one page can
+stand behind many:
+
+- **Time dilation** — a moving clock's ticks stretch by γ. See it move on the{' '}
+  <a href={`${import.meta.env.BASE_URL}viz/relativity/time-dilation/`}>time dilation page</a>.
+- **Length contraction** — a moving object shortens by a factor of 1/γ. *(coming soon)*
+- **Energy** — a moving mass carries energy γmc², which is why reaching c would
+  take infinite energy. *(coming soon)*
+
+<details class="misconception">
+  <summary>Can γ ever be less than 1?</summary>
+
+  No. γ is always at least 1, and equals 1 only when the object is at rest.
+  Motion can stretch time and shrink length, but never the reverse: from your
+  point of view a moving clock never ticks *faster* and a moving ruler never
+  grows *longer*. The square root is always between 0 and 1, so one divided by
+  it is always 1 or more.
+</details>
