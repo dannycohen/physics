@@ -8,7 +8,10 @@ const latex = z.string().brand<'LaTeX'>();
 
 const term = z.object({
   symbol: latex,
-  name: z.string().optional(), // human-readable name of the symbol, e.g. the Greek letter's name
+  // REQUIRED: the spoken name of the symbol (e.g. 'Gamma: Greek lowercase gamma').
+  // Renders as the hover tooltip + screen-reader text on the symbol in "Show the
+  // math". Required so every equation's symbols are always explained; see AGENTS.md.
+  name: z.string(),
   role: z.string(), // plain-language role, not a glossary definition
   effect: z.string(), // direction of effect on the output
   unit: z.string().optional(),

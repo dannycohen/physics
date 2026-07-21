@@ -62,7 +62,7 @@ const hasDataTable = Astro.slots.has('data-table');
                 <tr>
                   <td title={t.name}>
                     <Fragment set:html={renderLatexInline(t.symbol)} />
-                    {t.name && <span class="visually-hidden">{t.name}</span>}
+                    <span class="visually-hidden">{t.name}</span>
                   </td>
                   <td>{t.role}</td>
                   <td>{t.effect}</td>

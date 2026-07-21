@@ -33,6 +33,13 @@ Live site: https://dannycohen.github.io/physics/
 Deployment is GitHub Actions → GitHub Pages on push to `main` (`.github/workflows/`).
 CI gates PRs with typecheck, tests, build, and a client-JS bundle budget.
 
+## Adding a visualization
+
+See [`AGENTS.md`](./AGENTS.md) for the full conventions. One rule the build enforces:
+every equation symbol listed in a page's `terms[]` **must** have a `name`, which becomes a
+hover tooltip and screen-reader label on that symbol in "Show the math". The `name` field
+is required in the content schema, so an equation with an unexplained symbol fails the build.
+
 ## License
 
 Code is MIT (see `LICENSE`). Prose and figures are
