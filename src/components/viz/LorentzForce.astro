@@ -1,0 +1,305 @@
+---
+import { magneticForceMagnitude, radius } from '../../lib/physics/lorentz';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const DEFAULT_CHARGE = 1; // sign only, +1 or -1; |q| = 1
+const DEFAULT_SPEED = 5; // m/s
+const DEFAULT_B = 2; // tesla
+const MASS = 1; // kg, held fixed
+
+const forceText = (f: number) => formatQuantity(f, 'N', { sigFigs: 3 });
+const radiusText = (r: number) => formatQuantity(r, 'm', { sigFigs: 3 });
+
+const defaultForce = magneticForceMagnitude(DEFAULT_CHARGE, DEFAULT_SPEED, DEFAULT_B);
+const defaultRadius = radius(MASS, DEFAULT_CHARGE, DEFAULT_SPEED, DEFAULT_B);
+
+const SAMPLE_V = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const rows = SAMPLE_V.map((v) => ({
+  v: formatQuantity(v, ''),
+  force: forceText(magneticForceMagnitude(DEFAULT_CHARGE, v, DEFAULT_B)),
+  radius: radiusText(radius(MASS, DEFAULT_CHARGE, v, DEFAULT_B)),
+}));
+---
+
+<lorentz-force>
+  <figure class="field-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A charge moving through a magnetic field drawn as a grid of dot or cross symbols. A velocity arrow points along the motion, and a force arrow points at a right angle to it, toward the centre of a circle. The magnetic force is always perpendicular to the velocity, so the charge is steered around a circular path. A stronger field or a slower charge makes a tighter circle; flipping the charge or the field reverses the turn."
+      ></canvas>
+    </div>
+    <p class="force-stat" aria-hidden="true">
+      Force <b class="force-val">{forceText(defaultForce)}</b> (perpendicular to v), circle radius
+      <b class="radius-val">{radiusText(defaultRadius)}</b>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      The magnetic force is {forceText(defaultForce)}, perpendicular to the velocity, curving the
+      charge into a circle of radius {radiusText(defaultRadius)}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      Force and circle radius as the speed changes, in a {DEFAULT_B} T field (mass fixed at {MASS} kg,
+      charge magnitude 1). Force grows with speed, and so does the radius.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Speed (m/s)</th>
+          <th scope="col">Force (N)</th>
+          <th scope="col">Radius (m)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.v}</td>
+              <td>{row.force}</td>
+              <td>{row.radius}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</lorentz-force>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { magneticForceMagnitude, radius } from '../../lib/physics/lorentz';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+  import type { VizTheme } from '../../lib/theme';
+
+  const SLUG = 'electromagnetism/lorentz-force';
+  const DEFAULT_CHARGE = 1;
+  const DEFAULT_SPEED = 5;
+  const DEFAULT_B = 2;
+  const MASS = 1;
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, {
+    charge: DEFAULT_CHARGE,
+    speed: DEFAULT_SPEED,
+    bField: DEFAULT_B,
+  });
+
+  const num = (values: Record<string, number>, key: string, fallback: number) =>
+    values[key] ?? fallback;
+  const forceText = (f: number) => formatQuantity(f, 'N', { sigFigs: 3 });
+  const radiusText = (r: number) => formatQuantity(r, 'm', { sigFigs: 3 });
+
+  // Sign of the field: the slider only carries the charge sign, so the field
+  // direction is fixed out of the page (+z). The turn direction is set by the
+  // product of the charge sign and the field direction; flipping the charge
+  // reverses the circle, which is what the presets demonstrate.
+  const B_DIR = 1; // +1 = out of the page (⊙); -1 would be into the page (⊗)
+
+  function arrow(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    angle: number,
+    length: number,
+    width: number,
+    color: string,
+  ): void {
+    const hx = x + Math.cos(angle) * length;
+    const hy = y + Math.sin(angle) * length;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(hx, hy);
+    ctx.stroke();
+    const head = Math.min(6 + width, length);
+    ctx.beginPath();
+    ctx.moveTo(hx, hy);
+    ctx.lineTo(hx - Math.cos(angle - 0.4) * head, hy - Math.sin(angle - 0.4) * head);
+    ctx.lineTo(hx - Math.cos(angle + 0.4) * head, hy - Math.sin(angle + 0.4) * head);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Field symbols: ⊙ (dot) for a field out of the page, ⊗ (cross) for into it.
+  function fieldSymbol(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    radiusPx: number,
+    outOfPage: boolean,
+    color: string,
+  ): void {
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(x, y, radiusPx, 0, Math.PI * 2);
+    ctx.stroke();
+    if (outOfPage) {
+      ctx.beginPath();
+      ctx.arc(x, y, radiusPx * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      const d = radiusPx * 0.7;
+      ctx.beginPath();
+      ctx.moveTo(x - d, y - d);
+      ctx.lineTo(x + d, y + d);
+      ctx.moveTo(x + d, y - d);
+      ctx.lineTo(x - d, y + d);
+      ctx.stroke();
+    }
+  }
+
+  class LorentzForceElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const forceVal = this.querySelector('.force-val');
+      const radiusEl = this.querySelector('.radius-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const values = store.values.get();
+        const chargeSign = num(values, 'charge', DEFAULT_CHARGE) >= 0 ? 1 : -1;
+        const speed = num(values, 'speed', DEFAULT_SPEED);
+        const bField = num(values, 'bField', DEFAULT_B);
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        // Field grid, drawn faintly behind the motion.
+        const step = Math.max(40, size.w / 9);
+        ctx.save();
+        ctx.globalAlpha = 0.4;
+        for (let px = step / 2; px < size.w; px += step) {
+          for (let py = step / 2; py < size.h; py += step) {
+            fieldSymbol(ctx, px, py, 7, B_DIR > 0, theme.axis);
+          }
+        }
+        ctx.restore();
+
+        // Circle radius in pixels: physical r = m v / (|q| B), clamped so the
+        // path stays legible across the slider range.
+        const rPhys = radius(MASS, chargeSign, speed, bField);
+        const minDim = Math.min(size.w, size.h);
+        // Cap at 0.22·minDim: the charge sits on the circle, so the far edge is
+        // 2·rPx away and must stay on-canvas.
+        const rPx = Math.max(30, Math.min(rPhys * 18, minDim * 0.22));
+
+        // Velocity points to the right (+x). The magnetic force F = q v × B is
+        // vertical here; its canvas-y sign is (charge sign × field direction):
+        // positive points down (centre below), negative points up.
+        const forceSign = chargeSign * B_DIR; // +1 down, -1 up (canvas y grows down)
+        const chargeX = size.w * 0.42;
+        const chargeY = size.h * 0.5;
+        const centerX = chargeX;
+        const centerY = chargeY + forceSign * rPx;
+
+        // Circular path.
+        ctx.save();
+        ctx.strokeStyle = theme.curveSecondary;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, rPx, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // Force arrow: from the charge toward the centre (perpendicular to v).
+        const forceLen = Math.min(rPx, 70);
+        arrow(ctx, chargeX, chargeY, forceSign > 0 ? Math.PI / 2 : -Math.PI / 2, forceLen, 3, theme.active);
+
+        // Velocity arrow: tangent, pointing right.
+        const velLen = 30 + speed * 5;
+        arrow(ctx, chargeX, chargeY, 0, velLen, 3, theme.curve);
+
+        // The charge itself.
+        ctx.save();
+        ctx.shadowColor = theme.label;
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = theme.label;
+        ctx.beginPath();
+        ctx.arc(chargeX, chargeY, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        ctx.fillStyle = theme.bg;
+        ctx.font = 'bold 13px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(chargeSign > 0 ? '+' : '−', chargeX, chargeY + 1);
+
+        // Vector labels.
+        ctx.fillStyle = theme.curve;
+        ctx.font = 'italic bold 14px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('v', chargeX + velLen + 6, chargeY);
+        ctx.fillStyle = theme.active;
+        ctx.textBaseline = forceSign > 0 ? 'top' : 'bottom';
+        ctx.fillText('F', chargeX + 8, chargeY + forceSign * (forceLen + 4));
+      });
+
+      const renderStat = (values: Record<string, number>) => {
+        const chargeSign = num(values, 'charge', DEFAULT_CHARGE) >= 0 ? 1 : -1;
+        const speed = num(values, 'speed', DEFAULT_SPEED);
+        const bField = num(values, 'bField', DEFAULT_B);
+        const f = magneticForceMagnitude(chargeSign, speed, bField);
+        const r = radius(MASS, chargeSign, speed, bField);
+        if (forceVal) forceVal.textContent = forceText(f);
+        if (radiusEl) radiusEl.textContent = radiusText(r);
+      };
+
+      store.values.subscribe((values) => {
+        renderStat(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const chargeSign = num(values, 'charge', DEFAULT_CHARGE) >= 0 ? 1 : -1;
+        const speed = num(values, 'speed', DEFAULT_SPEED);
+        const bField = num(values, 'bField', DEFAULT_B);
+        const f = magneticForceMagnitude(chargeSign, speed, bField);
+        const r = radius(MASS, chargeSign, speed, bField);
+        const text = `The magnetic force is ${forceText(f)}, perpendicular to the velocity, curving the charge into a circle of radius ${radiusText(r)}.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('lorentz-force')) {
+    customElements.define('lorentz-force', LorentzForceElement);
+  }
+</script>
+
+<style>
+  .field-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 3 / 2;
+  }
+
+  .force-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .force-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+</style>

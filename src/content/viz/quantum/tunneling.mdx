@@ -1,0 +1,153 @@
+---
+title: 'Quantum tunnelling'
+category: quantum
+layoutArchetype: field-space
+status: live
+order: 3.9
+equationLatex: 'T \approx \dfrac{1}{1 + \dfrac{V_0^2 \sinh^2(\kappa a)}{4E(V_0 - E)}}'
+equationPlain: 'T = 1 / (1 + V₀²·sinh²(κa)/(4E(V₀−E)))'
+claim: 'A quantum particle can pass through a wall it does not have the energy to climb — with a probability that plummets as the wall thickens.'
+defaults:
+  energy: 1
+  barrier: 2
+  width: 0.5
+terms:
+  - symbol: 'T'
+    name: 'T: the transmission probability'
+    role: 'the chance the particle comes out the far side of the barrier'
+    effect: 'the output; a number between 0 and 1 that shrinks as the barrier gets thicker or taller'
+  - symbol: 'E'
+    name: 'E: the particle energy'
+    role: 'the kinetic energy the particle arrives with'
+    effect: 'the closer E gets to the barrier top, the more easily the particle tunnels'
+  - symbol: 'V_0'
+    name: 'V-nought: the barrier height'
+    role: 'how high the potential wall stands'
+    effect: 'a taller wall (larger V₀ − E) cuts the transmission sharply'
+  - symbol: 'a'
+    name: 'a: the barrier width'
+    role: 'how thick the wall is'
+    effect: 'transmission falls off roughly exponentially as the barrier widens'
+  - symbol: '\kappa'
+    name: 'kappa: Greek lowercase kappa, the decay rate inside the barrier'
+    role: 'how fast the wavefunction dies away inside the wall, κ = √(2m(V₀−E))/ħ'
+    effect: 'set by how far the energy falls short of the top; larger κ means faster decay and less tunnelling. This is the exact rectangular-barrier result for E below the top (V₀ > E)'
+presets:
+  - label: 'Thin barrier'
+    caption: 'A narrow wall lets a good fraction of the wave leak straight through.'
+    values:
+      width: 0.3
+  - label: 'Thick barrier'
+    caption: 'Transmission plummets: a little extra thickness costs orders of magnitude.'
+    values:
+      width: 1
+  - label: 'Low barrier'
+    caption: "Closer to the particle's energy, easier to tunnel."
+    values:
+      barrier: 1.5
+limits:
+  - label: 'a → thick'
+    collapse: 'transmission crashes toward zero (exponentially)'
+    values:
+      width: 1.5
+  - label: 'a → thin'
+    collapse: 'the particle passes easily'
+    values:
+      width: 0.15
+prerequisites: []
+related: ['quantum/de-broglie']
+---
+
+import TunnelBarrier from '../../../components/viz/TunnelBarrier.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<TunnelBarrier />
+
+<div class="viz-controls">
+  <SliderField
+    label="Particle energy"
+    unit="eV"
+    slug="quantum/tunneling"
+    storeKey="energy"
+    min={0.2}
+    max={1.9}
+    step={0.05}
+    sigFigs={3}
+    value={frontmatter.defaults.energy}
+    scale="linear"
+  />
+  <SliderField
+    label="Barrier height"
+    unit="eV"
+    slug="quantum/tunneling"
+    storeKey="barrier"
+    min={1}
+    max={4}
+    step={0.1}
+    sigFigs={3}
+    value={frontmatter.defaults.barrier}
+    scale="linear"
+  />
+  <SliderField
+    label="Barrier width"
+    unit="nm"
+    slug="quantum/tunneling"
+    storeKey="width"
+    min={0.1}
+    max={1.5}
+    step={0.05}
+    sigFigs={3}
+    value={frontmatter.defaults.width}
+    scale="linear"
+  />
+  <PresetButtons slug="quantum/tunneling" presets={frontmatter.presets} />
+  <LimitSnaps slug="quantum/tunneling" limits={frontmatter.limits} />
+  <ResetButton slug="quantum/tunneling" label="Reset to defaults" />
+</div>
+
+## Walking through walls
+
+Classically, a ball rolled at a hill it cannot crest just rolls back down. A
+particle without enough energy to get over a potential barrier does the same: it
+bounces off. Quantum mechanics breaks that rule. The particle is described by a
+wavefunction, and when it hits the barrier the wave does not stop dead. It leaks
+into the wall, dying away as it goes, and a small piece survives to the far
+side. Wherever the wave has any amplitude, the particle has some chance of being
+found. So there is a nonzero probability the particle simply appears on the other
+side, having tunnelled through a wall it could never climb.
+
+The transmission probability `T` is the fraction that gets through. Inside the
+barrier the wave decays at a rate `κ = √(2m(V₀−E))/ħ`, and the thicker the wall
+the more that decay compounds. That is why `T` falls off roughly exponentially
+with the barrier width `a`, and why it also drops as the energy `E` falls further
+short of the top `V₀`. Drag the sliders: widen the barrier a touch and watch the
+transmitted wave collapse to almost nothing.
+
+The formula on this page is the exact result for an idealised rectangular
+barrier with the particle energy below the top (`E < V₀`), the regime where
+tunnelling happens. It is not an approximation: it comes straight from matching
+the wavefunction across both walls.
+
+## Where this shows up
+
+Tunnelling is not a curiosity. Alpha decay is an alpha particle tunnelling out
+through the barrier that binds it inside a nucleus, and the steep width
+dependence is why decay half-lives span such an enormous range. A scanning
+tunnelling microscope holds a sharp tip a fraction of a nanometre above a
+surface and measures the tiny tunnelling current across the gap; because that
+current changes so violently with distance, the instrument can map individual
+atoms.
+
+<details class="misconception">
+  <summary>Does the particle "borrow" energy to jump over the wall?</summary>
+
+  No. The particle never has more energy than `E`, and it never gets up to the
+  top of the barrier, let alone over it. Nothing is borrowed and no debt is
+  repaid. What happens is purely about the wave: the wavefunction has a small but
+  real amplitude on the far side of the barrier, so when you look for the
+  particle it sometimes turns up there. It did not climb the wall or leap it — it
+  was simply, with some probability, already on the other side.
+</details>

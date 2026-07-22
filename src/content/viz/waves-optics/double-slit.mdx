@@ -1,0 +1,140 @@
+---
+title: 'Double-slit interference'
+category: waves-optics
+layoutArchetype: field-space
+status: live
+order: 6.7
+equationLatex: 'd\,\sin\theta = m\lambda'
+equationPlain: 'd·sin θ = m·λ'
+claim: 'Send light through two slits and it fans out into bright and dark bands — proof that light is a wave.'
+defaults:
+  wavelength: 550
+  spacing: 2500
+terms:
+  - symbol: 'd'
+    name: 'd: the slit spacing'
+    role: 'the distance between the centres of the two slits'
+    effect: 'smaller d spreads the fringes wider apart'
+  - symbol: '\theta'
+    name: 'theta: Greek lowercase theta'
+    role: 'the angle from the centre line out to a bright fringe'
+    effect: 'what we solve for; each order sits at its own angle'
+  - symbol: 'm'
+    name: 'm: the order, an integer'
+    role: 'which bright fringe you are counting, 0 at the centre'
+    effect: 'each whole step out is one more wavelength of path difference'
+  - symbol: '\lambda'
+    name: 'lambda: Greek lowercase lambda, the wavelength'
+    role: 'the wavelength of the light going in'
+    effect: 'longer wavelength spreads the fringes wider'
+presets:
+  - label: 'Green light'
+    values:
+      wavelength: 550
+      spacing: 2500
+  - label: 'Red light'
+    caption: 'Longer wavelength spreads the fringes wider.'
+    values:
+      wavelength: 700
+      spacing: 2500
+  - label: 'Closer slits'
+    caption: 'A smaller slit spacing spreads them wider too.'
+    values:
+      wavelength: 550
+      spacing: 1500
+limits:
+  - label: 'λ → long / d → small'
+    icon: '🌈'
+    collapse: 'fringes spread wide; fewer orders fit'
+    values:
+      wavelength: 700
+      spacing: 1200
+  - label: 'λ → short / d → large'
+    icon: '🔬'
+    collapse: 'fringes bunch tight; many orders fit'
+    values:
+      wavelength: 450
+      spacing: 4000
+prerequisites: []
+related:
+  - 'quantum/de-broglie'
+---
+
+import DoubleSlit from '../../../components/viz/DoubleSlit.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<DoubleSlit />
+
+<div class="viz-controls">
+  <SliderField
+    label="Wavelength"
+    unit="nm"
+    slug="waves-optics/double-slit"
+    storeKey="wavelength"
+    min={380}
+    max={750}
+    step={5}
+    sigFigs={3}
+    value={frontmatter.defaults.wavelength}
+    scale="linear"
+  />
+  <SliderField
+    label="Slit spacing"
+    unit="nm"
+    slug="waves-optics/double-slit"
+    storeKey="spacing"
+    min={1000}
+    max={5000}
+    step={50}
+    sigFigs={4}
+    value={frontmatter.defaults.spacing}
+    scale="linear"
+  />
+  <PresetButtons slug="waves-optics/double-slit" presets={frontmatter.presets} />
+  <LimitSnaps slug="waves-optics/double-slit" limits={frontmatter.limits} />
+  <ResetButton slug="waves-optics/double-slit" label="Reset" />
+</div>
+
+## Why two slits make bands
+
+Light passing through each slit spreads out on the far side as if the slit were
+a tiny source. Past the barrier the two spreading waves overlap, and where they
+meet they add up. Where a crest from one slit lands on a crest from the other,
+the light reinforces itself into a bright fringe. Where a crest meets a trough,
+they cancel and you get darkness. The result is a row of evenly spaced bright
+bands on the screen, not the two plain lines you might expect from two holes.
+
+## Where the bright fringes land
+
+A bright fringe appears wherever the path from one slit is longer than the path
+from the other by a whole number of wavelengths. That condition is `d sin θ = m
+λ`: the centre band is `m = 0` (straight ahead, equal paths), the next is `m =
+1` (one wavelength of path difference), and so on. Read it as a competition
+between `λ` and `d`. Make the wavelength longer, or push the slits closer
+together, and each fringe swings out to a larger angle, so the pattern spreads.
+Shorten the wavelength or widen the spacing and the fringes bunch toward the
+centre.
+
+Because `sin θ` can never exceed 1, only a finite number of orders fit: the
+count is however many whole wavelengths `d` can hold, `m ≤ d / λ`. Slide to a
+long wavelength with close slits and you may keep just the central band and one
+order on each side; go the other way and a dozen orders crowd onto the screen.
+
+This banded pattern is the classic proof that light travels as a wave, since
+only waves interfere. Send particles through one at a time and the same fringes
+still build up, which is how the experiment also demonstrates matter waves; see
+the <a href={`${import.meta.env.BASE_URL}viz/quantum/de-broglie/`}>de Broglie page</a>.
+
+<details class="misconception">
+  <summary>Do the slits just cast two bright lines?</summary>
+
+  No. If light were simply a stream of particles going straight through, you
+  would see two bright strips, one behind each slit. Instead the light spreads
+  from each slit and the two spreading waves interfere, painting many evenly
+  spaced fringes across the whole screen. Each bright band marks a spot where
+  the path difference between the two slits is a whole number of wavelengths;
+  the dark gaps between them are where the waves cancel.
+</details>

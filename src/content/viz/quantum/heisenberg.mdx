@@ -1,0 +1,123 @@
+---
+title: 'Heisenberg uncertainty'
+category: quantum
+layoutArchetype: distribution
+status: live
+order: 3.8
+equationLatex: '\Delta x\,\Delta p \ge \dfrac{\hbar}{2}'
+equationPlain: 'Δx · Δp ≥ ħ/2'
+claim: 'Pin down a particle''s position and its momentum blurs out — and pin down its momentum and its position smears. You cannot sharpen both at once.'
+defaults:
+  dx: 0.1
+terms:
+  - symbol: '\Delta x'
+    name: 'delta x: the position spread, a standard deviation'
+    role: 'how tightly the particle''s position is bunched, its statistical spread'
+    effect: 'shrinking it forces the momentum spread to grow'
+  - symbol: '\Delta p'
+    name: 'delta p: the momentum spread, a standard deviation'
+    role: 'how tightly the particle''s momentum is bunched, its statistical spread'
+    effect: 'shrinking it forces the position spread to grow'
+  - symbol: '\hbar'
+    name: 'h-bar: the reduced Planck constant'
+    role: 'the fixed quantum of action that sets the floor of the trade-off'
+    effect: 'the product of the two spreads can never fall below half of it'
+presets:
+  - label: 'Balanced'
+    caption: 'A middling packet: both spreads share the trade-off evenly.'
+    values:
+      dx: 0.1
+  - label: 'Pinned position'
+    caption: 'Squeeze the position tight and the momentum blurs out.'
+    values:
+      dx: 0.02
+  - label: 'Pinned momentum'
+    caption: 'Let the position spread wide and the momentum sharpens up.'
+    values:
+      dx: 0.5
+limits:
+  - label: 'Δx → tiny'
+    collapse: 'position sharp, momentum wildly uncertain'
+    values:
+      dx: 0.02
+  - label: 'Δx → large'
+    collapse: 'position vague, momentum well-defined'
+    values:
+      dx: 0.5
+prerequisites: []
+related:
+  - 'quantum/de-broglie'
+---
+
+import UncertaintyPacket from '../../../components/viz/UncertaintyPacket.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<UncertaintyPacket />
+
+<div class="viz-controls">
+  <SliderField
+    label="Position spread Δx"
+    unit="nm"
+    slug="quantum/heisenberg"
+    storeKey="dx"
+    min={0.02}
+    max={0.5}
+    step={0.01}
+    scale="log"
+    sigFigs={3}
+    value={frontmatter.defaults.dx}
+  />
+  <PresetButtons slug="quantum/heisenberg" presets={frontmatter.presets} />
+  <LimitSnaps slug="quantum/heisenberg" limits={frontmatter.limits} />
+  <ResetButton slug="quantum/heisenberg" label="Reset to balanced" />
+</div>
+
+## Two spreads on one seesaw
+
+Δx and Δp are not the position and momentum themselves. They are the *standard
+deviations* — the statistical spreads — of where a particle would be found and
+how fast it would be measured to move if you prepared the same quantum state
+over and over and measured it many times. A small Δx means the particle is
+bunched into a narrow region; a small Δp means its momentum is bunched into a
+narrow range.
+
+Heisenberg's result is that the product of the two spreads has a floor:
+
+Δx · Δp ≥ ħ/2
+
+The curves above are a minimum-uncertainty packet, the tightest a quantum state
+is allowed to be, so it rides right on that floor: Δx · Δp = ħ/2 exactly. Drag
+the slider and watch the seesaw. Narrow the position curve into a tall spike and
+the momentum curve fans out wide and low. Let the position spread out and the
+momentum curve pulls in sharp. One can never get narrow without the other
+getting wide.
+
+## This is not about disturbing the particle
+
+Here is the point almost everyone gets wrong. The uncertainty principle is **not**
+a statement about clumsy measuring instruments knocking the particle around, and
+it is **not** a claim that the act of measuring position ruins your knowledge of
+momentum. Even in principle, with perfect instruments that touch nothing, a
+quantum state simply does not possess a sharp position and a sharp momentum at
+the same time.
+
+It is a fact about what the particle *is*, not about what we are able to find
+out. A state with a narrow position spread is built, mathematically, from a wide
+spread of momenta; there is no state hiding underneath with both pinned down
+that our tools are too crude to reach. Narrowing one spread necessarily widens
+the other, because they are two faces of the same wave.
+
+<details class="misconception">
+  <summary>Is this just because measuring disturbs the particle?</summary>
+
+  No. The disturbance story is a common but wrong picture. It suggests there is a
+  real, definite position *and* a real, definite momentum sitting there, and that
+  poking at one merely spoils our reading of the other. Quantum mechanics says
+  something stronger: the particle does not have both a sharp position and a
+  sharp momentum to begin with. The spread is a property of the state itself, not
+  a smudge left by a heavy-handed instrument. Perfect measurement tools would not
+  rescue you — there is simply nothing sharper underneath to measure.
+</details>

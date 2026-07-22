@@ -1,0 +1,273 @@
+---
+import { transmission } from '../../lib/physics/tunneling';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const DEFAULT_ENERGY = 1; // eV
+const DEFAULT_BARRIER = 2; // eV (V0)
+const DEFAULT_WIDTH = 0.5; // nm
+
+const percentT = (T: number) => formatQuantity(T * 100, '%', { sigFigs: 3 });
+
+const defaultT = transmission(DEFAULT_ENERGY, DEFAULT_BARRIER, DEFAULT_WIDTH);
+
+// Barrier width vs transmission at the default energy and barrier height.
+const SAMPLE_WIDTHS = [0.1, 0.2, 0.3, 0.5, 0.7, 1.0, 1.2, 1.5];
+const rows = SAMPLE_WIDTHS.map((w) => ({
+  width: formatQuantity(w, 'nm', { sigFigs: 3 }),
+  t: percentT(transmission(DEFAULT_ENERGY, DEFAULT_BARRIER, w)),
+}));
+---
+
+<tunnel-barrier>
+  <figure class="tunnel-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A potential-energy diagram: a tall rectangular barrier in the middle sits above a horizontal line marking the incoming particle's energy, which is below the barrier top. The particle's wavefunction oscillates at full size on the left, decays steeply inside the barrier, and emerges on the right as a much smaller oscillation. The transmitted wave shrinks dramatically as the barrier is made wider or taller."
+      ></canvas>
+    </div>
+    <p class="tunnel-stat" aria-hidden="true">
+      Transmission <b class="tunnel-val">{percentT(defaultT)}</b>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      The particle tunnels through the barrier with a probability of {percentT(defaultT)}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      Transmission probability for an electron with energy {DEFAULT_ENERGY} eV meeting a {DEFAULT_BARRIER} eV
+      barrier, as the barrier is made wider. It falls off exponentially with thickness.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Barrier width</th>
+          <th scope="col">Transmission</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.width}</td>
+              <td>{row.t}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</tunnel-barrier>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { transmission } from '../../lib/physics/tunneling';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'quantum/tunneling';
+  const DEFAULT_ENERGY = 1;
+  const DEFAULT_BARRIER = 2;
+  const DEFAULT_WIDTH = 0.5;
+
+  // Fixed schematic scales so the barrier and axes never jump: the drawing maps
+  // energies against a fixed 0..MAX_BARRIER_EV axis and the width against a fixed
+  // 0..MAX_WIDTH_NM span, matching the slider ranges on the page.
+  const MAX_BARRIER_EV = 4;
+  const MAX_WIDTH_NM = 1.5;
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, {
+    energy: DEFAULT_ENERGY,
+    barrier: DEFAULT_BARRIER,
+    width: DEFAULT_WIDTH,
+  });
+
+  const percentT = (T: number) => formatQuantity(T * 100, '%', { sigFigs: 3 });
+
+  // Read the store and keep the energy strictly below the barrier top so the
+  // tunnelling formula is always in range. If a user drives E up to or past V0,
+  // clamp it to just under V0 for the display and note it in the live text.
+  function readState(values: Record<string, number>) {
+    const barrier = values['barrier'] ?? DEFAULT_BARRIER;
+    const width = values['width'] ?? DEFAULT_WIDTH;
+    const rawEnergy = values['energy'] ?? DEFAULT_ENERGY;
+    const clamped = rawEnergy >= barrier;
+    const energy = clamped ? barrier * 0.99 : rawEnergy;
+    return { energy, barrier, width, clamped };
+  }
+
+  class TunnelBarrierElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const stat = this.querySelector('.tunnel-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(
+        canvas,
+        (ctx, size, theme) => {
+          const { energy, barrier, width } = readState(store.values.get());
+          const T = transmission(energy, barrier, width);
+
+          ctx.fillStyle = theme.bg;
+          ctx.fillRect(0, 0, size.w, size.h);
+
+          const padX = 22;
+          const padTop = 18;
+          const padBottom = 34;
+          const spanX0 = padX;
+          const spanX1 = size.w - padX;
+          const span = spanX1 - spanX0;
+          const baseline = size.h - padBottom; // V = 0
+          const usableH = baseline - padTop;
+
+          const centerX = (spanX0 + spanX1) / 2;
+          const barrierPx = (width / MAX_WIDTH_NM) * (span * 0.42);
+          const barrierLeft = centerX - barrierPx / 2;
+          const barrierRight = centerX + barrierPx / 2;
+
+          const barrierTopY = baseline - (barrier / MAX_BARRIER_EV) * usableH;
+          const energyY = baseline - (energy / MAX_BARRIER_EV) * usableH;
+
+          // Baseline (potential outside the barrier).
+          ctx.strokeStyle = theme.axis;
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(spanX0, baseline);
+          ctx.lineTo(spanX1, baseline);
+          ctx.stroke();
+
+          // The barrier: a filled rectangle of height proportional to V0 and
+          // width proportional to a.
+          ctx.save();
+          ctx.globalAlpha = 0.22;
+          ctx.fillStyle = theme.rest;
+          ctx.fillRect(barrierLeft, barrierTopY, barrierRight - barrierLeft, baseline - barrierTopY);
+          ctx.restore();
+          ctx.strokeStyle = theme.rest;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(barrierLeft, barrierTopY, barrierRight - barrierLeft, baseline - barrierTopY);
+
+          // Incoming particle energy: a dashed horizontal line below the top.
+          ctx.strokeStyle = theme.curveSecondary;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          ctx.beginPath();
+          ctx.moveTo(spanX0, energyY);
+          ctx.lineTo(spanX1, energyY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Wavefunction, centred on the energy line. Amplitude squared is
+          // proportional to intensity, so the transmitted amplitude is
+          // sqrt(T) times the incident amplitude.
+          const ampIn = Math.min(30, (baseline - energyY) * 0.55, (energyY - padTop) * 0.55);
+          const ampOut = ampIn * Math.sqrt(Math.max(T, 0));
+          const wavelengthPx = 42;
+          const k = (2 * Math.PI) / wavelengthPx;
+
+          ctx.strokeStyle = theme.curve;
+          ctx.lineWidth = 2.5;
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+
+          // Incident region: cosine so it peaks (+ampIn) exactly at the wall.
+          let started = false;
+          const incSteps = 160;
+          for (let i = 0; i <= incSteps; i++) {
+            const x = spanX0 + (i / incSteps) * (barrierLeft - spanX0);
+            const y = energyY - ampIn * Math.cos(k * (x - barrierLeft));
+            if (!started) {
+              ctx.moveTo(x, y);
+              started = true;
+            } else ctx.lineTo(x, y);
+          }
+          // Inside the barrier: exponential decay of the amplitude from ampIn
+          // (at the left wall) to ampOut (at the right wall) — the evanescent tail.
+          const ratio = ampIn > 0 ? ampOut / ampIn : 0;
+          const inSteps = 120;
+          for (let i = 0; i <= inSteps; i++) {
+            const t = i / inSteps;
+            const x = barrierLeft + t * (barrierRight - barrierLeft);
+            const env = ampIn * Math.pow(ratio || 1e-6, t);
+            const y = energyY - env;
+            ctx.lineTo(x, y);
+          }
+          // Transmitted region: smaller cosine, peaking (+ampOut) at the right wall.
+          const outSteps = 160;
+          for (let i = 0; i <= outSteps; i++) {
+            const x = barrierRight + (i / outSteps) * (spanX1 - barrierRight);
+            const y = energyY - ampOut * Math.cos(k * (x - barrierRight));
+            ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+
+          // Labels.
+          ctx.fillStyle = theme.label;
+          ctx.font = 'bold 13px system-ui, sans-serif';
+          ctx.textBaseline = 'bottom';
+          ctx.textAlign = 'center';
+          ctx.fillText('V₀', centerX, barrierTopY - 4);
+          ctx.textAlign = 'left';
+          ctx.fillStyle = theme.curveSecondary;
+          ctx.fillText('E', spanX0 + 2, energyY - 4);
+        },
+        { animate: false },
+      );
+
+      const render = (values: Record<string, number>) => {
+        const { energy, barrier, width } = readState(values);
+        if (stat) stat.textContent = percentT(transmission(energy, barrier, width));
+      };
+
+      store.values.subscribe((values) => {
+        render(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const { energy, barrier, width, clamped } = readState(values);
+        const T = transmission(energy, barrier, width);
+        const note = clamped
+          ? ' (the energy was held just below the barrier top, which is where tunnelling applies)'
+          : '';
+        const text = `The particle tunnels through the barrier with a probability of ${percentT(T)}.${note}`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('tunnel-barrier')) {
+    customElements.define('tunnel-barrier', TunnelBarrierElement);
+  }
+</script>
+
+<style>
+  .tunnel-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 16 / 10;
+  }
+
+  .tunnel-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .tunnel-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+</style>

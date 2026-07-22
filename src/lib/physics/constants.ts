@@ -35,3 +35,6 @@ export const STANDARD_GRAVITY = 9.80665;
 
 /** Speed of sound in dry air at 20 degrees C, m/s. */
 export const SPEED_OF_SOUND_AIR = 343;
+
+/** Reduced Planck constant hbar = h / (2*pi), J*s. */
+export const REDUCED_PLANCK = 1.054571817e-34;

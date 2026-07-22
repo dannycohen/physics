@@ -1,0 +1,146 @@
+---
+title: 'Particle in a box'
+category: quantum
+layoutArchetype: field-space
+status: live
+order: 3.7
+equationLatex: 'E_n = \dfrac{n^2 h^2}{8 m L^2}'
+equationPlain: 'E_n = n²h² / (8mL²)'
+claim: 'Trap a quantum particle and its energy can only land on certain rungs — never in between, and never at zero.'
+defaults:
+  width: 0.5
+  n: 1
+terms:
+  - symbol: 'E_n'
+    name: 'E-n: the energy of level n'
+    role: 'the energy the particle has when it sits on rung n'
+    effect: 'the output; it climbs as the square of n and as one over the box width squared'
+  - symbol: 'n'
+    name: 'n: the quantum number, a positive integer'
+    role: 'which rung the particle is on, counting 1, 2, 3, and up'
+    effect: 'enters squared, so level 2 is four times the ground energy and level 3 is nine times'
+  - symbol: 'h'
+    name: 'h: the Planck constant'
+    role: 'the fundamental quantum of action that sets the size of the rungs'
+    effect: 'a fixed constant; its value fixes the overall energy scale'
+  - symbol: 'm'
+    name: 'm: the mass'
+    role: 'the mass of the trapped particle'
+    effect: 'heavier particles have lower, more closely spaced levels'
+  - symbol: 'L'
+    name: 'L: the box width'
+    role: 'how wide the box confining the particle is'
+    effect: 'enters squared in the denominator, so a tighter box pushes every level up fast'
+presets:
+  - label: 'Ground state (n=1)'
+    caption: 'The lowest allowed energy. Even here the particle is not at rest — its energy is above zero.'
+    values:
+      n: 1
+  - label: 'Third level (n=3)'
+    caption: 'Nine times the ground energy, with three half-waves fitting across the box.'
+    values:
+      n: 3
+  - label: 'Wider box'
+    caption: 'Doubling the box width drops every level to a quarter of its old value.'
+    values:
+      width: 1
+      n: 1
+limits:
+  - label: 'L → small'
+    icon: '🔒'
+    collapse: 'tighter box: levels shoot up, because confinement costs energy'
+    values:
+      width: 0.2
+  - label: 'L → large'
+    icon: '🌌'
+    collapse: 'roomier box: levels crowd toward the bottom as the rungs squeeze together'
+    values:
+      width: 2
+prerequisites: []
+related:
+  - quantum/de-broglie
+  - quantum/heisenberg
+---
+
+import ParticleBox from '../../../components/viz/ParticleBox.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<ParticleBox />
+
+<div class="viz-controls">
+  <SliderField
+    label="Box width"
+    unit="nm"
+    slug="quantum/particle-in-a-box"
+    storeKey="width"
+    min={0.2}
+    max={2}
+    step={0.05}
+    sigFigs={3}
+    value={frontmatter.defaults.width}
+    scale="linear"
+  />
+  <SliderField
+    label="Energy level n"
+    unit=""
+    slug="quantum/particle-in-a-box"
+    storeKey="n"
+    min={1}
+    max={5}
+    step={1}
+    sigFigs={1}
+    value={frontmatter.defaults.n}
+    scale="linear"
+  />
+  <PresetButtons slug="quantum/particle-in-a-box" presets={frontmatter.presets} />
+  <LimitSnaps slug="quantum/particle-in-a-box" limits={frontmatter.limits} />
+  <ResetButton slug="quantum/particle-in-a-box" label="Reset" />
+</div>
+
+## Why only certain energies?
+
+Trap a particle in a box and it stops behaving like a marble that can roll at any
+speed. It can only hold a short list of energies, drawn above as the rungs of a
+ladder. Pick a level with the slider and the box highlights it. The lowest rung is
+the ground state; the ones above it are the only other energies the particle is
+ever allowed to have.
+
+The rungs are not evenly spaced. Level `n` sits at `n²` times the ground energy, so
+they go 1, 4, 9, 16, 25. That is why the gaps widen as you climb: the jump from
+level 1 to 2 is smaller than the jump from 4 to 5.
+
+## Standing waves in a box
+
+The energies come from fitting waves into the box. The particle is also a
+<a href={`${import.meta.env.BASE_URL}viz/quantum/de-broglie/`}>matter wave</a>, and
+only whole numbers of half-waves fit neatly between the two walls: one hump for
+`n=1`, two for `n=2`, and so on. Each
+allowed wave has its own wavelength, and a shorter wavelength means more energy,
+which is exactly why the levels climb.
+
+Squeeze the box smaller and every wave has to bend more sharply to fit, so every
+level jumps up. That is the reason confinement costs energy: pinning a quantum
+particle into a smaller space forces it to carry more.
+
+## It can never sit still
+
+Notice the bottom rung is above the `E = 0` line. A trapped quantum particle can
+never have zero energy — it always keeps a minimum, the ground-state energy. This
+is tied to
+<a href={`${import.meta.env.BASE_URL}viz/quantum/heisenberg/`}>Heisenberg's uncertainty
+principle</a>: pin the
+particle inside a box and you have limited how much you can also pin down its
+motion, so it can never be perfectly at rest.
+
+<details class="misconception">
+  <summary>Can it have any energy in between the rungs?</summary>
+
+  No. The particle can only have the energies on the ladder — the `n²` rungs and
+  nothing between them. There is no allowed state at, say, halfway between level 1
+  and level 2. That is what quantization means, and it is the heart of quantum
+  mechanics: energy in a bound system comes in a discrete set, not a continuous
+  range.
+</details>

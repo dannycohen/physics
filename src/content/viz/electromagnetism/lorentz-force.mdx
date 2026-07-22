@@ -1,0 +1,144 @@
+---
+title: 'The Lorentz force'
+category: electromagnetism
+layoutArchetype: field-space
+status: live
+order: 4.7
+equationLatex: '\vec{F} = q\,\vec{v} \times \vec{B}'
+equationPlain: 'F = q·v × B'
+claim: 'A magnetic field pushes a moving charge sideways — never speeding it up, just curving it into circles.'
+defaults:
+  charge: 1
+  speed: 5
+  bField: 2
+terms:
+  - symbol: '\vec{F}'
+    name: 'F: Latin capital eff, the force vector'
+    role: 'the sideways push the moving charge feels'
+    effect: 'always perpendicular to the velocity, so it does no work; it steers but never speeds up'
+  - symbol: 'q'
+    name: 'q: the charge'
+    role: 'how much charge the particle carries, and its sign'
+    effect: 'flip the sign and the force reverses, so the charge circles the other way'
+  - symbol: '\vec{v}'
+    name: 'v: the velocity vector'
+    role: 'how fast and which way the charge is moving'
+    effect: 'a faster charge feels a bigger force and sweeps a wider circle'
+  - symbol: '\vec{B}'
+    name: 'B: the magnetic field vector'
+    role: 'the strength and direction of the magnetic field'
+    effect: 'a stronger field gives a bigger force and a tighter circle'
+  - symbol: '\times'
+    name: 'times: the vector cross product'
+    role: 'combines v and B into a force at right angles to both'
+    effect: 'this is why F comes out perpendicular to v, so the force can only turn the charge'
+presets:
+  - label: 'Positive charge'
+    values:
+      charge: 1
+  - label: 'Negative charge'
+    caption: 'Flip the sign and the force flips too, so the charge circles the other way.'
+    values:
+      charge: -1
+  - label: 'Strong field'
+    caption: 'A stronger field bends the path harder, tightening the circle.'
+    values:
+      bField: 5
+limits:
+  - label: 'B → strong'
+    icon: '🌀'
+    collapse: 'tight circle: a strong field means a small radius'
+    values:
+      bField: 8
+  - label: 'v → fast'
+    icon: '🚀'
+    collapse: 'wide circle: a faster charge means a bigger radius'
+    values:
+      speed: 10
+prerequisites: []
+related:
+  - 'electromagnetism/coulomb'
+---
+
+import LorentzForce from '../../../components/viz/LorentzForce.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<LorentzForce />
+
+<div class="viz-controls">
+  <SliderField
+    label="Charge sign"
+    unit=""
+    slug="electromagnetism/lorentz-force"
+    storeKey="charge"
+    min={-1}
+    max={1}
+    step={2}
+    sigFigs={1}
+    value={frontmatter.defaults.charge}
+  />
+  <SliderField
+    label="Speed"
+    unit="m/s"
+    slug="electromagnetism/lorentz-force"
+    storeKey="speed"
+    min={1}
+    max={10}
+    step={0.5}
+    sigFigs={2}
+    value={frontmatter.defaults.speed}
+  />
+  <SliderField
+    label="Field strength"
+    unit="T"
+    slug="electromagnetism/lorentz-force"
+    storeKey="bField"
+    min={0.5}
+    max={8}
+    step={0.5}
+    sigFigs={2}
+    value={frontmatter.defaults.bField}
+  />
+  <PresetButtons slug="electromagnetism/lorentz-force" presets={frontmatter.presets} />
+  <LimitSnaps slug="electromagnetism/lorentz-force" limits={frontmatter.limits} />
+  <ResetButton slug="electromagnetism/lorentz-force" label="Reset" />
+</div>
+
+## A force at right angles
+
+The magnetic force on a moving charge is `q v × B`. That cross product is the
+whole trick: it always comes out perpendicular to the velocity. Because the
+force is sideways to the motion, it never pulls in the direction the charge is
+already going, so it cannot speed the charge up or slow it down. All it can do
+is turn it. A steady turn at constant speed is a circle, and the charge settles
+into a loop of radius `r = m v / (q B)`.
+
+## What changes the circle
+
+Two knobs set how tight that loop is. A faster charge carries more momentum, so
+it resists the turn and sweeps a wider circle. A stronger field bends the path
+harder, pulling the charge into a smaller one. Flip the sign of the charge, or
+reverse the field, and the force points the other way, so the charge circles in
+the opposite direction. This is exactly how a cyclotron holds particles on a
+looping path and how a mass spectrometer sorts ions by how sharply they curve.
+
+## No work, no energy change
+
+Because the force stays perpendicular to the motion, it does no work. Work is
+force along the direction of travel, and here there is none. So the charge's
+kinetic energy, and therefore its speed, never changes in a purely magnetic
+field. Only an electric field can add or remove energy. A magnetic field is a
+steering wheel, not an accelerator pedal.
+
+<details class="misconception">
+  <summary>Does a magnetic field speed the charge up?</summary>
+
+  No. The magnetic force is always perpendicular to the velocity, so it only
+  changes the direction of motion, never the speed. The charge goes around and
+  around at a constant pace; its kinetic energy stays fixed. If something is
+  genuinely speeding a charged particle up, there is an electric field doing
+  that work, not the magnetic field.
+</details>

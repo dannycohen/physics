@@ -1,0 +1,251 @@
+---
+import { energyLevelEv } from '../../lib/physics/particle-box';
+import { ELECTRON_MASS } from '../../lib/physics/constants';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const DEFAULT_WIDTH = 0.5; // nanometres
+const DEFAULT_N = 1;
+const LEVELS = [1, 2, 3, 4, 5];
+
+const evAt = (n: number, widthNm: number) =>
+  energyLevelEv(n, ELECTRON_MASS, widthNm * 1e-9);
+const energyText = (ev: number) => formatQuantity(ev, 'eV', { sigFigs: 3 });
+
+const defaultEnergy = evAt(DEFAULT_N, DEFAULT_WIDTH);
+const rows = LEVELS.map((n) => ({
+  n,
+  energy: energyText(evAt(n, DEFAULT_WIDTH)),
+}));
+---
+
+<particle-box>
+  <figure class="field-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="An energy-level diagram for a particle trapped in a box. Five horizontal lines mark the only energies the particle is allowed, rising as the square of the level number so the gaps widen going up. The lowest line sits above zero, showing the particle can never have zero energy. The selected level is highlighted with its standing wave drawn inside the box; narrowing the box pushes every level higher."
+      ></canvas>
+    </div>
+    <p class="level-stat" aria-hidden="true">
+      Level n=<b class="n-val">{DEFAULT_N}</b>: energy <b class="energy-val">{energyText(defaultEnergy)}</b>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      Level n={DEFAULT_N} has energy {energyText(defaultEnergy)}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      Allowed energies for an electron in a {DEFAULT_WIDTH} nm box. Each level is the
+      ground-state energy times n squared, so the rungs are 1, 4, 9, 16 and 25 times
+      the bottom one.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Level n</th>
+          <th scope="col">Energy (eV)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.n}</td>
+              <td>{row.energy}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</particle-box>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { energyLevelJoules, energyLevelEv } from '../../lib/physics/particle-box';
+  import { ELECTRON_MASS } from '../../lib/physics/constants';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'quantum/particle-in-a-box';
+  const DEFAULT_WIDTH = 0.5;
+  const DEFAULT_N = 1;
+  const LEVELS = [1, 2, 3, 4, 5];
+  const MIN_WIDTH = 0.2;
+  const MAX_WIDTH = 2;
+
+  // Fixed energy scale: the top of the diagram is the highest level (n=5) in the
+  // tightest box (min width). Keeping it fixed means that widening the box visibly
+  // drops every level toward the floor, and squeezing it lifts them — the physics
+  // the page is about.
+  const E_REF = energyLevelJoules(5, ELECTRON_MASS, MIN_WIDTH * 1e-9);
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, { width: DEFAULT_WIDTH, n: DEFAULT_N });
+
+  const num = (values: Record<string, number>, key: string, fallback: number) =>
+    values[key] ?? fallback;
+  const energyText = (ev: number) => formatQuantity(ev, 'eV', { sigFigs: 3 });
+
+  class ParticleBoxElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const nVal = this.querySelector('.n-val');
+      const energyVal = this.querySelector('.energy-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const v = store.values.get();
+        const widthNm = num(v, 'width', DEFAULT_WIDTH);
+        const selected = Math.round(num(v, 'n', DEFAULT_N));
+        const L = widthNm * 1e-9;
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        // Plot area with room for the axis label on the left.
+        const padL = size.w * 0.14;
+        const padR = size.w * 0.06;
+        const padTop = size.h * 0.08;
+        const padBottom = size.h * 0.1;
+        const floor = size.h - padBottom;
+        const plotH = floor - padTop;
+
+        // Box width grows with L across the available plot span.
+        const spanW = size.w - padL - padR;
+        const boxFrac = 0.42 + 0.58 * ((widthNm - MIN_WIDTH) / (MAX_WIDTH - MIN_WIDTH));
+        const boxW = spanW * boxFrac;
+        const boxLeft = padL;
+        const boxRight = boxLeft + boxW;
+
+        const energyToY = (eJoules: number) =>
+          floor - Math.min(eJoules / E_REF, 1) * plotH;
+
+        // Zero-energy floor line, so the nonzero ground state reads clearly.
+        ctx.strokeStyle = theme.grid;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(boxLeft, floor);
+        ctx.lineTo(size.w - padR, floor);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = theme.label;
+        ctx.font = '11px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText('E = 0', boxLeft, floor - 3);
+
+        // Box walls: two vertical bars marking the confining potential.
+        ctx.strokeStyle = theme.axis;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(boxLeft, padTop);
+        ctx.lineTo(boxLeft, floor);
+        ctx.moveTo(boxRight, padTop);
+        ctx.lineTo(boxRight, floor);
+        ctx.stroke();
+
+        // Energy levels.
+        for (const n of LEVELS) {
+          const eJ = energyLevelJoules(n, ELECTRON_MASS, L);
+          const y = energyToY(eJ);
+          const isSel = n === selected;
+          ctx.strokeStyle = isSel ? theme.active : theme.curve;
+          ctx.globalAlpha = isSel ? 1 : 0.55;
+          ctx.lineWidth = isSel ? 3 : 1.5;
+          ctx.beginPath();
+          ctx.moveTo(boxLeft, y);
+          ctx.lineTo(boxRight, y);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+
+          // Level label (n) to the left, energy to the right.
+          ctx.fillStyle = isSel ? theme.active : theme.label;
+          ctx.font = `${isSel ? 'bold ' : ''}12px system-ui, sans-serif`;
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`n=${n}`, boxLeft - 6, y);
+          ctx.textAlign = 'left';
+          ctx.font = '11px system-ui, sans-serif';
+          ctx.fillStyle = isSel ? theme.active : theme.label;
+          ctx.globalAlpha = isSel ? 1 : 0.7;
+          ctx.fillText(energyText(energyLevelEv(n, ELECTRON_MASS, L)), boxRight + 6, y);
+          ctx.globalAlpha = 1;
+
+          // Standing wave psi_n = sin(n*pi*x/L) drawn about the selected level.
+          if (isSel) {
+            const amp = Math.min(plotH * 0.09, 22);
+            ctx.strokeStyle = theme.curveSecondary;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            const steps = 120;
+            for (let i = 0; i <= steps; i++) {
+              const u = i / steps; // fraction across the box
+              const px = boxLeft + u * boxW;
+              const py = y - amp * Math.sin(n * Math.PI * u);
+              if (i === 0) ctx.moveTo(px, py);
+              else ctx.lineTo(px, py);
+            }
+            ctx.stroke();
+          }
+        }
+      });
+
+      const renderStat = (values: Record<string, number>) => {
+        const widthNm = num(values, 'width', DEFAULT_WIDTH);
+        const selected = Math.round(num(values, 'n', DEFAULT_N));
+        const ev = energyLevelEv(selected, ELECTRON_MASS, widthNm * 1e-9);
+        if (nVal) nVal.textContent = String(selected);
+        if (energyVal) energyVal.textContent = energyText(ev);
+      };
+
+      store.values.subscribe((values) => {
+        renderStat(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const widthNm = num(values, 'width', DEFAULT_WIDTH);
+        const selected = Math.round(num(values, 'n', DEFAULT_N));
+        const ev = energyLevelEv(selected, ELECTRON_MASS, widthNm * 1e-9);
+        const text = `Level n=${selected} has energy ${energyText(ev)}.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('particle-box')) {
+    customElements.define('particle-box', ParticleBoxElement);
+  }
+</script>
+
+<style>
+  .field-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 3 / 2;
+  }
+
+  .level-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .level-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+</style>

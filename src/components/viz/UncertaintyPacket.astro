@@ -1,0 +1,223 @@
+---
+import { minMomentumSpread } from '../../lib/physics/heisenberg';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and the default readout.
+// Δx is stored in nanometres; the physics runs in SI (metres), so Δp comes out
+// in kg·m/s. A minimum-uncertainty Gaussian packet saturates the bound, so the
+// product is always ħ/2 (the minimum).
+const DEFAULT_DX_NM = 0.1;
+const NM = 1e-9;
+
+const dxNm = (v: number) => formatQuantity(v, 'nm', { sigFigs: 3 });
+// Δp is ~1e-25 kg·m/s; standard notation is unreadable, so show it scaled.
+const dp = (v: number) => `${formatQuantity(v / 1e-25, '', { sigFigs: 3 })} ×10⁻²⁵ kg·m/s`;
+
+const defaultDpSI = minMomentumSpread(DEFAULT_DX_NM * NM);
+
+const SAMPLE_DX_NM = [0.02, 0.05, 0.1, 0.2, 0.3, 0.5];
+const rows = SAMPLE_DX_NM.map((nm) => ({
+  dx: dxNm(nm),
+  dp: dp(minMomentumSpread(nm * NM)),
+}));
+---
+
+<uncertainty-packet>
+  <figure class="packet-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Two bell curves sharing the same centre, one for the particle's position spread and one for its momentum spread, each normalised to its own peak. Narrowing the position slider makes the position curve tall and thin while the momentum curve spreads wide and low, and widening it does the reverse. Their product stays fixed at the minimum, ħ/2."
+      ></canvas>
+    </div>
+    <p class="packet-legend" aria-hidden="true">
+      <span class="stat"><span class="swatch swatch-pos"></span>position</span>
+      <span class="stat"><span class="swatch swatch-mom"></span>momentum</span>
+    </p>
+    <p class="packet-readout" aria-hidden="true">
+      Δx = <b class="dx-val">{dxNm(DEFAULT_DX_NM)}</b>, Δp = <b class="dp-val">{dp(defaultDpSI)}</b> (product = ħ/2, the minimum)
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      Position spread Δx {dxNm(DEFAULT_DX_NM)}, momentum spread Δp {dp(defaultDpSI)}; their product
+      is ħ/2, the smallest quantum mechanics allows.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      As the position spread Δx shrinks, the momentum spread Δp grows in exact proportion, because
+      their product is pinned at ħ/2.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Position spread Δx</th>
+          <th scope="col">Momentum spread Δp</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.dx}</td>
+              <td>{row.dp}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</uncertainty-packet>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { plotCurve, type Series } from '../../lib/plotCurve';
+  import { minMomentumSpread } from '../../lib/physics/heisenberg';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'quantum/heisenberg';
+  const DEFAULT_DX_NM = 0.1;
+  const NM = 1e-9;
+  const DX_MIN_NM = 0.02;
+  const DX_MAX_NM = 0.5;
+  const STEPS = 200;
+
+  // This island seeds the shared store so reset() restores this default and the
+  // controls connect against it. Module scripts run in document order and the
+  // MDX places <UncertaintyPacket /> ahead of the controls, so it seeds first.
+  const store = getVizStore(SLUG, { dx: DEFAULT_DX_NM });
+
+  const dxNm = (v: number) => formatQuantity(v, 'nm', { sigFigs: 3 });
+  const dpFmt = (v: number) => `${formatQuantity(v / 1e-25, '', { sigFigs: 3 })} ×10⁻²⁵ kg·m/s`;
+  const readDxNm = (values: Record<string, number>) =>
+    Math.min(Math.max(values['dx'] ?? DEFAULT_DX_NM, DX_MIN_NM), DX_MAX_NM);
+
+  // A Gaussian normalised to its own peak (peak = 1), centred at the middle of a
+  // 0..1 axis. `spread` is the standard deviation in the same 0..1 axis units.
+  const gaussian = (spread: number): Array<[number, number]> => {
+    const pts: Array<[number, number]> = [];
+    for (let i = 0; i <= STEPS; i++) {
+      const x = i / STEPS;
+      const z = (x - 0.5) / spread;
+      pts.push([x, Math.exp(-0.5 * z * z)]);
+    }
+    return pts;
+  };
+
+  // Map Δx (nm) and Δp (SI) to on-axis widths. The widest realistic spread of
+  // each maps to a readable curve; the narrowest maps to a thin spike. Both use
+  // the same reference so the trade-off reads honestly: as one narrows the other
+  // widens, and the shared reference keeps areas comparable.
+  const DX_REF_NM = DX_MAX_NM; // widest position spread -> widest position curve
+  const DP_REF = minMomentumSpread(DX_MIN_NM * NM); // widest momentum spread (at tightest Δx)
+  const WIDTH_MAX = 0.16; // std-dev in axis units for the reference (widest) case
+
+  class UncertaintyPacketElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const dxVal = this.querySelector('.dx-val');
+      const dpVal = this.querySelector('.dp-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const dxNmVal = readDxNm(store.values.get());
+        const dpSI = minMomentumSpread(dxNmVal * NM);
+
+        const posSpread = WIDTH_MAX * (dxNmVal / DX_REF_NM);
+        const momSpread = WIDTH_MAX * (dpSI / DP_REF);
+
+        const series: Series[] = [
+          { points: gaussian(posSpread), color: theme.curve, label: '' },
+          { points: gaussian(momSpread), color: theme.curveSecondary, label: '', dash: [7, 4] },
+        ];
+
+        plotCurve(ctx, size, theme, {
+          series,
+          xLabel: 'spread about the average (each curve to its own scale)',
+          yLabel: 'relative probability',
+          xDomain: [0, 1],
+          yDomain: [0, 1.05],
+        });
+      });
+
+      const renderReadout = (values: Record<string, number>) => {
+        const dxNmVal = readDxNm(values);
+        const dpSI = minMomentumSpread(dxNmVal * NM);
+        if (dxVal) dxVal.textContent = dxNm(dxNmVal);
+        if (dpVal) dpVal.textContent = dpFmt(dpSI);
+      };
+
+      store.values.subscribe((values) => {
+        renderReadout(values);
+        handle.redraw();
+      });
+
+      // Screen-reader summary only once the value settles, so a drag does not flood.
+      store.onSettled((values) => {
+        const dxNmVal = readDxNm(values);
+        const dpSI = minMomentumSpread(dxNmVal * NM);
+        const text = `Position spread Δx ${dxNm(dxNmVal)}, momentum spread Δp ${dpFmt(dpSI)}; their product is ħ/2, the smallest quantum mechanics allows.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('uncertainty-packet')) {
+    customElements.define('uncertainty-packet', UncertaintyPacketElement);
+  }
+</script>
+
+<style>
+  .packet-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 16 / 10;
+  }
+
+  .packet-readout {
+    margin-block: var(--space-2) 0;
+    font-size: 0.95rem;
+  }
+
+  .packet-readout b {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .packet-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-block: var(--space-2) 0;
+    font-size: 0.9rem;
+  }
+
+  .packet-legend .stat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .packet-legend .swatch {
+    display: inline-block;
+    width: 20px;
+    height: 0;
+  }
+
+  .swatch-pos {
+    border-top: 3px solid var(--viz-curve);
+  }
+
+  .swatch-mom {
+    border-top: 3px dashed var(--viz-curve-secondary);
+  }
+</style>
