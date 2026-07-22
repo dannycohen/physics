@@ -12,13 +12,15 @@ const NM = 1e-9;
 const dxNm = (v: number) => formatQuantity(v, 'nm', { sigFigs: 3 });
 // Δp is ~1e-25 kg·m/s; standard notation is unreadable, so show it scaled.
 const dp = (v: number) => `${formatQuantity(v / 1e-25, '', { sigFigs: 3 })} ×10⁻²⁵ kg·m/s`;
+// Value + scale without the unit, for places where the unit is shown separately.
+const dpNum = (v: number) => `${formatQuantity(v / 1e-25, '', { sigFigs: 3 })} ×10⁻²⁵`;
 
 const defaultDpSI = minMomentumSpread(DEFAULT_DX_NM * NM);
 
 const SAMPLE_DX_NM = [0.02, 0.05, 0.1, 0.2, 0.3, 0.5];
 const rows = SAMPLE_DX_NM.map((nm) => ({
   dx: dxNm(nm),
-  dp: dp(minMomentumSpread(nm * NM)),
+  dp: dpNum(minMomentumSpread(nm * NM)),
 }));
 ---
 
@@ -35,7 +37,7 @@ const rows = SAMPLE_DX_NM.map((nm) => ({
       <span class="stat"><span class="swatch swatch-mom"></span>momentum</span>
     </p>
     <p class="packet-readout" aria-hidden="true">
-      Δx = <b class="dx-val">{dxNm(DEFAULT_DX_NM)}</b>, Δp = <b class="dp-val">{dp(defaultDpSI)}</b> (product = ħ/2, the minimum)
+      Δx = <b class="dx-val">{dxNm(DEFAULT_DX_NM)}</b>, Δp = <b class="dp-val">{dpNum(defaultDpSI)}</b> <abbr title="kilogram-metres per second — the unit of momentum (mass times speed)">kg·m/s</abbr> (product = ħ/2, the minimum)
     </p>
     <span class="visually-hidden" aria-live="polite">
       Position spread Δx {dxNm(DEFAULT_DX_NM)}, momentum spread Δp {dp(defaultDpSI)}; their product
@@ -90,6 +92,7 @@ const rows = SAMPLE_DX_NM.map((nm) => ({
 
   const dxNm = (v: number) => formatQuantity(v, 'nm', { sigFigs: 3 });
   const dpFmt = (v: number) => `${formatQuantity(v / 1e-25, '', { sigFigs: 3 })} ×10⁻²⁵ kg·m/s`;
+  const dpNum = (v: number) => `${formatQuantity(v / 1e-25, '', { sigFigs: 3 })} ×10⁻²⁵`;
   const readDxNm = (values: Record<string, number>) =>
     Math.min(Math.max(values['dx'] ?? DEFAULT_DX_NM, DX_MIN_NM), DX_MAX_NM);
 
@@ -152,7 +155,7 @@ const rows = SAMPLE_DX_NM.map((nm) => ({
         const dxNmVal = readDxNm(values);
         const dpSI = minMomentumSpread(dxNmVal * NM);
         if (dxVal) dxVal.textContent = dxNm(dxNmVal);
-        if (dpVal) dpVal.textContent = dpFmt(dpSI);
+        if (dpVal) dpVal.textContent = dpNum(dpSI);
       };
 
       store.values.subscribe((values) => {

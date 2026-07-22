@@ -31,7 +31,7 @@ const rows = SAMPLE_V.map((v) => ({
       ></canvas>
     </div>
     <p class="force-stat" aria-hidden="true">
-      Force <b class="force-val">{forceText(defaultForce)}</b> (perpendicular to v), circle radius
+      Force <b class="force-val">{formatQuantity(defaultForce, '', { sigFigs: 3 })}</b> <abbr title="newton, the unit of force">N</abbr> (perpendicular to v), circle radius
       <b class="radius-val">{radiusText(defaultRadius)}</b>
     </p>
     <span class="visually-hidden" aria-live="polite">
@@ -258,7 +258,7 @@ const rows = SAMPLE_V.map((v) => ({
         const bField = num(values, 'bField', DEFAULT_B);
         const f = magneticForceMagnitude(chargeSign, speed, bField);
         const r = radius(MASS, chargeSign, speed, bField);
-        if (forceVal) forceVal.textContent = forceText(f);
+        if (forceVal) forceVal.textContent = formatQuantity(f, '', { sigFigs: 3 });
         if (radiusEl) radiusEl.textContent = radiusText(r);
       };
 

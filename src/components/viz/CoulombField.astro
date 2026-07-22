@@ -29,7 +29,8 @@ const rows = SAMPLE_R.map((rCm) => ({
       ></canvas>
     </div>
     <p class="force-stat" aria-hidden="true">
-      Force on each charge: <b class="force-val">{forceText(defaultForce)}</b>
+      Force on each charge: <b class="force-val">{formatQuantity(Math.abs(defaultForce), '', { sigFigs: 3 })}</b>
+      {' '}<abbr title="newton, the unit of force">N</abbr>
       <span class="dir-val">({direction(defaultForce)})</span>
     </p>
     <span class="visually-hidden" aria-live="polite">
@@ -219,7 +220,7 @@ const rows = SAMPLE_R.map((rCm) => ({
           num(values, 'q2', DEFAULT_Q2) * 1e-6,
           num(values, 'r', DEFAULT_R) / 100,
         );
-        if (forceVal) forceVal.textContent = forceText(f);
+        if (forceVal) forceVal.textContent = formatQuantity(Math.abs(f), '', { sigFigs: 3 });
         if (dirVal) dirVal.textContent = `(${direction(f)})`;
       };
 

@@ -29,7 +29,8 @@ const rows = SAMPLE_V.map((volumeL) => ({
       ></canvas>
     </div>
     <p class="pressure-stat" aria-hidden="true">
-      Pressure = <b class="pressure-val">{pressureText(defaultP)}</b>
+      Pressure = <b class="pressure-val">{formatQuantity(defaultP, '', { sigFigs: 3 })}</b>
+      {' '}<abbr title="kilopascal — a unit of pressure; ordinary air is about 101 kPa">kPa</abbr>
     </p>
     <span class="visually-hidden" aria-live="polite">
       The gas pushes on the piston at {pressureText(defaultP)}.
@@ -190,7 +191,7 @@ const rows = SAMPLE_V.map((volumeL) => ({
           num(values, 'volume', DEFAULT_V),
           num(values, 'moles', DEFAULT_N),
         );
-        if (pressureVal) pressureVal.textContent = pressureText(p);
+        if (pressureVal) pressureVal.textContent = formatQuantity(p, '', { sigFigs: 3 });
       };
 
       store.values.subscribe((values) => {

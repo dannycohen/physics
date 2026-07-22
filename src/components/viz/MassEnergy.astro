@@ -26,7 +26,7 @@ const rows = SAMPLE_BETAS.map((beta) => ({
       ></canvas>
     </div>
     <p class="energy-stat" aria-hidden="true">
-      Total energy <b class="e-val">{mev(totalEnergy(E0, DEFAULT_BETA))}</b>
+      Total energy <b class="e-val">{formatQuantity(totalEnergy(E0, DEFAULT_BETA), '', { sigFigs: 3 })}</b> <abbr title="megaelectronvolt — one million electronvolts; an electron's rest energy is 0.511 MeV">MeV</abbr>
       <span class="parts-val">= rest {mev(E0)} + kinetic {mev(kineticEnergy(E0, DEFAULT_BETA))}</span>
     </p>
     <span class="visually-hidden" aria-live="polite">
@@ -155,7 +155,7 @@ const rows = SAMPLE_BETAS.map((beta) => ({
 
       const renderStat = (values: Record<string, number>) => {
         const beta = clampBeta(values['beta']);
-        if (eVal) eVal.textContent = mev(totalEnergy(E0, beta));
+        if (eVal) eVal.textContent = formatQuantity(totalEnergy(E0, beta), '', { sigFigs: 3 });
         if (partsVal) partsVal.textContent = `= rest ${mev(E0)} + kinetic ${mev(kineticEnergy(E0, beta))}`;
       };
 
