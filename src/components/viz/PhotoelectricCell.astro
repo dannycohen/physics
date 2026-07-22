@@ -1,0 +1,347 @@
+---
+import { photonEnergyEv, maxKineticEnergyEv } from '../../lib/physics/photoelectric';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const DEFAULT_WAVELENGTH = 400; // nm
+const DEFAULT_WORK_FUNCTION = 2.3; // eV, ~sodium
+
+const evText = (e: number) => formatQuantity(e, 'eV', { sigFigs: 3 });
+const emitting = (wl: number, phi: number) => maxKineticEnergyEv(wl, phi) > 0;
+const emitLabel = (wl: number, phi: number) => (emitting(wl, phi) ? 'emitting' : 'no emission');
+
+const defaultPhoton = photonEnergyEv(DEFAULT_WAVELENGTH);
+const defaultKmax = maxKineticEnergyEv(DEFAULT_WAVELENGTH, DEFAULT_WORK_FUNCTION);
+
+// wavelength vs K_max at the default metal, spanning UV through red.
+const SAMPLE_WL = [200, 250, 300, 350, 400, 450, 500, 550, 620, 700];
+const rows = SAMPLE_WL.map((wl) => ({
+  wl: formatQuantity(wl, ''),
+  photon: evText(photonEnergyEv(wl)),
+  kmax: emitting(wl, DEFAULT_WORK_FUNCTION)
+    ? evText(maxKineticEnergyEv(wl, DEFAULT_WORK_FUNCTION))
+    : 'no emission',
+}));
+---
+
+<photoelectric-cell>
+  <figure class="cell-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A beam of coloured light strikes a metal surface. When the photon energy is at or above the metal's work function, electrons are ejected and fly away from the surface; the leftover energy is their kinetic energy. When the photon energy is below the work function, no electrons escape no matter how bright the light."
+      ></canvas>
+    </div>
+    <p class="cell-stat" aria-hidden="true">
+      Photon <b class="photon-val">{evText(defaultPhoton)}</b> vs work function
+      <b class="phi-val">{evText(DEFAULT_WORK_FUNCTION)}</b> → K_max =
+      <b class="kmax-val">{evText(defaultKmax)}</b>
+      <span class="emit-val"
+        >({emitLabel(DEFAULT_WAVELENGTH, DEFAULT_WORK_FUNCTION)})</span
+      >
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      A {evText(defaultPhoton)} photon hits a metal with a {evText(DEFAULT_WORK_FUNCTION)} work
+      function, so K_max is {evText(defaultKmax)} and the surface is {emitLabel(
+        DEFAULT_WAVELENGTH,
+        DEFAULT_WORK_FUNCTION,
+      )}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      Maximum electron kinetic energy as the light's wavelength changes, for the default
+      metal (work function {evText(DEFAULT_WORK_FUNCTION)}). Shorter wavelengths carry more
+      energy per photon; below the threshold wavelength nothing is emitted.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Wavelength (nm)</th>
+          <th scope="col">Photon energy (eV)</th>
+          <th scope="col">K_max</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.wl}</td>
+              <td>{row.photon}</td>
+              <td>{row.kmax}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</photoelectric-cell>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { photonEnergyEv, maxKineticEnergyEv } from '../../lib/physics/photoelectric';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+  import type { VizTheme } from '../../lib/theme';
+
+  const SLUG = 'quantum/photoelectric';
+  const DEFAULT_WAVELENGTH = 400;
+  const DEFAULT_WORK_FUNCTION = 2.3;
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, {
+    wavelength: DEFAULT_WAVELENGTH,
+    workFunction: DEFAULT_WORK_FUNCTION,
+  });
+
+  const num = (values: Record<string, number>, key: string, fallback: number) =>
+    values[key] ?? fallback;
+  const evText = (e: number) => formatQuantity(e, 'eV', { sigFigs: 3 });
+  const emitLabel = (wl: number, phi: number) =>
+    maxKineticEnergyEv(wl, phi) > 0 ? 'emitting' : 'no emission';
+
+  // Approximate visible-spectrum colour for a wavelength in nm. Outside the
+  // visible band we return null so the caller can show a labelled UV/IR swatch
+  // instead of a misleading colour.
+  function visibleColor(wl: number): string | null {
+    if (wl < 380 || wl > 750) return null; // ultraviolet / infrared: invisible, labelled by the caller
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    if (wl >= 380 && wl < 440) {
+      r = -(wl - 440) / (440 - 380);
+      b = 1;
+    } else if (wl < 490) {
+      g = (wl - 440) / (490 - 440);
+      b = 1;
+    } else if (wl < 510) {
+      g = 1;
+      b = -(wl - 510) / (510 - 490);
+    } else if (wl < 580) {
+      r = (wl - 510) / (580 - 510);
+      g = 1;
+    } else if (wl < 645) {
+      r = 1;
+      g = -(wl - 645) / (645 - 580);
+    } else if (wl <= 750) {
+      r = 1;
+    } else {
+      return null;
+    }
+    // Fade intensity at the deep-violet and deep-red ends.
+    let factor = 1;
+    if (wl < 420) factor = 0.3 + (0.7 * (wl - 380)) / (420 - 380);
+    else if (wl > 700) factor = 0.3 + (0.7 * (750 - wl)) / (750 - 700);
+    const ch = (c: number) => Math.round(255 * Math.pow(Math.max(0, c) * factor, 0.8));
+    return `rgb(${ch(r)}, ${ch(g)}, ${ch(b)})`;
+  }
+
+  // A colour to draw the beam with: real visible colour where possible, else a
+  // theme-driven swatch for UV (short) and IR (long) so it never relies on a
+  // colour that does not exist.
+  function beamColor(wl: number, theme: VizTheme): { color: string; band: string } {
+    const vis = visibleColor(wl);
+    if (vis) return { color: vis, band: 'visible' };
+    if (wl < 380) return { color: theme.curveSecondary || theme.active, band: 'ultraviolet' };
+    return { color: theme.rest, band: 'infrared' };
+  }
+
+  interface Electron {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+  }
+
+  class PhotoelectricCellElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const photonVal = this.querySelector('.photon-val');
+      const phiVal = this.querySelector('.phi-val');
+      const kmaxVal = this.querySelector('.kmax-val');
+      const emitVal = this.querySelector('.emit-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const v = store.values.get();
+        const wl = num(v, 'wavelength', DEFAULT_WAVELENGTH);
+        const phi = num(v, 'workFunction', DEFAULT_WORK_FUNCTION);
+        const photon = photonEnergyEv(wl);
+        const kmax = maxKineticEnergyEv(wl, phi);
+        const emits = kmax > 0;
+        const { color: beam, band } = beamColor(wl, theme);
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        // Metal surface: a slab on the right that the light strikes.
+        const surfaceX = size.w * 0.62;
+        const slabW = size.w * 0.16;
+        ctx.fillStyle = theme.axis;
+        ctx.fillRect(surfaceX, 0, slabW, size.h);
+        ctx.fillStyle = theme.label;
+        ctx.font = '12px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('metal', surfaceX + slabW / 2, size.h - 20);
+
+        // Incoming light: parallel rays from the left toward the surface.
+        const rayCount = 5;
+        ctx.save();
+        ctx.strokeStyle = beam;
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.85;
+        for (let i = 0; i < rayCount; i++) {
+          const y = size.h * (0.2 + (0.6 * i) / (rayCount - 1));
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(surfaceX, y);
+          ctx.stroke();
+          // small arrowhead near the surface
+          ctx.beginPath();
+          ctx.moveTo(surfaceX, y);
+          ctx.lineTo(surfaceX - 10, y - 5);
+          ctx.lineTo(surfaceX - 10, y + 5);
+          ctx.closePath();
+          ctx.fillStyle = beam;
+          ctx.fill();
+        }
+        ctx.restore();
+
+        // Band label for non-visible light so colour is never the only signal.
+        if (band !== 'visible') {
+          ctx.fillStyle = theme.label;
+          ctx.font = 'bold 13px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.fillText(band === 'ultraviolet' ? 'UV' : 'IR', 10, 10);
+        }
+
+        // Ejected electrons: only when the photon clears the work function.
+        // Their speed reflects the kinetic energy left over.
+        if (emits) {
+          const speed = 3 + 6 * Math.min(kmax / 4, 1);
+          const electrons: Electron[] = [];
+          const n = 4;
+          for (let i = 0; i < n; i++) {
+            const y = size.h * (0.28 + (0.44 * i) / (n - 1));
+            const spread = (i - (n - 1) / 2) * 0.28;
+            electrons.push({
+              x: surfaceX,
+              y,
+              vx: -Math.cos(spread) * speed,
+              vy: Math.sin(spread) * speed,
+            });
+          }
+          for (const e of electrons) {
+            const ex = e.x + e.vx * 8;
+            const ey = e.y + e.vy * 8;
+            ctx.strokeStyle = theme.curve;
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(e.x, e.y);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = theme.curve;
+            ctx.beginPath();
+            ctx.arc(ex, ey, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = theme.bg;
+            ctx.font = 'bold 9px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('−', ex, ey);
+          }
+          ctx.fillStyle = theme.curve;
+          ctx.font = 'bold 13px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.fillText(`K_max = ${evText(kmax)}`, 10, size.h - 26);
+        } else {
+          ctx.fillStyle = theme.limit || theme.label;
+          ctx.font = 'bold 14px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('no emission', surfaceX * 0.5, size.h * 0.5);
+        }
+
+        // Energy readout: photon vs work function.
+        ctx.fillStyle = theme.label;
+        ctx.font = '12px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText(
+          `photon ${evText(photon)}   φ ${evText(phi)}`,
+          10,
+          band !== 'visible' ? 30 : 10,
+        );
+      });
+
+      const renderStat = (values: Record<string, number>) => {
+        const wl = num(values, 'wavelength', DEFAULT_WAVELENGTH);
+        const phi = num(values, 'workFunction', DEFAULT_WORK_FUNCTION);
+        const photon = photonEnergyEv(wl);
+        const kmax = maxKineticEnergyEv(wl, phi);
+        if (photonVal) photonVal.textContent = evText(photon);
+        if (phiVal) phiVal.textContent = evText(phi);
+        if (kmaxVal) kmaxVal.textContent = evText(kmax);
+        if (emitVal) emitVal.textContent = `(${emitLabel(wl, phi)})`;
+      };
+
+      store.values.subscribe((values) => {
+        renderStat(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const wl = num(values, 'wavelength', DEFAULT_WAVELENGTH);
+        const phi = num(values, 'workFunction', DEFAULT_WORK_FUNCTION);
+        const photon = photonEnergyEv(wl);
+        const kmax = maxKineticEnergyEv(wl, phi);
+        const text = `A ${evText(photon)} photon hits a metal with a ${evText(
+          phi,
+        )} work function, so K_max is ${evText(kmax)} and the surface is ${emitLabel(wl, phi)}.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('photoelectric-cell')) {
+    customElements.define('photoelectric-cell', PhotoelectricCellElement);
+  }
+</script>
+
+<style>
+  .cell-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 3 / 2;
+  }
+
+  .cell-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .cell-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .emit-val {
+    color: var(--color-text-muted);
+  }
+</style>

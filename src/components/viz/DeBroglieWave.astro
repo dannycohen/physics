@@ -1,0 +1,214 @@
+---
+import { deBroglieWavelength } from '../../lib/physics/debroglie';
+import { ELECTRON_MASS } from '../../lib/physics/constants';
+import { formatQuantity } from '../../lib/format';
+
+const DEFAULT_SPEED = 1e6; // m/s
+// Reference scale: a typical atom is about 0.1 nm across. Not a fundamental
+// constant, just the yardstick the wavelength is compared against on screen.
+const ATOM_DIAMETER_M = 1e-10;
+
+const lambdaNm = (v: number) => formatQuantity(deBroglieWavelength(ELECTRON_MASS, v) * 1e9, 'nm', { sigFigs: 3 });
+const atomsWide = (v: number) =>
+  formatQuantity(deBroglieWavelength(ELECTRON_MASS, v) / ATOM_DIAMETER_M, '', { sigFigs: 2 });
+
+const SAMPLE_SPEEDS = [1e5, 5e5, 1e6, 2e6, 5e6, 1e7, 2e7];
+const rows = SAMPLE_SPEEDS.map((v) => ({
+  speed: formatQuantity(v, 'm/s', { sigFigs: 3 }),
+  lambda: lambdaNm(v),
+  atoms: atomsWide(v),
+}));
+---
+
+<de-broglie-wave>
+  <figure class="wave-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A single sine wave — the electron's matter wave — drawn above a short fixed bar marking the diameter of an atom, about 0.1 nanometres. As the electron's speed rises its de Broglie wavelength shrinks, so the wave packs more and more cycles into the same width and its wavelength grows small next to the atom bar. At low speed the wave stretches into a long, gentle curve much wider than an atom."
+      ></canvas>
+    </div>
+    <p class="lambda-stat" aria-hidden="true">
+      Wavelength = <b class="lambda-val">{lambdaNm(DEFAULT_SPEED)}</b>
+      <span class="atoms-word">— about {atomsWide(DEFAULT_SPEED)}× an atom's width</span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      The electron's de Broglie wavelength is {lambdaNm(DEFAULT_SPEED)}, about {atomsWide(DEFAULT_SPEED)} times the width of an atom.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>de Broglie wavelength of an electron at different speeds, and how it compares to an atom's ~0.1 nm width.</p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Electron speed</th>
+          <th scope="col">Wavelength</th>
+          <th scope="col">÷ atom width</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.speed}</td>
+              <td>{row.lambda}</td>
+              <td>{row.atoms}×</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</de-broglie-wave>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { deBroglieWavelength } from '../../lib/physics/debroglie';
+  import { ELECTRON_MASS } from '../../lib/physics/constants';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'quantum/de-broglie';
+  const DEFAULT_SPEED = 1e6;
+  const MIN_SPEED = 1e5;
+  const MAX_SPEED = 2e7;
+  const ATOM_DIAMETER_M = 1e-10;
+
+  const store = getVizStore(SLUG, { speed: DEFAULT_SPEED });
+  const clampSpeed = (v: number | undefined) =>
+    Math.min(Math.max(v ?? DEFAULT_SPEED, MIN_SPEED), MAX_SPEED);
+
+  const lambda = (v: number) => deBroglieWavelength(ELECTRON_MASS, v);
+  const lambdaNm = (v: number) => formatQuantity(lambda(v) * 1e9, 'nm', { sigFigs: 3 });
+  const atomsWide = (v: number) => formatQuantity(lambda(v) / ATOM_DIAMETER_M, '', { sigFigs: 2 });
+
+  // Fixed screen scale: at the default speed the wave shows about three cycles
+  // across the span. The scale is derived from the default only, so it never
+  // moves — the atom bar stays a fixed width and only the wave's wavelength
+  // changes with speed, which is the whole point of the comparison.
+  const LAMBDA_REF = lambda(DEFAULT_SPEED);
+
+  class DeBroglieWaveElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const lambdaVal = this.querySelector('.lambda-val');
+      const atomsSpan = this.querySelector('.atoms-word');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(
+        canvas,
+        (ctx, size, theme) => {
+          const speed = clampSpeed(store.values.get()['speed']);
+
+          ctx.fillStyle = theme.bg;
+          ctx.fillRect(0, 0, size.w, size.h);
+
+          const padX = 24;
+          const x0 = padX;
+          const x1 = size.w - padX;
+          const span = x1 - x0;
+          const amp = Math.min(size.h * 0.2, 60);
+          const waveY = size.h * 0.42;
+          const barY = size.h * 0.82;
+
+          // Pixels per metre, fixed so the default wavelength spans a third of
+          // the width. metres of wave visible across the span stays constant.
+          const metresAcross = 3 * LAMBDA_REF;
+          const pxPerMetre = span / metresAcross;
+
+          const lam = lambda(speed);
+          const wavelengthPx = lam * pxPerMetre;
+          const cycles = span / wavelengthPx;
+
+          // Sine wave: the electron's matter wave.
+          ctx.strokeStyle = theme.curve;
+          ctx.lineWidth = 3;
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          const steps = Math.max(300, Math.ceil(cycles * 24));
+          for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const x = x0 + t * span;
+            const yy = waveY - Math.sin(t * cycles * 2 * Math.PI) * amp;
+            if (i === 0) ctx.moveTo(x, yy);
+            else ctx.lineTo(x, yy);
+          }
+          ctx.stroke();
+
+          // Fixed atom-diameter scale bar with end ticks.
+          const atomPx = ATOM_DIAMETER_M * pxPerMetre;
+          ctx.strokeStyle = theme.limit;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(x0, barY);
+          ctx.lineTo(x0 + atomPx, barY);
+          ctx.moveTo(x0, barY - 6);
+          ctx.lineTo(x0, barY + 6);
+          ctx.moveTo(x0 + atomPx, barY - 6);
+          ctx.lineTo(x0 + atomPx, barY + 6);
+          ctx.stroke();
+
+          ctx.fillStyle = theme.label;
+          ctx.font = 'bold 14px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.fillText('one atom ≈ 0.1 nm', x0, barY + 10);
+        },
+        { animate: false },
+      );
+
+      const render = (values: Record<string, number>) => {
+        const speed = clampSpeed(values['speed']);
+        if (lambdaVal) lambdaVal.textContent = lambdaNm(speed);
+        if (atomsSpan) atomsSpan.textContent = `— about ${atomsWide(speed)}× an atom's width`;
+      };
+
+      store.values.subscribe((values) => {
+        render(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const speed = clampSpeed(values['speed']);
+        const text = `The electron's de Broglie wavelength is ${lambdaNm(speed)}, about ${atomsWide(speed)} times the width of an atom.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('de-broglie-wave')) {
+    customElements.define('de-broglie-wave', DeBroglieWaveElement);
+  }
+</script>
+
+<style>
+  .wave-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 16 / 10;
+  }
+
+  .lambda-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .lambda-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .atoms-word {
+    color: var(--color-text-muted);
+  }
+</style>

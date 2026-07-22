@@ -20,3 +20,12 @@ export const PLANCK_CONSTANT = 6.62607015e-34;
 /** Wien's displacement-law constant b, m*K (CODATA). The wavelength of peak
  *  spectral radiance is b / T. */
 export const WIEN_WAVELENGTH_B = 2.897771955e-3;
+
+/** Electron mass, kg (CODATA 2018). */
+export const ELECTRON_MASS = 9.1093837015e-31;
+
+/** Molar gas constant R, J mol^-1 K^-1 (exact SI). */
+export const GAS_CONSTANT = 8.314462618;
+
+/** Elementary charge e, C (exact SI). Use to convert joules to electronvolts. */
+export const ELEMENTARY_CHARGE = 1.602176634e-19;

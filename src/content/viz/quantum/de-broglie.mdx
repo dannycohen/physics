@@ -1,0 +1,123 @@
+---
+title: 'de Broglie wavelength'
+category: quantum
+layoutArchetype: comparison
+status: live
+order: 3.5
+equationLatex: '\lambda = \dfrac{h}{p} = \dfrac{h}{mv}'
+equationPlain: 'λ = h / (m·v)'
+claim: 'Every moving particle is also a wave; the faster and heavier it is, the shorter its wavelength — which is why you never see your own.'
+defaults:
+  speed: 1000000
+terms:
+  - symbol: '\lambda'
+    name: 'lambda: Greek lowercase lambda, the wavelength'
+    role: 'the wavelength of the matter wave'
+    effect: 'the output; it shrinks as the particle moves faster or is more massive'
+  - symbol: 'h'
+    name: 'h: the Planck constant'
+    role: 'the fundamental quantum of action that sets the scale of the wave'
+    effect: 'a fixed constant; its tininess is why everyday wavelengths are unobservably small'
+  - symbol: 'p'
+    name: 'p: the momentum'
+    role: 'the particle momentum, mass times speed'
+    effect: 'larger momentum means a shorter wavelength (they are inversely proportional)'
+  - symbol: 'm'
+    name: 'm: the mass'
+    role: 'the mass of the particle'
+    effect: 'heavier particles have shorter wavelengths at the same speed'
+  - symbol: 'v'
+    name: 'v: the speed'
+    role: 'how fast the particle is moving'
+    effect: 'faster motion shortens the wavelength'
+presets:
+  - label: 'Slow electron (1e6 m/s)'
+    caption: 'A thermal-ish electron: its wavelength is about seven atoms wide, big enough to diffract off a crystal lattice.'
+    values:
+      speed: 1000000
+  - label: 'Fast electron (1e7 m/s)'
+    caption: 'Ten times faster: the wavelength drops below one atom, the resolution that lets an electron microscope beat a light microscope.'
+    values:
+      speed: 10000000
+  - label: 'Very slow (1e5 m/s)'
+    caption: 'Barely moving by electron standards: the wavelength swells to dozens of atoms, so the wave nature is impossible to miss.'
+    values:
+      speed: 100000
+limits:
+  - label: 'v → small'
+    collapse: 'wavelength grows: wave nature more obvious'
+    values:
+      speed: 100000
+  - label: 'v → large'
+    collapse: 'wavelength shrinks toward nothing: behaves like a particle'
+    values:
+      speed: 20000000
+prerequisites: []
+related: []
+---
+
+import DeBroglieWave from '../../../components/viz/DeBroglieWave.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<DeBroglieWave />
+
+<div class="viz-controls">
+  <SliderField
+    label="Electron speed"
+    unit="m/s"
+    slug="quantum/de-broglie"
+    storeKey="speed"
+    min={100000}
+    max={20000000}
+    step={100000}
+    sigFigs={3}
+    value={frontmatter.defaults.speed}
+    scale="log"
+  />
+  <PresetButtons slug="quantum/de-broglie" presets={frontmatter.presets} />
+  <LimitSnaps slug="quantum/de-broglie" limits={frontmatter.limits} />
+  <ResetButton slug="quantum/de-broglie" label="Reset to 1e6 m/s" />
+</div>
+
+## Matter is made of waves too
+
+In 1924 Louis de Broglie proposed that the wave–particle duality already known
+for light runs both ways: anything with momentum also has a wavelength. Slide the
+electron's speed and watch the wave on the canvas. As the electron speeds up its
+wavelength shrinks, so more crests crowd into the same width and the wave grows
+tiny next to the fixed bar marking an atom's width.
+
+The rule is `λ = h / p`, wavelength equals the Planck constant divided by
+momentum. Momentum is `m·v`, so the wavelength gets shorter whenever the particle
+is heavier or faster. Everything hinges on how small `h` is: about
+`6.6 × 10⁻³⁴` joule-seconds. Divide that by any everyday momentum and you get a
+number far too small to ever notice.
+
+## Why the electron diffracts but you don't
+
+A person walking at a stroll carries a de Broglie wavelength of roughly
+`10⁻³⁵` metres — smaller than the size of a proton by twenty-odd orders of
+magnitude, utterly beyond any possible measurement. That is why a walking person
+never shows any hint of being a wave.
+
+An electron is different. It is roughly `10³¹` times lighter than a person, so its
+wavelength lands right around the size of an atom, near `10⁻¹⁰` metres. That is
+big enough to interfere and diffract when it passes through the regularly spaced
+atoms of a crystal, exactly as X-rays do. It is also what makes electron
+microscopes work: a shorter wavelength resolves finer detail, and a fast
+electron's wavelength is far shorter than any wavelength of visible light, so an
+electron microscope sees things a light microscope never could.
+
+<details class="misconception">
+  <summary>If everything is a wave, why don't I see myself ripple?</summary>
+
+  Your wavelength is real, it is just hopelessly small — around `10⁻³⁵` metres,
+  set by your large mass and ordinary walking speed. To see wave behaviour you
+  need the wavelength to be comparable to the things it interacts with, and
+  nothing in the universe is fine enough to reveal a ripple that small. Only
+  light, low-mass things like electrons have wavelengths big enough to matter,
+  which is why quantum weirdness shows up for them and not for you.
+</details>

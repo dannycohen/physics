@@ -1,0 +1,165 @@
+---
+import { formatQuantity } from '../../lib/format';
+import { clockRate } from '../../lib/physics/gravitational-dilation';
+
+interface Props {
+  /** Store slug to bind to. */
+  slug?: string;
+}
+
+const { slug = 'relativity/gravitational-time-dilation' } = Astro.props;
+
+const DEFAULT_R = 3;
+const rate = (x: number) => formatQuantity(x, '', { sigFigs: 3 });
+
+// Build-time samples so the table exists without JavaScript.
+const SAMPLE_R = [1.02, 1.1, 1.5, 2, 3, 5, 8, 12, 20];
+const rows = SAMPLE_R.map((r) => ({
+  r: formatQuantity(r, ''),
+  rate: rate(clockRate(r)),
+}));
+const rateAtDefault = rate(clockRate(DEFAULT_R));
+---
+
+<gravitational-clock data-slug={slug}>
+  <figure class="clock-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Graph of a clock's tick rate against distance from a black hole, measured in Schwarzschild radii. The curve starts near zero at the event horizon and rises toward 1 far away. A dashed line at 1 marks a far-away clock that never slows. A marker sits on the curve at the current distance."></canvas>
+    </div>
+    <p class="rate-stat" aria-hidden="true">
+      A clock here ticks at <b class="rate-val">{rateAtDefault}</b> of a far-away clock's rate
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      A clock at {formatQuantity(DEFAULT_R, '')} Schwarzschild radii ticks at {rateAtDefault} of a far-away clock's rate.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>The clock rate is near zero at the horizon and climbs toward 1 far away.</p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">r / r_s (distance in Schwarzschild radii)</th>
+          <th scope="col">Clock rate (fraction of far-away rate)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.r}</td>
+              <td>{row.rate}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</gravitational-clock>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { plotCurve, type Series } from '../../lib/plotCurve';
+  import { clockRate } from '../../lib/physics/gravitational-dilation';
+  import { getVizStore } from '../../lib/vizStore';
+  import { formatQuantity } from '../../lib/format';
+
+  const DEFAULT_R = 3;
+  const X_DOMAIN: [number, number] = [1, 20];
+  const Y_DOMAIN: [number, number] = [0, 1];
+
+  // Reads are clamped just above the horizon so the rate stays defined.
+  const R_MIN = 1.0001;
+  const clampR = (r: number | undefined) => Math.max(r ?? DEFAULT_R, R_MIN);
+  const rate = (x: number) => formatQuantity(x, '', { sigFigs: 3 });
+
+  const ratePoints: Array<[number, number]> = [];
+  const STEPS = 240;
+  for (let i = 0; i <= STEPS; i++) {
+    const r = X_DOMAIN[0] + (i / STEPS) * (X_DOMAIN[1] - X_DOMAIN[0]);
+    ratePoints.push([r, clockRate(Math.max(r, R_MIN))]);
+  }
+
+  const farAwayPoints: Array<[number, number]> = [
+    [X_DOMAIN[0], 1],
+    [X_DOMAIN[1], 1],
+  ];
+
+  class GravitationalClockElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const rateVal = this.querySelector('.rate-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const store = getVizStore(this.dataset.slug ?? 'relativity/gravitational-time-dilation', {
+        rOverRs: DEFAULT_R,
+      });
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const series: Series[] = [
+          { points: ratePoints, color: theme.curve, label: 'clock rate' },
+          {
+            points: farAwayPoints,
+            color: theme.curveSecondary,
+            label: 'far away (no slowing)',
+            dashed: true,
+          },
+        ];
+        const r = clampR(store.values.get()['rOverRs']);
+        plotCurve(ctx, size, theme, {
+          series,
+          xLabel: 'distance r / r_s',
+          yLabel: 'clock rate',
+          xDomain: X_DOMAIN,
+          yDomain: Y_DOMAIN,
+          marker: { x: Math.min(r, X_DOMAIN[1]), y: clockRate(r) },
+        });
+      });
+
+      store.values.subscribe((values) => {
+        const r = clampR(values['rOverRs']);
+        if (rateVal) rateVal.textContent = rate(clockRate(r));
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const r = clampR(values['rOverRs']);
+        const text = `A clock at ${formatQuantity(r, '')} Schwarzschild radii ticks at ${rate(clockRate(r))} of a far-away clock's rate.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('gravitational-clock')) {
+    customElements.define('gravitational-clock', GravitationalClockElement);
+  }
+</script>
+
+<style>
+  .clock-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 16 / 10;
+  }
+
+  .rate-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .rate-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+</style>

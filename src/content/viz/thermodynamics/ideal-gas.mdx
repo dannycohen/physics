@@ -1,0 +1,160 @@
+---
+title: 'The ideal gas law'
+category: thermodynamics
+layoutArchetype: field-space
+status: live
+order: 2.7
+equationLatex: 'PV = nRT'
+equationPlain: 'P·V = n·R·T'
+claim: 'Squeeze a gas or heat it up and the pressure answers back. One tidy equation ties the four together.'
+defaults:
+  tempK: 300
+  volume: 22.4
+  moles: 1
+terms:
+  - symbol: 'P'
+    name: 'P: Latin capital pee, pressure'
+    role: 'the force the gas presses on every wall, per unit area'
+    effect: 'this is the output; it rises when you heat, add gas, or squeeze'
+    unit: 'Pa'
+  - symbol: 'V'
+    name: 'V: Latin capital vee, volume'
+    role: 'the space the gas fills'
+    effect: 'a smaller volume packs the gas tighter, so the pressure climbs'
+    unit: 'm³'
+  - symbol: 'n'
+    name: 'n: Latin letter en, amount in moles'
+    role: 'how much gas there is, counted in moles'
+    effect: 'more molecules means more collisions, so the pressure climbs'
+    unit: 'mol'
+  - symbol: 'R'
+    name: 'R: Latin capital arr, the gas constant'
+    role: 'the fixed number that links the units together'
+    effect: 'a constant, so it just sets the scale of the answer'
+    unit: 'J mol⁻¹ K⁻¹'
+  - symbol: 'T'
+    name: 'T: Latin capital tee, absolute temperature'
+    role: 'the temperature of the gas, in kelvin'
+    effect: 'hotter molecules hit harder and faster, so the pressure climbs'
+    unit: 'K'
+presets:
+  - label: 'Room conditions'
+    caption: 'About one mole of gas at room temperature, near everyday atmospheric pressure.'
+    values:
+      tempK: 293
+      volume: 24
+      moles: 1
+  - label: 'Heat it up'
+    caption: 'Same gas, same box, twice as hot. The pressure roughly doubles.'
+    values:
+      tempK: 600
+      volume: 24
+      moles: 1
+  - label: 'Compress it'
+    caption: 'Squeeze the same gas into a quarter of the space and the pressure shoots up.'
+    values:
+      tempK: 293
+      volume: 6
+      moles: 1
+limits:
+  - label: 'V → small'
+    icon: '🗜️'
+    collapse: 'pressure rockets up as you squeeze'
+    values:
+      volume: 2
+  - label: 'T → high'
+    icon: '🔥'
+    collapse: 'pressure climbs as the gas heats'
+    values:
+      tempK: 1000
+prerequisites: []
+related:
+  - 'thermodynamics/maxwell-boltzmann'
+---
+
+import GasPiston from '../../../components/viz/GasPiston.astro';
+import TempConversions from '../../../components/viz/TempConversions.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<GasPiston />
+
+<div class="viz-controls">
+  <SliderField
+    label="Temperature"
+    unit="K"
+    slug="thermodynamics/ideal-gas"
+    storeKey="tempK"
+    min={100}
+    max={1000}
+    step={10}
+    sigFigs={4}
+    value={300}
+    scale="linear"
+  />
+  <TempConversions slug="thermodynamics/ideal-gas" value={frontmatter.defaults.tempK} />
+  <SliderField
+    label="Volume"
+    unit="L"
+    slug="thermodynamics/ideal-gas"
+    storeKey="volume"
+    min={2}
+    max={40}
+    step={0.5}
+    sigFigs={3}
+    value={22.4}
+    scale="linear"
+  />
+  <SliderField
+    label="Amount"
+    unit="mol"
+    slug="thermodynamics/ideal-gas"
+    storeKey="moles"
+    min={0.5}
+    max={3}
+    step={0.1}
+    sigFigs={2}
+    value={1}
+    scale="linear"
+  />
+  <PresetButtons slug="thermodynamics/ideal-gas" presets={frontmatter.presets} />
+  <LimitSnaps slug="thermodynamics/ideal-gas" limits={frontmatter.limits} />
+  <ResetButton slug="thermodynamics/ideal-gas" label="Reset to 1 mol, 300 K" />
+</div>
+
+## Where does pressure come from?
+
+A gas is a swarm of molecules flying in every direction. Pressure is nothing more
+than those molecules drumming on the walls: each tiny bounce is a push, and the
+push per unit area, summed over billions of hits a second, is the pressure you
+feel. Change how hard or how often they hit and the pressure changes with it.
+
+Heating the gas speeds the molecules up, so they strike the walls harder and more
+often. That is the same spread of speeds you can watch in the
+[Maxwell–Boltzmann distribution](maxwell-boltzmann). Squeezing the gas into a
+smaller volume packs the molecules closer to the walls, so the hits come thicker
+and faster. Adding more gas simply puts more molecules in the box. Every one of
+those moves raises the pressure, and `PV = nRT` is the bookkeeping that ties the
+four quantities together: fix any three and the fourth is set.
+
+## Reading the equation
+
+Rearranged as `P = nRT / V`, the law reads directly off the sliders. Pressure
+grows in step with the amount of gas and with temperature, and it falls as the
+volume opens up. Double the temperature and the pressure doubles; halve the
+volume and the pressure doubles again. `R` never moves; it is just the constant
+that makes the units agree.
+
+<details class="misconception">
+  <summary>Is "ideal" real?</summary>
+
+  Real gases follow this law closely under everyday conditions, room temperature
+  and ordinary pressure, which is why it is so useful. It leans on two
+  simplifications: that molecules take up no space of their own, and that they
+  ignore each other between collisions. Those assumptions hold until you push a
+  gas toward condensing, cool it near its boiling point, or crush it to very high
+  pressure. There the molecules crowd and start to attract one another, and the
+  real pressure drifts away from `nRT / V`.
+</details>

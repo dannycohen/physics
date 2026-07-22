@@ -1,0 +1,236 @@
+---
+import { pressure } from '../../lib/physics/ideal-gas';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const DEFAULT_T = 300; // kelvin
+const DEFAULT_V = 22.4; // litres
+const DEFAULT_N = 1; // moles
+
+// Litres → cubic metres for the physics.
+const kPa = (tempK: number, volumeL: number, nMoles: number) =>
+  pressure(nMoles, tempK, volumeL * 1e-3) / 1000;
+const pressureText = (p: number) => formatQuantity(p, 'kPa', { sigFigs: 3 });
+
+const defaultP = kPa(DEFAULT_T, DEFAULT_V, DEFAULT_N);
+const SAMPLE_V = [4, 8, 12, 16, 22.4, 28, 34, 40];
+const rows = SAMPLE_V.map((volumeL) => ({
+  v: formatQuantity(volumeL, ''),
+  p: pressureText(kPa(DEFAULT_T, volumeL, DEFAULT_N)),
+}));
+---
+
+<gas-piston>
+  <figure class="field-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A cylinder of gas sealed by a movable piston. The gas is drawn as scattered dots; a taller cylinder means more volume and lower pressure, a shorter one means less volume and higher pressure. Heating the gas warms its colour. A gauge shows the pressure."
+      ></canvas>
+    </div>
+    <p class="pressure-stat" aria-hidden="true">
+      Pressure = <b class="pressure-val">{pressureText(defaultP)}</b>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      The gas pushes on the piston at {pressureText(defaultP)}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      Pressure of {DEFAULT_N} mol of gas at {DEFAULT_T} K as the volume changes.
+      Halving the volume doubles the pressure.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Volume (L)</th>
+          <th scope="col">Pressure (kPa)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.v}</td>
+              <td>{row.p}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</gas-piston>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { pressure } from '../../lib/physics/ideal-gas';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+  import type { VizTheme } from '../../lib/theme';
+
+  const SLUG = 'thermodynamics/ideal-gas';
+  const DEFAULT_T = 300;
+  const DEFAULT_V = 22.4;
+  const DEFAULT_N = 1;
+
+  // Slider bounds (kept in step with the MDX SliderFields) map the volume onto
+  // the piston height and the moles onto the particle count.
+  const V_MIN = 2;
+  const V_MAX = 40;
+  const T_MIN = 100;
+  const T_MAX = 1000;
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, { tempK: DEFAULT_T, volume: DEFAULT_V, moles: DEFAULT_N });
+
+  const num = (values: Record<string, number>, key: string, fallback: number) =>
+    values[key] ?? fallback;
+  const kPa = (tempK: number, volumeL: number, nMoles: number) =>
+    pressure(nMoles, tempK, volumeL * 1e-3) / 1000;
+  const pressureText = (p: number) => formatQuantity(p, 'kPa', { sigFigs: 3 });
+
+  // Warm (hot) vs cool (cold) tint for the gas, mixed from theme colours.
+  function tempColor(theme: VizTheme, tempK: number): string {
+    const t = Math.min(1, Math.max(0, (tempK - T_MIN) / (T_MAX - T_MIN)));
+    return t >= 0.5 ? theme.active : theme.curveSecondary;
+  }
+
+  // A deterministic pseudo-random layout so particles do not jump every redraw.
+  function seeded(i: number): [number, number] {
+    const a = Math.sin(i * 12.9898) * 43758.5453;
+    const b = Math.sin(i * 78.233) * 12543.6789;
+    return [a - Math.floor(a), b - Math.floor(b)];
+  }
+
+  class GasPistonElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const pressureVal = this.querySelector('.pressure-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const v = store.values.get();
+        const tempK = num(v, 'tempK', DEFAULT_T);
+        const volumeL = num(v, 'volume', DEFAULT_V);
+        const nMoles = num(v, 'moles', DEFAULT_N);
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        // Cylinder geometry: fixed width, variable gas height from the volume.
+        const pad = Math.max(24, size.w * 0.1);
+        const cylW = size.w - pad * 2 - size.w * 0.18; // leave room for the gauge
+        const cylX = pad;
+        const floorY = size.h - pad;
+        const ceilY = pad;
+        const spanY = floorY - ceilY;
+        const vFrac = (volumeL - V_MIN) / (V_MAX - V_MIN);
+        const gasH = spanY * (0.12 + 0.8 * vFrac); // cap leaves headroom for the piston bar + rod
+        const gasTop = floorY - gasH;
+
+        // Cylinder walls and floor.
+        ctx.strokeStyle = theme.axis;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cylX, ceilY);
+        ctx.lineTo(cylX, floorY);
+        ctx.lineTo(cylX + cylW, floorY);
+        ctx.lineTo(cylX + cylW, ceilY);
+        ctx.stroke();
+
+        // Gas particles: count grows with the amount of gas, positions seeded so
+        // they read as a denser cloud when the piston squeezes the same gas.
+        const count = Math.round(18 + 12 * ((nMoles - 0.5) / 2.5));
+        ctx.fillStyle = tempColor(theme, tempK);
+        const inset = 8;
+        for (let i = 0; i < count; i++) {
+          const [rx, ry] = seeded(i + 1);
+          const px = cylX + inset + rx * (cylW - inset * 2);
+          const py = gasTop + inset + ry * (gasH - inset * 2);
+          ctx.beginPath();
+          ctx.arc(px, py, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Piston: a bar sitting on top of the gas, with a rod above it.
+        ctx.fillStyle = theme.label;
+        ctx.fillRect(cylX - 3, gasTop - 10, cylW + 6, 10);
+        ctx.fillRect(cylX + cylW / 2 - 4, ceilY - 2, 8, gasTop - 10 - (ceilY - 2));
+
+        // Pressure gauge: a bar to the right whose fill tracks the pressure.
+        const p = kPa(tempK, volumeL, nMoles);
+        const gaugeX = cylX + cylW + size.w * 0.06;
+        const gaugeW = Math.max(14, size.w * 0.06);
+        ctx.strokeStyle = theme.axis;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(gaugeX, ceilY, gaugeW, spanY);
+        const gaugeFrac = Math.min(1, p / 500); // 500 kPa fills the gauge
+        ctx.fillStyle = theme.curve;
+        ctx.fillRect(gaugeX, floorY - spanY * gaugeFrac, gaugeW, spanY * gaugeFrac);
+
+        ctx.fillStyle = theme.label;
+        ctx.font = '12px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('P', gaugeX + gaugeW / 2, floorY + 6);
+      });
+
+      const renderStat = (values: Record<string, number>) => {
+        const p = kPa(
+          num(values, 'tempK', DEFAULT_T),
+          num(values, 'volume', DEFAULT_V),
+          num(values, 'moles', DEFAULT_N),
+        );
+        if (pressureVal) pressureVal.textContent = pressureText(p);
+      };
+
+      store.values.subscribe((values) => {
+        renderStat(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const p = kPa(
+          num(values, 'tempK', DEFAULT_T),
+          num(values, 'volume', DEFAULT_V),
+          num(values, 'moles', DEFAULT_N),
+        );
+        const text = `The gas pushes on the piston at ${pressureText(p)}.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('gas-piston')) {
+    customElements.define('gas-piston', GasPistonElement);
+  }
+</script>
+
+<style>
+  .field-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 3 / 2;
+  }
+
+  .pressure-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .pressure-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+</style>

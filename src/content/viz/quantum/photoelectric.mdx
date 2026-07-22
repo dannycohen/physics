@@ -1,0 +1,137 @@
+---
+title: 'The photoelectric effect'
+category: quantum
+layoutArchetype: field-space
+status: live
+order: 3.6
+equationLatex: 'K_{max} = hf - \phi'
+equationPlain: 'K_max = h·f − φ'
+claim: 'Light knocks electrons out of metal, but only if its colour is blue enough, not if it is merely bright.'
+defaults:
+  wavelength: 400
+  workFunction: 2.3
+terms:
+  - symbol: 'K_{max}'
+    name: 'K-max: the maximum kinetic energy'
+    role: 'the energy the fastest ejected electron carries away'
+    effect: 'what we solve for; zero below the threshold, then climbs as the light gets bluer'
+  - symbol: 'h'
+    name: 'h: the Planck constant'
+    role: 'the fixed conversion between a light wave''s frequency and its photon energy'
+    effect: 'a tiny number, which is why one photon carries only a few electronvolts'
+  - symbol: 'f'
+    name: 'f: Latin lowercase eff, the frequency'
+    role: 'how fast the light wave oscillates, set here by the wavelength you choose'
+    effect: 'higher frequency (bluer light) means more energy per photon, so more kinetic energy'
+  - symbol: '\phi'
+    name: 'phi: Greek lowercase phi, the work function'
+    role: 'the energy price to pull one electron out of this particular metal'
+    effect: 'raise it and you need bluer light to eject anything; the leftover after paying it is the kinetic energy'
+presets:
+  - label: 'Sodium (φ=2.3 eV)'
+    caption: 'A soft metal that gives up electrons easily; blue and violet light eject them with energy to spare.'
+    values:
+      workFunction: 2.3
+      wavelength: 400
+  - label: 'Zinc (φ=4.3 eV)'
+    caption: 'A stubborn metal: only ultraviolet light carries enough energy per photon to free an electron.'
+    values:
+      workFunction: 4.3
+      wavelength: 250
+  - label: 'Caesium (φ=2.1 eV)'
+    caption: 'The classic photocathode metal, so easy to ionise that even green light works.'
+    values:
+      workFunction: 2.1
+      wavelength: 500
+limits:
+  - label: 'below threshold'
+    icon: '🚫'
+    collapse: 'no electrons escape, however bright the light'
+    values:
+      wavelength: 700
+      workFunction: 2.3
+  - label: 'well above threshold'
+    icon: '⚡'
+    collapse: 'electrons fly out with energy to spare'
+    values:
+      wavelength: 250
+      workFunction: 2.3
+prerequisites: []
+related: []
+---
+
+import PhotoelectricCell from '../../../components/viz/PhotoelectricCell.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<PhotoelectricCell />
+
+<div class="viz-controls">
+  <SliderField
+    label="Light wavelength"
+    unit="nm"
+    slug="quantum/photoelectric"
+    storeKey="wavelength"
+    min={200}
+    max={750}
+    step={5}
+    sigFigs={3}
+    value={frontmatter.defaults.wavelength}
+    scale="linear"
+  />
+  <SliderField
+    label="Metal work function"
+    unit="eV"
+    slug="quantum/photoelectric"
+    storeKey="workFunction"
+    min={1.5}
+    max={5}
+    step={0.1}
+    sigFigs={2}
+    value={frontmatter.defaults.workFunction}
+    scale="linear"
+  />
+  <PresetButtons slug="quantum/photoelectric" presets={frontmatter.presets} />
+  <LimitSnaps slug="quantum/photoelectric" limits={frontmatter.limits} />
+  <ResetButton slug="quantum/photoelectric" label="Reset" />
+</div>
+
+## Light arrives in lumps
+
+Classical physics said light was a wave, and a wave should be able to shake an
+electron loose if you just poured in enough energy: turn up the brightness and
+wait. That is not what happens. Shine dim blue light on a metal and electrons
+pop out at once. Shine intense red light on the same metal and nothing comes
+out, no matter how long you wait or how bright the beam.
+
+Einstein's insight was that light comes in packets called photons, and one
+photon carries an energy fixed only by its frequency: `E = hf`. A single photon
+ejects a single electron, all at once, or not at all. To escape, that photon
+must carry at least the metal's work function `φ` — the energy cost of pulling
+an electron free. Anything left over becomes the electron's kinetic energy:
+`K_max = hf − φ`.
+
+## Colour sets the energy, brightness sets the count
+
+Move the wavelength slider toward blue and the photon energy climbs; the ejected
+electrons carry more kinetic energy. Move it toward red and the energy per photon
+falls. Cross the threshold and emission stops dead.
+
+Brightness is a separate knob entirely. A brighter beam is simply more photons
+per second, so it ejects more electrons per second, but each electron still
+leaves with exactly the same maximum energy, because each is freed by one photon
+of the same frequency. More photons, not more energetic ones. This split, energy
+from colour and count from brightness, is the fingerprint of the photon.
+
+<details class="misconception">
+  <summary>Won't a bright enough dim-colour light eventually eject electrons?</summary>
+
+  No. Below the threshold frequency, no electron escapes however bright the light
+  gets. Piling on more photons just means more photons that are each too weak to
+  pay the work function, and their energies do not pool: an electron is freed by
+  one photon or none. Cranking up red light forever still ejects nothing. That
+  stubborn fact is exactly what a pure wave picture could not explain, and it is
+  what forced the photon idea.
+</details>

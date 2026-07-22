@@ -1,0 +1,118 @@
+---
+title: 'Gravitational time dilation'
+category: relativity
+layoutArchetype: distribution
+status: live
+order: 1.9
+equationLatex: 't_{far} = \dfrac{t_{near}}{\sqrt{1 - r_s/r}}'
+equationPlain: 'rate = √(1 − r_s/r)'
+claim: 'Clocks run slower the deeper they sit in gravity. Right at a black hole, they almost freeze.'
+defaults:
+  rOverRs: 3
+terms:
+  - symbol: '\text{rate}'
+    name: 'rate: the clock rate, a plain English word'
+    role: "how fast a clock here ticks compared with a clock far from all gravity"
+    effect: 'between 0 and 1; smaller means slower ticking as seen from far away'
+  - symbol: 'r'
+    name: 'r: Latin letter r, the radial distance'
+    role: 'how far the clock sits from the centre of the mass'
+    effect: 'larger r -> weaker gravity -> rate closer to 1'
+  - symbol: 'r_s'
+    name: 'r-s: Latin letter r with subscript s, the Schwarzschild radius'
+    role: 'the event-horizon radius, where gravity would freeze a clock completely'
+    effect: 'fixed by the mass; the clock freezes when r reaches r_s'
+  - symbol: 'r_s/r'
+    name: 'r-s over r: the ratio of the Schwarzschild radius to the distance'
+    role: 'how deep in the gravity well you are, as a fraction'
+    effect: 'closer to 1 near the horizon, toward 0 far away'
+presets:
+  - label: 'Just outside a black hole'
+    icon: '🕳️'
+    caption: 'A hair above the horizon: to a distant observer, time here is nearly frozen.'
+    values:
+      rOverRs: 1.05
+  - label: 'Neutron-star surface'
+    icon: '⭐'
+    caption: 'Sitting on a neutron star, clocks run noticeably slow compared with far away.'
+    values:
+      rOverRs: 2.4
+  - label: 'Far away'
+    icon: '🛰️'
+    caption: 'Well clear of the mass, gravity barely touches the clock and the rate is close to 1.'
+    values:
+      rOverRs: 15
+limits:
+  - label: 'r → r_s (the horizon)'
+    icon: '🥶'
+    collapse: 'the clock rate falls to zero: time appears frozen'
+    values:
+      rOverRs: 1.02
+  - label: 'r → ∞'
+    icon: '🌌'
+    collapse: 'rate → 1: ordinary far-from-gravity time'
+    values:
+      rOverRs: 20
+prerequisites: []
+related:
+  - relativity/time-dilation
+  - foundations/lorentz-factor
+---
+
+import GravitationalClock from '../../../components/viz/GravitationalClock.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<GravitationalClock />
+
+<div class="viz-controls">
+  <SliderField
+    label="Distance (r / r_s)"
+    unit=""
+    slug="relativity/gravitational-time-dilation"
+    storeKey="rOverRs"
+    min={1.02}
+    max={20}
+    step={0.02}
+    scale="linear"
+    sigFigs={3}
+    value={frontmatter.defaults.rOverRs}
+  />
+  <PresetButtons slug="relativity/gravitational-time-dilation" presets={frontmatter.presets} />
+  <LimitSnaps slug="relativity/gravitational-time-dilation" limits={frontmatter.limits} />
+  <ResetButton slug="relativity/gravitational-time-dilation" label="Reset to 3 r_s" />
+</div>
+
+Drag the slider inward and the clock slows. Distance is measured in Schwarzschild
+radii, so r / r_s = 1 sits right at the event horizon and larger numbers mean you
+are farther out, where gravity is weaker.
+
+## Deeper in the well, slower the clock
+
+Gravity slows time. A clock deep in a gravity well ticks slower than one far
+away, and the closer it sits to the mass, the slower it runs. This is not about
+motion: the clock can be sitting perfectly still. What matters is how deep in
+the gravity it rests.
+
+The Schwarzschild radius r_s is the point of no return around a black hole. As
+a clock approaches it, the rate drops toward zero, so to a distant observer the
+clock appears to freeze. You never see it cross; it just fades and dims forever.
+
+Near Earth the effect is tiny but real. A clock on the ground runs a hair slower
+than one in orbit because it sits deeper in Earth's gravity. GPS satellites
+correct for it every day. This is the opposite-sign partner to the speed effect
+on the <a href={`${import.meta.env.BASE_URL}viz/relativity/time-dilation/`}>special-relativity
+time-dilation page</a>: motion slows a satellite's clock, while its weaker gravity
+speeds it up, and engineers account for both.
+
+<details class="misconception">
+  <summary>Would you feel your own clock slow down?</summary>
+
+  No. Your own clock always ticks normally to you. A second feels like a second,
+  your heartbeat feels ordinary, and every clock riding along with you agrees.
+  The slowing is what a <em>distant</em> observer measures when they compare your
+  clock with theirs. Time dilation is always a comparison between frames, never
+  something you feel happening to yourself.
+</details>
