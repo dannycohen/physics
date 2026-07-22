@@ -70,6 +70,7 @@ import ResetButton from '../../../components/ResetButton.astro';
   <SliderField
     label="Particle energy"
     unit="eV"
+    unitTitle="electronvolt — a tiny unit of energy, what one electron gains crossing a 1-volt gap"
     slug="quantum/tunneling"
     storeKey="energy"
     min={0.2}
@@ -82,6 +83,7 @@ import ResetButton from '../../../components/ResetButton.astro';
   <SliderField
     label="Barrier height"
     unit="eV"
+    unitTitle="electronvolt — a tiny unit of energy, what one electron gains crossing a 1-volt gap"
     slug="quantum/tunneling"
     storeKey="barrier"
     min={1}
@@ -94,6 +96,7 @@ import ResetButton from '../../../components/ResetButton.astro';
   <SliderField
     label="Barrier width"
     unit="nm"
+    unitTitle="nanometre — one billionth of a metre (atoms are about 0.1 nm across)"
     slug="quantum/tunneling"
     storeKey="width"
     min={0.1}
@@ -113,7 +116,7 @@ import ResetButton from '../../../components/ResetButton.astro';
 Classically, a ball rolled at a hill it cannot crest just rolls back down. A
 particle without enough energy to get over a potential barrier does the same: it
 bounces off. Quantum mechanics breaks that rule. The particle is described by a
-wavefunction, and when it hits the barrier the wave does not stop dead. It leaks
+<abbr title="the wave that describes where a quantum particle might be found">wavefunction</abbr>, and when it hits the barrier the wave does not stop dead. It leaks
 into the wall, dying away as it goes, and a small piece survives to the far
 side. Wherever the wave has any amplitude, the particle has some chance of being
 found. So there is a nonzero probability the particle simply appears on the other
@@ -124,7 +127,9 @@ barrier the wave decays at a rate `κ = √(2m(V₀−E))/ħ`, and the thicker t
 the more that decay compounds. That is why `T` falls off roughly exponentially
 with the barrier width `a`, and why it also drops as the energy `E` falls further
 short of the top `V₀`. Drag the sliders: widen the barrier a touch and watch the
-transmitted wave collapse to almost nothing.
+transmitted wave collapse to almost nothing. (The sinh in the formula is the
+hyperbolic sine — you don't need its exact form; the point is that the
+transmission falls off extremely fast as the barrier gets thicker.)
 
 The formula on this page is the exact result for an idealised rectangular
 barrier with the particle energy below the top (`E < V₀`), the regime where
@@ -133,7 +138,7 @@ the wavefunction across both walls.
 
 ## Where this shows up
 
-Tunnelling is not a curiosity. Alpha decay is an alpha particle tunnelling out
+Tunnelling is not a curiosity. Alpha decay is an <abbr title="a clump of two protons and two neutrons — a helium nucleus">alpha particle</abbr> tunnelling out
 through the barrier that binds it inside a nucleus, and the steep width
 dependence is why decay half-lives span such an enormous range. A scanning
 tunnelling microscope holds a sharp tip a fraction of a nanometre above a

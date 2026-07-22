@@ -14,6 +14,9 @@ interface Props {
   sigFigs?: number;
   /** Initial value for the SSR snapshot; should match the page default. */
   value?: number;
+  /** When set, the unit is shown in the label as an <abbr> with this tooltip,
+   *  defining the unit once, on the control that introduces it. */
+  unitTitle?: string;
 }
 
 const {
@@ -27,6 +30,7 @@ const {
   scale = 'linear',
   sigFigs,
   value = min,
+  unitTitle,
 } = Astro.props;
 
 const nonlinear = scale !== 'linear';
@@ -49,7 +53,14 @@ const initialText = formatQuantity(initialValue, unit, { sigFigs });
   data-sig-figs={sigFigs}
 >
   <div class="slider-field">
-    <label for={inputId}>{label}</label>
+    <label for={inputId}>
+      {label}
+      {unitTitle && (
+        <Fragment>
+          {' '}(<abbr class="unit-def" title={unitTitle}>{unit}</abbr>)
+        </Fragment>
+      )}
+    </label>
     <input
       type="range"
       id={inputId}

@@ -31,15 +31,15 @@ terms:
     role: 'how fast the particle is moving'
     effect: 'faster motion shortens the wavelength'
 presets:
-  - label: 'Slow electron (1e6 m/s)'
+  - label: 'Slow electron (1 million m/s)'
     caption: 'A thermal-ish electron: its wavelength is about seven atoms wide, big enough to diffract off a crystal lattice.'
     values:
       speed: 1000000
-  - label: 'Fast electron (1e7 m/s)'
+  - label: 'Fast electron (10 million m/s)'
     caption: 'Ten times faster: the wavelength drops below one atom, the resolution that lets an electron microscope beat a light microscope.'
     values:
       speed: 10000000
-  - label: 'Very slow (1e5 m/s)'
+  - label: 'Very slow (100,000 m/s)'
     caption: 'Barely moving by electron standards: the wavelength swells to dozens of atoms, so the wave nature is impossible to miss.'
     values:
       speed: 100000
@@ -79,7 +79,7 @@ import ResetButton from '../../../components/ResetButton.astro';
   />
   <PresetButtons slug="quantum/de-broglie" presets={frontmatter.presets} />
   <LimitSnaps slug="quantum/de-broglie" limits={frontmatter.limits} />
-  <ResetButton slug="quantum/de-broglie" label="Reset to 1e6 m/s" />
+  <ResetButton slug="quantum/de-broglie" label="Reset to 1 million m/s" />
 </div>
 
 ## Matter is made of waves too
@@ -105,7 +105,7 @@ never shows any hint of being a wave.
 
 An electron is different. It is roughly `10³¹` times lighter than a person, so its
 wavelength lands right around the size of an atom, near `10⁻¹⁰` metres. That is
-big enough to interfere and diffract when it passes through the regularly spaced
+big enough to interfere and <abbr title="bend and spread when passing through a regular pattern, producing wave interference">diffract</abbr> when it passes through the regularly spaced
 atoms of a crystal, exactly as X-rays do. It is also what makes electron
 microscopes work: a shorter wavelength resolves finer detail, and a fast
 electron's wavelength is far shorter than any wavelength of visible light, so an

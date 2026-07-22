@@ -6,6 +6,14 @@
   width: 100%;
 }
 
+/* Glossary tooltips: units and jargon defined via <abbr title="...">. Dotted
+   underline signals a definition is available on hover/focus. */
+abbr[title] {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  cursor: help;
+}
+
 /* "View as table" fallback that each chart/field island emits for its canvas. */
 .view-table {
   margin-top: var(--space-3);

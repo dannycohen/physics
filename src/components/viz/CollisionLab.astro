@@ -42,7 +42,7 @@ const rows = SAMPLE_E.map((e) => {
     </div>
     <p class="collision-stat" aria-hidden="true">
       After: v₁ = <b class="v1-val">{velText(def.v1)}</b>, v₂ = <b class="v2-val">{velText(def.v2)}</b>
-      <span class="kept-note">· momentum conserved, KE <span class="kept-val">{defKept}%</span></span>
+      <span class="kept-note">· momentum conserved, <abbr title="kinetic energy — the energy an object has because of its motion">KE</abbr> <span class="kept-val">{defKept}%</span></span>
     </p>
     <span class="visually-hidden" aria-live="polite">
       After the collision ball one moves at {velText(def.v1)} and ball two at {velText(def.v2)}.
@@ -62,7 +62,7 @@ const rows = SAMPLE_E.map((e) => {
           <th scope="col">Bounciness e</th>
           <th scope="col">Final v₁ (m/s)</th>
           <th scope="col">Final v₂ (m/s)</th>
-          <th scope="col">KE kept</th>
+          <th scope="col"><abbr title="kinetic energy — the energy an object has because of its motion">KE</abbr> kept</th>
         </tr>
       </thead>
       <tbody>

@@ -84,6 +84,7 @@ import ResetButton from '../../../components/ResetButton.astro';
   <SliderField
     label="Resistance"
     unit="Ω"
+    unitTitle="ohm — the unit of electrical resistance (kΩ means 1000 ohms)"
     slug="electromagnetism/rc-charging"
     storeKey="resistance"
     min={100}
@@ -96,6 +97,7 @@ import ResetButton from '../../../components/ResetButton.astro';
   <SliderField
     label="Capacitance"
     unit="µF"
+    unitTitle="microfarad — one millionth of a farad, the unit of capacitance"
     slug="electromagnetism/rc-charging"
     storeKey="capacitance"
     min={10}
@@ -120,7 +122,7 @@ that shoots up at the start and then flattens as it eases toward the full voltag
 
 ## The rate is set by the time constant
 
-One number governs the whole curve: the time constant τ = RC. Multiply the
+One number governs the whole curve: the time constant τ = <abbr title="the resistor–capacitor pair; their product R×C is the time constant τ">RC</abbr>. Multiply the
 resistance in ohms by the capacitance in farads and you get τ in seconds. It is the
 natural clock of the circuit. After one τ the capacitor has reached 63% of full
 voltage. After two τ it is at about 86%, after three about 95%, and by five τ it is
