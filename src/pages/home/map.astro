@@ -1,0 +1,154 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import LandingSwitcher from '../../components/LandingSwitcher.astro';
+import { getCatalog, vizHref } from '../../lib/catalog';
+
+const { byCategory, live } = await getCatalog();
+const base = import.meta.env.BASE_URL;
+
+// One accent per domain, drawn from the archetype palette so the map reads as a
+// colour-coded field guide rather than a uniform grid.
+const domainAccent: Record<string, string> = {
+  foundations: 'var(--viz-curve)',
+  relativity: 'var(--accent-comparison)',
+  'classical-mechanics': 'var(--accent-time-series)',
+  electromagnetism: 'var(--accent-field-space)',
+  quantum: 'var(--accent-comparison)',
+  thermodynamics: 'var(--accent-distribution)',
+  'waves-optics': 'var(--accent-field-space)',
+};
+---
+
+<BaseLayout
+  title="A map of physics"
+  description="See the whole field at once: every domain and the equations inside it, colour-coded on one map."
+>
+  <h1>The map of physics</h1>
+  <p>
+    The whole collection on one screen. Each panel is a domain; each tile inside is one
+    interactive equation. Take in the shape of the field, then dive into a corner.
+  </p>
+
+  <LandingSwitcher current="home/map" />
+
+  <div class="domain-map">
+    {
+      byCategory.map((group) => {
+        const liveCount = group.entries.filter((e) => e.data.status === 'live').length;
+        return (
+          <section class="domain" style={`--card-accent: ${domainAccent[group.category] ?? 'var(--viz-curve)'}`}>
+            <header class="domain-head">
+              <h2>{group.label}</h2>
+              <span class="domain-count">{liveCount}</span>
+            </header>
+            <ul class="tiles">
+              {group.entries.map((e) =>
+                e.data.status === 'live' ? (
+                  <li>
+                    <a class="tile" href={vizHref(base, e)}>
+                      <span class="tile-eq">{e.data.equationPlain}</span>
+                      <span class="tile-title">{e.data.title}</span>
+                    </a>
+                  </li>
+                ) : (
+                  <li>
+                    <span class="tile is-soon">
+                      <span class="tile-eq">{e.data.equationPlain}</span>
+                      <span class="tile-title">{e.data.title}</span>
+                    </span>
+                  </li>
+                ),
+              )}
+            </ul>
+          </section>
+        );
+      })
+    }
+  </div>
+
+  <p class="map-total">{live.length} interactive equations across {byCategory.length} domains.</p>
+</BaseLayout>
+
+<style>
+  .domain-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+  }
+
+  .domain {
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-top: 3px solid var(--card-accent);
+    border-radius: var(--radius);
+  }
+
+  .domain-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .domain-head h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--card-accent);
+  }
+
+  .domain-count {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    color: var(--color-text-muted);
+  }
+
+  .tiles {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface-raised);
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius) - 4px);
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  a.tile:hover {
+    border-color: var(--card-accent);
+  }
+
+  .tile-eq {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .tile-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .is-soon {
+    opacity: 0.5;
+  }
+
+  .map-total {
+    margin-top: var(--space-4);
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+</style>

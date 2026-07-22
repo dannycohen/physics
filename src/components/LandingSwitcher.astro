@@ -1,0 +1,79 @@
+---
+import { landingVariants } from '../lib/catalog';
+
+interface Props {
+  current: string; // matches a landingVariants slug ('' for the original list)
+}
+
+const { current } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const hrefFor = (slug: string) => (slug ? `${base}${slug}/` : base);
+---
+
+<nav class="landing-switcher" aria-label="Landing page styles">
+  <span class="switcher-label">See this catalog as</span>
+  <ul>
+    {
+      landingVariants.map((v) => (
+        <li>
+          <a
+            href={hrefFor(v.slug)}
+            aria-current={v.slug === current ? 'page' : undefined}
+            title={v.blurb}
+          >
+            {v.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .landing-switcher {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-block: var(--space-3) var(--space-5);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+  }
+
+  .switcher-label {
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .landing-switcher ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .landing-switcher a {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-pill);
+    color: var(--color-text);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .landing-switcher a:hover {
+    background: var(--color-surface-raised);
+  }
+
+  .landing-switcher a[aria-current='page'] {
+    background: var(--viz-curve);
+    color: var(--color-bg);
+  }
+</style>

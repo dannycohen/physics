@@ -1,0 +1,120 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import LandingSwitcher from '../../components/LandingSwitcher.astro';
+import { getCatalog, archetypeAccent, vizHref } from '../../lib/catalog';
+
+const { live } = await getCatalog();
+const base = import.meta.env.BASE_URL;
+const byId = new Map(live.map((e) => [e.id, e]));
+
+// Plain-language curiosity questions mapped to the equation that answers each.
+// Meets a reader who has a question but not the vocabulary to name the topic.
+const questions: { q: string; id: string }[] = [
+  { q: 'Why do moving clocks run slow?', id: 'relativity/time-dilation' },
+  { q: 'What does E = mc² actually balance?', id: 'relativity/mass-energy' },
+  { q: "Why can't we pin down a particle exactly?", id: 'quantum/heisenberg' },
+  { q: 'Why does light knock electrons loose from metal?', id: 'quantum/photoelectric' },
+  { q: 'What colour does a hot object glow?', id: 'thermodynamics/planck-blackbody' },
+  { q: 'How fast are the air molecules around you moving?', id: 'thermodynamics/maxwell-boltzmann' },
+  { q: 'Why does a straw look bent in a glass of water?', id: 'waves-optics/snell' },
+  { q: 'What launch angle throws a ball the farthest?', id: 'classical-mechanics/projectile-range' },
+  { q: 'What makes electric charges push and pull?', id: 'electromagnetism/coulomb' },
+  { q: 'Why does a half-life never quite reach zero?', id: 'foundations/exponential-decay' },
+];
+
+// Only render a tile whose target actually exists, so no link can dangle.
+const cards = questions
+  .map((item) => ({ ...item, entry: byId.get(item.id) }))
+  .filter((c): c is typeof c & { entry: NonNullable<typeof c.entry> } => Boolean(c.entry));
+---
+
+<BaseLayout
+  title="What are you curious about?"
+  description="Pick a question in plain language and jump straight to the physics that answers it."
+>
+  <h1>What are you curious about?</h1>
+  <p>
+    No jargon needed. Pick a question that snags your curiosity and go straight to the
+    equation behind the answer.
+  </p>
+
+  <LandingSwitcher current="home/chooser" />
+
+  <ul class="question-grid">
+    {
+      cards.map((c) => (
+        <li>
+          <a
+            class="question"
+            href={vizHref(base, c.entry)}
+            style={`--card-accent: ${archetypeAccent[c.entry.data.layoutArchetype]}`}
+          >
+            <span class="question-q">{c.q}</span>
+            <span class="question-foot">
+              <span class="question-eq">{c.entry.data.equationPlain}</span>
+              <span class="question-title">{c.entry.data.title}</span>
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>
+
+<style>
+  .question-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    padding: 0;
+    list-style: none;
+  }
+
+  .question {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-4);
+    height: 100%;
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .question:hover {
+    border-color: var(--card-accent);
+    background: var(--color-surface-raised);
+  }
+
+  .question-q {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .question-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .question-eq {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--card-accent);
+    overflow-wrap: anywhere;
+  }
+
+  .question-title {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+  }
+</style>

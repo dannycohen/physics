@@ -1,19 +1,9 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import LandingSwitcher from '../components/LandingSwitcher.astro';
+import { getCatalog } from '../lib/catalog';
 
-const all = (await getCollection('viz')).sort((a, b) => a.data.order - b.data.order);
-const categories = [...new Set(all.map((e) => e.data.category))];
-const categoryLabels: Record<string, string> = {
-  relativity: 'Relativity',
-  'classical-mechanics': 'Classical mechanics',
-  electromagnetism: 'Electromagnetism',
-  quantum: 'Quantum',
-  thermodynamics: 'Thermodynamics',
-  'waves-optics': 'Waves & optics',
-  foundations: 'Foundations',
-};
-const live = all.filter((e) => e.data.status === 'live');
+const { live, byCategory } = await getCatalog();
 const hero = live[0];
 const base = import.meta.env.BASE_URL;
 ---
@@ -36,29 +26,28 @@ const base = import.meta.env.BASE_URL;
       </p>
     )
   }
+
+  <LandingSwitcher current="" />
+
   {
-    categories
-      .filter((cat) => all.some((e) => e.data.category === cat && e.data.status === 'live'))
-      .map((cat) => (
-        <section>
-          <h2>{categoryLabels[cat]}</h2>
-          <ul>
-            {all
-              .filter((e) => e.data.category === cat)
-              .map((e) =>
-                e.data.status === 'live' ? (
-                  <li>
-                    <a href={`${base}viz/${e.id}/`}>{e.data.title}</a> — {e.data.claim}
-                  </li>
-                ) : (
-                  <li>
-                    <span class="coming-soon">{e.data.title} (coming soon)</span>
-                  </li>
-                ),
-              )}
-          </ul>
-        </section>
-      ))
+    byCategory.map((group) => (
+      <section>
+        <h2>{group.label}</h2>
+        <ul>
+          {group.entries.map((e) =>
+            e.data.status === 'live' ? (
+              <li>
+                <a href={`${base}viz/${e.id}/`}>{e.data.title}</a> — {e.data.claim}
+              </li>
+            ) : (
+              <li>
+                <span class="coming-soon">{e.data.title} (coming soon)</span>
+              </li>
+            ),
+          )}
+        </ul>
+      </section>
+    ))
   }
 </BaseLayout>
 

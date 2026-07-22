@@ -1,0 +1,186 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import LandingSwitcher from '../../components/LandingSwitcher.astro';
+import { getCatalog, archetypeAccent, categoryLabels, vizHref, type VizEntry } from '../../lib/catalog';
+
+const { live, byCategory } = await getCatalog();
+const base = import.meta.env.BASE_URL;
+
+// Editorial curation: the flagship leads, then one representative pick from each
+// of the next few domains so the spotlight shows range without a wall of links.
+const hero = live[0];
+const picks: VizEntry[] = [];
+for (const group of byCategory) {
+  const first = group.entries.find((e) => e.data.status === 'live');
+  if (first && first.id !== hero?.id) picks.push(first);
+  if (picks.length >= 3) break;
+}
+---
+
+<BaseLayout
+  title="Physics spotlight"
+  description="A curated front door to interactive physics: one featured equation plus a few hand-picked starts."
+>
+  <LandingSwitcher current="home/spotlight" />
+
+  {
+    hero && (
+      <a
+        class="hero-feature"
+        href={vizHref(base, hero)}
+        style={`--card-accent: ${archetypeAccent[hero.data.layoutArchetype]}`}
+      >
+        <span class="kicker">Start here · {categoryLabels[hero.data.category]}</span>
+        <span class="hero-eq">{hero.data.equationPlain}</span>
+        <h1 class="hero-title">{hero.data.title}</h1>
+        <p class="hero-claim">{hero.data.claim}</p>
+        <span class="hero-cta">Open it →</span>
+      </a>
+    )
+  }
+
+  {
+    picks.length > 0 && (
+      <>
+        <h2 class="picks-heading">Then try one of these</h2>
+        <ul class="picks">
+          {picks.map((e) => (
+            <li>
+              <a
+                class="pick"
+                href={vizHref(base, e)}
+                style={`--card-accent: ${archetypeAccent[e.data.layoutArchetype]}`}
+              >
+                <span class="pick-eq">{e.data.equationPlain}</span>
+                <span class="pick-body">
+                  <span class="pick-kicker">{categoryLabels[e.data.category]}</span>
+                  <span class="pick-title">{e.data.title}</span>
+                  <span class="pick-claim">{e.data.claim}</span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+
+  <p class="see-all">
+    Want the whole set? <a href={base}>Browse all {live.length} equations →</a>
+  </p>
+</BaseLayout>
+
+<style>
+  .hero-feature {
+    display: block;
+    margin-block: var(--space-4);
+    padding: var(--space-5);
+    background:
+      radial-gradient(60rem 20rem at 15% -10rem, var(--color-surface-raised), transparent),
+      var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--card-accent);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .kicker,
+  .pick-kicker {
+    display: block;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--card-accent);
+  }
+
+  .hero-eq {
+    display: block;
+    margin-block: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: clamp(1.5rem, 6vw, 2.6rem);
+    color: var(--color-text);
+    overflow-wrap: anywhere;
+  }
+
+  .hero-title {
+    margin: 0;
+    -webkit-text-fill-color: initial;
+    background: none;
+    color: var(--color-text);
+  }
+
+  .hero-claim {
+    max-width: 40rem;
+    color: var(--color-text-muted);
+  }
+
+  .hero-cta {
+    display: inline-block;
+    margin-top: var(--space-2);
+    font-weight: 700;
+    color: var(--card-accent);
+  }
+
+  .picks-heading {
+    margin-top: var(--space-5);
+  }
+
+  .picks {
+    display: grid;
+    gap: var(--space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pick {
+    display: flex;
+    gap: var(--space-4);
+    align-items: center;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .pick:hover {
+    border-color: var(--card-accent);
+  }
+
+  .pick-eq {
+    flex: 0 0 auto;
+    font-family: var(--font-mono);
+    font-size: 1.1rem;
+    color: var(--card-accent);
+  }
+
+  .pick-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .pick-title {
+    font-weight: 700;
+  }
+
+  .pick-claim {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+
+  .see-all {
+    margin-top: var(--space-5);
+  }
+
+  @media (max-width: 32rem) {
+    .pick {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+  }
+</style>
