@@ -45,3 +45,9 @@ is required in the content schema, so an equation with an unexplained symbol fai
 Code is MIT (see `LICENSE`). Prose and figures are
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Third-party assets are listed
 in `ATTRIBUTIONS.md`.
+
+## Notes
+
+The alternative landing pages were built through a self-repeating agent loop; the
+[Ralph-loop retrospective](./docs/ralph-wiggum-retrospective-analysis.md) records how that
+run went, what to change, and a rephrased prompt that folds the lessons back in.
