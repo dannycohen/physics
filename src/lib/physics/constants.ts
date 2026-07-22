@@ -29,3 +29,6 @@ export const GAS_CONSTANT = 8.314462618;
 
 /** Elementary charge e, C (exact SI). Use to convert joules to electronvolts. */
 export const ELEMENTARY_CHARGE = 1.602176634e-19;
+
+/** Standard gravitational acceleration at Earth's surface, m/s^2 (defined value). */
+export const STANDARD_GRAVITY = 9.80665;

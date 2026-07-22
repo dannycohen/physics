@@ -1,0 +1,214 @@
+---
+import { formatQuantity } from '../../lib/format';
+import { period } from '../../lib/physics/pendulum';
+
+const SLUG = 'classical-mechanics/pendulum';
+const DEFAULT_LENGTH = 1;
+
+const secs = (x: number) => formatQuantity(x, 's', { sigFigs: 3 });
+const perMin = (T: number) => formatQuantity(60 / T, '', { sigFigs: 3 });
+
+const defaultPeriod = period(DEFAULT_LENGTH);
+const defaultSentence = `Period ${secs(defaultPeriod)} — ${perMin(defaultPeriod)} swings per minute`;
+
+// Build-time table so the length/period relationship exists without JavaScript.
+const SAMPLE_LENGTHS = [0.1, 0.25, 0.5, 1, 2, 4];
+const rows = SAMPLE_LENGTHS.map((L) => ({
+  length: formatQuantity(L, 'm', { sigFigs: 3 }),
+  period: secs(period(L)),
+}));
+---
+
+<pendulum-swing data-slug={SLUG}>
+  <figure class="pendulum-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A pendulum hanging from a fixed pivot: a rod with a round bob at its end, swinging back and forth through a small angle. A longer rod swings more slowly."
+      ></canvas>
+    </div>
+    <p class="pendulum-readout">
+      <span class="readout-visible" aria-hidden="true">Period <b class="period-val">{secs(defaultPeriod)}</b> — <b class="rate-val">{perMin(defaultPeriod)}</b> swings per minute</span>
+      <span class="visually-hidden" aria-live="polite">{defaultSentence}</span>
+    </p>
+    <button type="button" class="play-toggle chip" aria-pressed="true">Pause</button>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      The swing time set by the rod's length (Earth gravity, small swings).
+      Quadrupling the length doubles the period.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Length L (m)</th>
+          <th scope="col">Period T (s)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.length}</td>
+              <td>{row.period}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</pendulum-swing>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { formatQuantity } from '../../lib/format';
+  import { angleAt, period } from '../../lib/physics/pendulum';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'classical-mechanics/pendulum';
+  const DEFAULT_LENGTH = 1;
+  const MIN_LENGTH = 0.1;
+  const MAX_LENGTH = 4;
+  // The slider drives length only; the swing keeps a fixed, honestly-small
+  // amplitude so the small-angle assumption behind the formula holds.
+  const AMPLITUDE_RAD = (12 * Math.PI) / 180;
+  // Static reduced-motion frame renders at tMs = 0. Offset it so the bob sits
+  // partway through a swing rather than at the far extreme.
+  const STATIC_OFFSET_S = 0.25;
+
+  // Seed the shared store before any control connects.
+  const store = getVizStore(SLUG, { length: DEFAULT_LENGTH });
+  const clampLength = (v: number | undefined) =>
+    Math.min(Math.max(v ?? DEFAULT_LENGTH, MIN_LENGTH), MAX_LENGTH);
+  const secs = (x: number) => formatQuantity(x, 's', { sigFigs: 3 });
+  const perMin = (T: number) => formatQuantity(60 / T, '', { sigFigs: 3 });
+
+  class PendulumSwingElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      const button = this.querySelector<HTMLButtonElement>('.play-toggle');
+      const periodVal = this.querySelector('.period-val');
+      const rateVal = this.querySelector('.rate-val');
+      const live = this.querySelector('.pendulum-readout .visually-hidden');
+      if (!canvas || !button || !periodVal || !rateVal || !live) return;
+
+      const handle = createVizCanvas(
+        canvas,
+        (ctx, size, theme, tMs) => {
+          const length = clampLength(store.values.get()['length']);
+          const t = tMs / 1000 + STATIC_OFFSET_S;
+          const angle = angleAt(AMPLITUDE_RAD, length, t);
+
+          ctx.fillStyle = theme.bg;
+          ctx.fillRect(0, 0, size.w, size.h);
+
+          // Pivot near the top; rod length maps linearly from L (capped at
+          // MAX_LENGTH) for a clear "longer = lower bob" read.
+          const pivotX = size.w / 2;
+          const pivotY = size.h * 0.12;
+          const maxRod = size.h * 0.78;
+          const rodLen = maxRod * (length / MAX_LENGTH);
+          const bobX = pivotX + Math.sin(angle) * rodLen;
+          const bobY = pivotY + Math.cos(angle) * rodLen;
+
+          // Faint arc showing the swing envelope.
+          ctx.strokeStyle = theme.grid;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(pivotX, pivotY, rodLen, Math.PI / 2 - AMPLITUDE_RAD, Math.PI / 2 + AMPLITUDE_RAD);
+          ctx.stroke();
+
+          // Pivot mount.
+          ctx.fillStyle = theme.axis;
+          ctx.fillRect(pivotX - 18, pivotY - 6, 36, 6);
+          ctx.beginPath();
+          ctx.arc(pivotX, pivotY, 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Rod.
+          ctx.strokeStyle = theme.label;
+          ctx.lineWidth = 2;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(pivotX, pivotY);
+          ctx.lineTo(bobX, bobY);
+          ctx.stroke();
+
+          // Bob (glow scaled to survive the DPR transform, as in the clocks island).
+          const glowScale = ctx.canvas.width / Math.max(size.w, 1);
+          const r = Math.max(8, size.h * 0.045);
+          ctx.shadowColor = theme.active;
+          ctx.shadowBlur = 14 * glowScale;
+          ctx.fillStyle = theme.active;
+          ctx.beginPath();
+          ctx.arc(bobX, bobY, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        },
+        { animate: true },
+      );
+
+      const syncButton = () => {
+        const playing = handle.isPlaying();
+        button.textContent = playing ? 'Pause' : 'Play';
+        button.setAttribute('aria-pressed', String(playing));
+      };
+      button.addEventListener('click', () => {
+        handle.setPlaying(!handle.isPlaying());
+        syncButton();
+      });
+      syncButton();
+
+      const renderReadout = (values: Record<string, number>) => {
+        const T = period(clampLength(values['length']));
+        periodVal.textContent = secs(T);
+        rateVal.textContent = perMin(T);
+        handle.redraw();
+      };
+      store.values.subscribe(renderReadout);
+
+      store.onSettled((values) => {
+        const T = period(clampLength(values['length']));
+        const text = `Period ${secs(T)} — ${perMin(T)} swings per minute`;
+        if (live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('pendulum-swing')) {
+    customElements.define('pendulum-swing', PendulumSwingElement);
+  }
+</script>
+
+<style>
+  .pendulum-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 4 / 3;
+  }
+
+  .pendulum-readout {
+    margin-block: var(--space-2) 0;
+    min-height: 1.6em; /* reserve the line so announcements don't shift layout */
+    font-size: 1.05rem;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pendulum-readout b {
+    color: var(--color-text);
+  }
+
+  .play-toggle {
+    min-width: 5.5em;
+    margin-top: var(--space-2);
+  }
+</style>

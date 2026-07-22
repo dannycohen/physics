@@ -1,0 +1,244 @@
+---
+import { beatFrequency, carrierFrequency } from '../../lib/physics/beats';
+import { formatQuantity } from '../../lib/format';
+
+const DEFAULT_F1 = 440;
+const DEFAULT_F2 = 444;
+
+const beatText = (f1: number, f2: number) =>
+  formatQuantity(beatFrequency(f1, f2), 'Hz', { sigFigs: 3 });
+const carrierText = (f1: number, f2: number) =>
+  formatQuantity(carrierFrequency(f1, f2), 'Hz', { sigFigs: 4 });
+
+const SAMPLES: Array<[number, number]> = [
+  [440, 440],
+  [440, 444],
+  [440, 452],
+  [440, 470],
+];
+const rows = SAMPLES.map(([f1, f2]) => ({
+  f1: formatQuantity(f1, 'Hz', { sigFigs: 3 }),
+  f2: formatQuantity(f2, 'Hz', { sigFigs: 3 }),
+  beat: beatText(f1, f2),
+  carrier: carrierText(f1, f2),
+}));
+---
+
+<beats-wave>
+  <figure class="wave-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Three stacked wave traces plotted against time over the same window. The top trace is the first tone at frequency f1; the middle trace is the second tone at frequency f2, drawn at a slightly different rate. The bottom trace is their sum: because the two tones drift in and out of step, the sum swells and fades, and a faint dashed outline traces that slowly-varying beat envelope. When the two frequencies match, the traces stay in step and the sum has a steady, unchanging outline."
+      ></canvas>
+    </div>
+    <p class="beat-stat" aria-hidden="true">
+      Beat rate <b class="beat-val">{beatText(DEFAULT_F1, DEFAULT_F2)}</b>, average tone
+      <span class="carrier-val">{carrierText(DEFAULT_F1, DEFAULT_F2)}</span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      Beat rate {beatText(DEFAULT_F1, DEFAULT_F2)}; average tone {carrierText(DEFAULT_F1, DEFAULT_F2)}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>Beat rate and average tone for the two frequencies added together.</p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Frequency 1</th>
+          <th scope="col">Frequency 2</th>
+          <th scope="col">Beat rate |f₁ − f₂|</th>
+          <th scope="col">Average tone (f₁ + f₂)/2</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.f1}</td>
+              <td>{row.f2}</td>
+              <td>{row.beat}</td>
+              <td>{row.carrier}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</beats-wave>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { beatFrequency, carrierFrequency } from '../../lib/physics/beats';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'waves-optics/beats';
+  const DEFAULT_F1 = 440;
+  const DEFAULT_F2 = 444;
+
+  // Seed the shared store at module load so the controls connect to the page defaults.
+  const store = getVizStore(SLUG, { f1: DEFAULT_F1, f2: DEFAULT_F2 });
+
+  const clampF1 = (f: number | undefined) => Math.min(Math.max(f ?? DEFAULT_F1, 430), 450);
+  const clampF2 = (f: number | undefined) => Math.min(Math.max(f ?? DEFAULT_F2, 430), 470);
+
+  const beatText = (f1: number, f2: number) =>
+    formatQuantity(beatFrequency(f1, f2), 'Hz', { sigFigs: 3 });
+  const carrierText = (f1: number, f2: number) =>
+    formatQuantity(carrierFrequency(f1, f2), 'Hz', { sigFigs: 4 });
+
+  class BeatsWaveElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const beatVal = this.querySelector('.beat-val');
+      const carrierVal = this.querySelector('.carrier-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(
+        canvas,
+        (ctx, size, theme) => {
+          const f1 = clampF1(store.values.get()['f1']);
+          const f2 = clampF2(store.values.get()['f2']);
+          const d = Math.abs(f1 - f2);
+
+          ctx.fillStyle = theme.bg;
+          ctx.fillRect(0, 0, size.w, size.h);
+
+          const padX = 20;
+          const labelW = 88; // room for the on-canvas trace labels on the left
+          const x0 = padX + labelW;
+          const x1 = size.w - padX;
+          const span = x1 - x0;
+
+          // The frequencies are visually scaled: we are showing the SHAPE and the
+          // beat envelope, not audio. Map the difference to a handful of beat
+          // pulses across the window, and set the carrier density to keep several
+          // wiggles inside each pulse so the swelling is legible.
+          const beatPulses = d / 4; // 0 when in tune, ~7.5 at the far edge
+          const carrierCycles = 16 + beatPulses * 6;
+          const n1 = carrierCycles + beatPulses / 2;
+          const n2 = carrierCycles - beatPulses / 2;
+
+          const amp = Math.min(size.h * 0.12, 40);
+          const y1 = size.h * 0.2;
+          const y2 = size.h * 0.5;
+          const y3 = size.h * 0.82;
+          const steps = Math.max(700, Math.ceil(span * 2));
+
+          const trace = (
+            y: number,
+            fn: (t: number) => number,
+            color: string,
+            label: string,
+          ) => {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2.5;
+            ctx.lineJoin = 'round';
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            for (let i = 0; i <= steps; i++) {
+              const t = i / steps;
+              const x = x0 + t * span;
+              const yy = y - fn(t) * amp;
+              if (i === 0) ctx.moveTo(x, yy);
+              else ctx.lineTo(x, yy);
+            }
+            ctx.stroke();
+
+            ctx.fillStyle = theme.label;
+            ctx.font = 'bold 13px system-ui, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x0 - 12, y);
+          };
+
+          const wave1 = (t: number) => Math.cos(2 * Math.PI * n1 * t);
+          const wave2 = (t: number) => Math.cos(2 * Math.PI * n2 * t);
+          // Sum divided by two so its swing stays within ±amp; the envelope of
+          // the sum then rides at cos(2π·(beatPulses/2)·t).
+          const sum = (t: number) => (wave1(t) + wave2(t)) / 2;
+          const envelope = (t: number) => Math.cos(2 * Math.PI * (beatPulses / 2) * t);
+
+          trace(y1, wave1, theme.rest, 'wave 1 (f₁)');
+          trace(y2, wave2, theme.curveSecondary, 'wave 2 (f₂)');
+          trace(y3, sum, theme.curve, 'sum');
+
+          // Faint dashed beat envelope over the sum, top and bottom.
+          ctx.strokeStyle = theme.active;
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([5, 4]);
+          for (const sign of [1, -1]) {
+            ctx.beginPath();
+            for (let i = 0; i <= steps; i++) {
+              const t = i / steps;
+              const x = x0 + t * span;
+              const yy = y3 - sign * Math.abs(envelope(t)) * amp;
+              if (i === 0) ctx.moveTo(x, yy);
+              else ctx.lineTo(x, yy);
+            }
+            ctx.stroke();
+          }
+          ctx.setLineDash([]);
+        },
+        { animate: false },
+      );
+
+      const render = (values: Record<string, number>) => {
+        const f1 = clampF1(values['f1']);
+        const f2 = clampF2(values['f2']);
+        if (beatVal) beatVal.textContent = beatText(f1, f2);
+        if (carrierVal) carrierVal.textContent = carrierText(f1, f2);
+      };
+
+      store.values.subscribe((values) => {
+        render(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const f1 = clampF1(values['f1']);
+        const f2 = clampF2(values['f2']);
+        const text = `Beat rate ${beatText(f1, f2)}; average tone ${carrierText(f1, f2)}.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('beats-wave')) {
+    customElements.define('beats-wave', BeatsWaveElement);
+  }
+</script>
+
+<style>
+  .wave-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 16 / 10;
+  }
+
+  .beat-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .beat-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .carrier-val {
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

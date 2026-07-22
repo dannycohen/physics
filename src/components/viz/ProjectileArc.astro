@@ -1,0 +1,251 @@
+---
+import { maxHeight, range, timeOfFlight } from '../../lib/physics/projectile';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const DEFAULT_SPEED = 20; // m/s
+const DEFAULT_ANGLE = 45; // degrees
+
+const rangeText = (v: number, a: number) => formatQuantity(range(v, a), 'm', { sigFigs: 3 });
+const heightText = (v: number, a: number) => formatQuantity(maxHeight(v, a), 'm', { sigFigs: 3 });
+const timeText = (v: number, a: number) => formatQuantity(timeOfFlight(v, a), 's', { sigFigs: 3 });
+
+const defR = rangeText(DEFAULT_SPEED, DEFAULT_ANGLE);
+const defH = heightText(DEFAULT_SPEED, DEFAULT_ANGLE);
+const defT = timeText(DEFAULT_SPEED, DEFAULT_ANGLE);
+
+// Angle vs range at the default speed: shows the 45° peak and the mirror
+// symmetry of complementary angles (20°/70°, 30°/60°, ...).
+const SAMPLE_ANGLES = [0, 15, 20, 30, 45, 60, 70, 75, 90];
+const rows = SAMPLE_ANGLES.map((angle) => ({
+  angle: formatQuantity(angle, ''),
+  range: rangeText(DEFAULT_SPEED, angle),
+}));
+---
+
+<projectile-arc>
+  <figure class="arc-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A projectile's flight over level ground. The curve is the parabolic path for the current launch speed and angle, starting from a launch marker on the left and landing at a point marked on the ground to the right. A faint dashed curve shows the complementary launch angle, which lands at the same spot. The range is longest at a 45-degree launch."
+      ></canvas>
+    </div>
+    <p class="arc-stat" aria-hidden="true">
+      Range <b class="range-val">{defR}</b>, peak height <span class="height-val">{defH}</span>, airtime
+      <span class="time-val">{defT}</span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      Launched at {DEFAULT_SPEED} metres per second and {DEFAULT_ANGLE} degrees, the projectile
+      travels a range of {defR}, reaching a peak height of {defH} over an airtime of {defT}.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      Range at a fixed launch speed of {DEFAULT_SPEED} m/s as the angle changes. Range peaks at
+      45°, and any two angles that add to 90° (like 20° and 70°, or 30° and 60°) land in the same
+      place.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Launch angle (°)</th>
+          <th scope="col">Range (m)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.angle}</td>
+              <td>{row.range}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</projectile-arc>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { maxHeight, range, timeOfFlight } from '../../lib/physics/projectile';
+  import { STANDARD_GRAVITY } from '../../lib/physics/constants';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+  import type { VizTheme } from '../../lib/theme';
+
+  const SLUG = 'classical-mechanics/projectile-range';
+  const DEFAULT_SPEED = 20;
+  const DEFAULT_ANGLE = 45;
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, { speed: DEFAULT_SPEED, angle: DEFAULT_ANGLE });
+
+  const num = (values: Record<string, number>, key: string, fallback: number) =>
+    values[key] ?? fallback;
+  const rangeText = (v: number, a: number) => formatQuantity(range(v, a), 'm', { sigFigs: 3 });
+  const heightText = (v: number, a: number) => formatQuantity(maxHeight(v, a), 'm', { sigFigs: 3 });
+  const timeText = (v: number, a: number) => formatQuantity(timeOfFlight(v, a), 's', { sigFigs: 3 });
+
+  // A trajectory in physical (x, y) metres. The horizontal position at time t is
+  // vx·t; the height is vy·t − ½g·t². Sampled so the canvas draws a smooth arc.
+  function trajectory(v: number, angleDeg: number, samples: number): Array<[number, number]> {
+    const t = timeOfFlight(v, angleDeg);
+    const rad = (angleDeg * Math.PI) / 180;
+    const vx = v * Math.cos(rad);
+    const vy = v * Math.sin(rad);
+    const g = STANDARD_GRAVITY;
+    const pts: Array<[number, number]> = [];
+    for (let i = 0; i <= samples; i++) {
+      const tau = (t * i) / samples;
+      pts.push([vx * tau, vy * tau - 0.5 * g * tau * tau]);
+    }
+    return pts;
+  }
+
+  class ProjectileArcElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const rangeVal = this.querySelector('.range-val');
+      const heightVal = this.querySelector('.height-val');
+      const timeVal = this.querySelector('.time-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme: VizTheme) => {
+        const vals = store.values.get();
+        const v = num(vals, 'speed', DEFAULT_SPEED);
+        const angle = num(vals, 'angle', DEFAULT_ANGLE);
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        const padL = 24;
+        const padR = 24;
+        const padTop = 24;
+        const groundY = size.h - 28;
+        const plotW = size.w - padL - padR;
+        const plotH = groundY - padTop;
+
+        const main = trajectory(v, angle, 96);
+        const comp = trajectory(v, 90 - angle, 96);
+
+        // Auto-scale so the current arc (and its complement) fit the plot. The
+        // two arcs share the same range, so scale from the taller of the pair.
+        const r = range(v, angle);
+        const peak = Math.max(maxHeight(v, angle), maxHeight(v, 90 - angle));
+        const xSpan = Math.max(r, 1e-6);
+        const ySpan = Math.max(peak, 1e-6);
+        const sx = plotW / xSpan;
+        const sy = plotH / ySpan;
+
+        const toX = (x: number) => padL + x * sx;
+        const toY = (y: number) => groundY - y * sy;
+
+        // Ground line.
+        ctx.strokeStyle = theme.axis;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(padL, groundY);
+        ctx.lineTo(size.w - padR, groundY);
+        ctx.stroke();
+
+        // Complementary-angle arc: faint and dashed, to show equal range.
+        ctx.save();
+        ctx.setLineDash([5, 5]);
+        ctx.globalAlpha = 0.5;
+        ctx.strokeStyle = theme.curveSecondary;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        comp.forEach(([x, y], i) => (i ? ctx.lineTo(toX(x), toY(y)) : ctx.moveTo(toX(x), toY(y))));
+        ctx.stroke();
+        ctx.restore();
+
+        // Main trajectory.
+        ctx.strokeStyle = theme.curve;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        main.forEach(([x, y], i) => (i ? ctx.lineTo(toX(x), toY(y)) : ctx.moveTo(toX(x), toY(y))));
+        ctx.stroke();
+
+        // Launch marker at the origin.
+        ctx.fillStyle = theme.active;
+        ctx.beginPath();
+        ctx.arc(toX(0), toY(0), 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Landing point at x = range.
+        ctx.fillStyle = theme.limit;
+        ctx.beginPath();
+        ctx.arc(toX(r), toY(0), 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Range label under the landing point.
+        ctx.fillStyle = theme.label;
+        ctx.font = '12px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(rangeText(v, angle), toX(r), groundY + 8);
+      });
+
+      const renderStat = (values: Record<string, number>) => {
+        const v = num(values, 'speed', DEFAULT_SPEED);
+        const a = num(values, 'angle', DEFAULT_ANGLE);
+        if (rangeVal) rangeVal.textContent = rangeText(v, a);
+        if (heightVal) heightVal.textContent = heightText(v, a);
+        if (timeVal) timeVal.textContent = timeText(v, a);
+      };
+
+      store.values.subscribe((values) => {
+        renderStat(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const v = num(values, 'speed', DEFAULT_SPEED);
+        const a = num(values, 'angle', DEFAULT_ANGLE);
+        const text = `Launched at ${formatQuantity(v, 'metres per second', { sigFigs: 2 })} and ${formatQuantity(a, 'degrees', { sigFigs: 2 })}, the projectile travels a range of ${rangeText(v, a)}, reaching a peak height of ${heightText(v, a)} over an airtime of ${timeText(v, a)}.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('projectile-arc')) {
+    customElements.define('projectile-arc', ProjectileArcElement);
+  }
+</script>
+
+<style>
+  .arc-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 3 / 2;
+  }
+
+  .arc-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .arc-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .height-val,
+  .time-val {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted);
+  }
+</style>

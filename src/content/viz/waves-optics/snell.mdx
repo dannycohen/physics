@@ -1,0 +1,152 @@
+---
+title: "Snell's law"
+category: waves-optics
+layoutArchetype: field-space
+status: live
+order: 6
+equationLatex: 'n_1 \sin\theta_1 = n_2 \sin\theta_2'
+equationPlain: 'n₁·sin θ₁ = n₂·sin θ₂'
+claim: 'Light bends when it changes speed between materials — and past a steep enough angle it can get trapped, reflecting entirely back by total internal reflection.'
+defaults:
+  n1: 1
+  n2: 1.5
+  incident: 40
+terms:
+  - symbol: 'n_1'
+    name: 'n-one: the first refractive index'
+    role: 'how much the first material slows light down'
+    effect: 'a higher value on the incidence side sends the ray farther from the normal after it crosses'
+  - symbol: 'n_2'
+    name: 'n-two: the second refractive index'
+    role: 'how much the second material slows light down'
+    effect: 'a higher value on the far side bends the ray closer to the normal'
+  - symbol: '\theta_1'
+    name: 'theta-one: the incident angle'
+    role: 'the angle of the incoming ray, measured from the normal'
+    effect: 'open it up and the refracted ray opens up too, until past the critical angle no ray gets through'
+  - symbol: '\theta_2'
+    name: 'theta-two: the refracted angle'
+    role: 'the angle of the transmitted ray, measured from the normal'
+    effect: 'what we solve for; it has no real value once total internal reflection sets in'
+presets:
+  - label: 'Air to glass'
+    caption: 'Entering denser glass, the ray bends toward the normal.'
+    values:
+      n1: 1
+      n2: 1.5
+      incident: 40
+  - label: 'Air to water'
+    caption: 'Water bends light less than glass, so the ray turns a little less.'
+    values:
+      n1: 1
+      n2: 1.33
+      incident: 40
+  - label: 'Glass to air (TIR)'
+    caption: 'Going from dense glass out to air at a steep angle, the ray cannot escape and reflects entirely back.'
+    values:
+      n1: 1.5
+      n2: 1
+      incident: 60
+limits:
+  - label: 'grazing incidence'
+    icon: '📐'
+    collapse: 'ray skims along the surface'
+    values:
+      incident: 88
+  - label: 'straight on'
+    icon: '⬇️'
+    collapse: 'no bending at all'
+    values:
+      incident: 0
+prerequisites: []
+related: []
+---
+
+import SnellRay from '../../../components/viz/SnellRay.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<SnellRay />
+
+<div class="viz-controls">
+  <SliderField
+    label="Index of first medium n₁"
+    unit=""
+    slug="waves-optics/snell"
+    storeKey="n1"
+    min={1}
+    max={2.5}
+    step={0.01}
+    sigFigs={3}
+    value={frontmatter.defaults.n1}
+    scale="linear"
+  />
+  <SliderField
+    label="Index of second medium n₂"
+    unit=""
+    slug="waves-optics/snell"
+    storeKey="n2"
+    min={1}
+    max={2.5}
+    step={0.01}
+    sigFigs={3}
+    value={frontmatter.defaults.n2}
+    scale="linear"
+  />
+  <SliderField
+    label="Incident angle"
+    unit="°"
+    slug="waves-optics/snell"
+    storeKey="incident"
+    min={0}
+    max={89}
+    step={1}
+    sigFigs={2}
+    value={frontmatter.defaults.incident}
+    scale="linear"
+  />
+  <PresetButtons slug="waves-optics/snell" presets={frontmatter.presets} />
+  <LimitSnaps slug="waves-optics/snell" limits={frontmatter.limits} />
+  <ResetButton slug="waves-optics/snell" label="Reset" />
+</div>
+
+## Why does light bend?
+
+Light travels slower through some materials than others, and the refractive
+index is just a measure of how much a material slows it down. Air is close to 1,
+water is about 1.33, ordinary glass about 1.5. When a ray crosses from one
+material into another, the change in speed makes it change direction at the
+boundary. That kerb is what you see when a straw in a glass of water looks
+snapped in two.
+
+Which way it bends follows one rule. Entering a slower, denser medium (a higher
+index), the ray bends toward the normal, the dashed line drawn straight through
+the surface. Entering a faster, lighter medium (a lower index), it bends away
+from the normal. The steeper the incoming angle, the more there is to bend.
+
+## When light can't get out
+
+Going the other way, from a dense medium out to a lighter one, the ray bends
+away from the normal and keeps opening up as you raise the incident angle. There
+is a limit. At the critical angle the refracted ray would lie flat along the
+surface, and beyond it there is no angle left for light to escape into: the
+equation asks for `sin θ₂` greater than 1, which has no real answer. All of the
+light reflects back into the dense medium instead. That is total internal
+reflection, and it happens exactly when
+
+`sin θ_c = n₂ / n₁`  (only possible when n₁ is greater than n₂).
+
+It is not a defect. It is how a fibre-optic cable pipes light around bends for
+kilometres without leaking, and why a cut diamond, with its very high index,
+traps and throws back so much light that it sparkles.
+
+<details class="misconception">
+  <summary>Does light always pass through into the next material?</summary>
+
+  No. Going from a denser medium into a lighter one, once the incident angle
+  passes the critical angle, none of the light gets through: it is 100% reflected
+  back. That is total internal reflection. Try the "Glass to air (TIR)" preset
+  and watch the transmitted ray vanish, replaced by a reflected ray and a label.
+</details>

@@ -1,0 +1,128 @@
+---
+title: 'Projectile range'
+category: classical-mechanics
+layoutArchetype: field-space
+status: live
+order: 5
+equationLatex: 'R = \dfrac{v^2 \sin(2\theta)}{g}'
+equationPlain: 'R = v²·sin(2θ) / g'
+claim: 'Throw at 45° to go the farthest, and any two angles that add to 90° land in exactly the same place.'
+defaults:
+  speed: 20
+  angle: 45
+terms:
+  - symbol: 'R'
+    name: 'R: Latin capital arr, the range'
+    role: 'how far the projectile travels along the ground'
+    effect: 'what we solve for; largest when the launch angle is 45°'
+  - symbol: 'v'
+    name: 'v: Latin lowercase vee, the launch speed'
+    role: 'how fast the projectile leaves the launch point'
+    effect: 'enters squared, so doubling the speed quadruples the range'
+  - symbol: '\theta'
+    name: 'theta: Greek lowercase theta, the launch angle'
+    role: 'the angle above the ground the projectile is thrown at'
+    effect: 'range follows sin(2θ), peaking at 45° and mirrored around it'
+  - symbol: 'g'
+    name: 'g: Latin lowercase gee, gravity'
+    role: 'the downward acceleration pulling the projectile back to the ground'
+    effect: 'stronger gravity shortens the range; weaker gravity stretches it out'
+presets:
+  - label: 'Best angle (45°)'
+    caption: 'The sweet spot: sin(2θ) hits its maximum of 1 at 45°, so nothing thrown at this speed goes farther.'
+    values:
+      angle: 45
+  - label: 'Low and fast (20°)'
+    caption: 'A flat, fast throw. It lands at the same range as the 70° lob, because 20° and 70° add to 90°.'
+    values:
+      angle: 20
+  - label: 'High lob (70°)'
+    caption: 'A steep, hanging throw. Same landing spot as the 20° shot, just with far more airtime.'
+    values:
+      angle: 70
+limits:
+  - label: 'θ → 0'
+    icon: '➡️'
+    collapse: 'flat shot: no airtime, no range'
+    values:
+      angle: 2
+  - label: 'θ → 90°'
+    icon: '⬆️'
+    collapse: 'straight up: comes back to the start, zero range'
+    values:
+      angle: 88
+prerequisites: []
+related: []
+---
+
+import ProjectileArc from '../../../components/viz/ProjectileArc.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<ProjectileArc />
+
+<div class="viz-controls">
+  <SliderField
+    label="Launch speed"
+    unit="m/s"
+    slug="classical-mechanics/projectile-range"
+    storeKey="speed"
+    min={5}
+    max={40}
+    step={1}
+    sigFigs={2}
+    value={frontmatter.defaults.speed}
+    scale="linear"
+  />
+  <SliderField
+    label="Launch angle"
+    unit="°"
+    slug="classical-mechanics/projectile-range"
+    storeKey="angle"
+    min={0}
+    max={90}
+    step={1}
+    sigFigs={2}
+    value={frontmatter.defaults.angle}
+    scale="linear"
+  />
+  <PresetButtons slug="classical-mechanics/projectile-range" presets={frontmatter.presets} />
+  <LimitSnaps slug="classical-mechanics/projectile-range" limits={frontmatter.limits} />
+  <ResetButton slug="classical-mechanics/projectile-range" label="Reset" />
+</div>
+
+## Why 45° goes the farthest
+
+Range is a tug-of-war between two things a throw needs: horizontal speed to
+cover ground, and time in the air to use that speed. Throw too flat and the
+projectile is fast but lands almost immediately. Throw too steep and it hangs
+forever but barely moves sideways. The best trade sits right in the middle, at
+45°, where `sin(2θ)` reaches its largest value of 1. Slide the angle away from
+45° in either direction and the range drops off.
+
+## Complementary angles tie
+
+Look at the `sin(2θ)` in the equation. Feed it an angle θ or its complement
+90 − θ and you get the same number, because `sin(2θ)` and `sin(2(90 − θ))` are
+equal. So a 20° throw and a 70° throw of the same speed land in exactly the same
+spot. The steep one just spends much longer in the air getting there. Try the
+"Low and fast" and "High lob" presets and watch the landing marker stay put.
+
+## What this leaves out
+
+The formula assumes level ground (launch and landing at the same height), no air
+resistance, and a constant gravity `g`. Those idealizations are why the arc is a
+clean parabola. Real throws land short of it: drag bleeds off speed, and a ball
+launched from shoulder height lands below where it started, both of which nudge
+the best angle a little under 45°.
+
+<details class="misconception">
+  <summary>Is steeper always farther?</summary>
+
+  No. It helps only up to 45°. Past that, extra steepness trades away too much
+  horizontal speed for airtime you cannot use, and the range falls again. That is
+  why 30° and 60° reach the same distance, and why the flat 20° shot matches the
+  steep 70° lob. Steeper buys you hang time, not distance.
+</details>

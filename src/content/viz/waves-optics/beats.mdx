@@ -1,0 +1,135 @@
+---
+title: 'Beats'
+category: waves-optics
+layoutArchetype: comparison
+status: live
+order: 6.2
+equationLatex: 'f_{beat} = |f_1 - f_2|'
+equationPlain: 'f_beat = |f₁ − f₂|'
+claim: 'Play two tones a few hertz apart and they add up to a single throbbing sound that swells and fades — the beat — pulsing at the difference of their frequencies.'
+defaults:
+  f1: 440
+  f2: 444
+terms:
+  - symbol: 'f_{beat}'
+    name: 'f-beat: the beat frequency'
+    role: 'how many loud-soft pulses you hear each second'
+    effect: 'equals the gap between the two frequencies; zero when they match, faster as they spread apart'
+  - symbol: 'f_1'
+    name: 'f-one: the first frequency'
+    role: 'one of the two tones being added together'
+    effect: 'moving it away from the other widens the gap and speeds the beats up'
+  - symbol: 'f_2'
+    name: 'f-two: the second frequency'
+    role: 'the other tone being added together'
+    effect: 'moving it away from the first widens the gap and speeds the beats up'
+  - symbol: '\dfrac{f_1 + f_2}{2}'
+    name: 'f-one plus f-two over two: the carrier, or average, frequency'
+    role: 'the average of the two frequencies — the pitch you actually perceive'
+    effect: 'sits between the two tones and barely moves as the beat rate changes'
+presets:
+  - label: 'In tune (440 & 440)'
+    caption: 'No beats — the two waves stay perfectly in step. This is how you tune an instrument: adjust until the beating stops.'
+    values:
+      f1: 440
+      f2: 440
+  - label: 'Slightly off (440 & 444)'
+    caption: 'Four hertz apart: a slow, gentle throb you can easily count.'
+    values:
+      f1: 440
+      f2: 444
+  - label: 'Clearly off (440 & 452)'
+    caption: 'Twelve hertz apart: a fast, obvious wobble in the sound.'
+    values:
+      f1: 440
+      f2: 452
+limits:
+  - label: 'f₁ = f₂'
+    collapse: 'no beats: the two waves stay in step'
+    values:
+      f1: 440
+      f2: 440
+  - label: 'far apart'
+    collapse: 'fast beats blur into a rough tone'
+    values:
+      f1: 440
+      f2: 470
+prerequisites: []
+related: []
+---
+
+import BeatsWave from '../../../components/viz/BeatsWave.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<BeatsWave />
+
+<div class="viz-controls">
+  <SliderField
+    label="Frequency 1"
+    unit="Hz"
+    slug="waves-optics/beats"
+    storeKey="f1"
+    min={430}
+    max={450}
+    step={1}
+    sigFigs={3}
+    value={frontmatter.defaults.f1}
+    scale="linear"
+  />
+  <SliderField
+    label="Frequency 2"
+    unit="Hz"
+    slug="waves-optics/beats"
+    storeKey="f2"
+    min={430}
+    max={470}
+    step={1}
+    sigFigs={3}
+    value={frontmatter.defaults.f2}
+    scale="linear"
+  />
+  <PresetButtons slug="waves-optics/beats" presets={frontmatter.presets} />
+  <LimitSnaps slug="waves-optics/beats" limits={frontmatter.limits} />
+  <ResetButton slug="waves-optics/beats" label="Reset to 440 & 444 Hz" />
+</div>
+
+## Two waves add up, point by point
+
+When two waves pass through the same place at the same time, they add: at every
+instant the combined displacement is just the sum of the two. That is
+superposition. Slide the two frequencies together and watch the bottom trace —
+it is the top two traces added together, moment by moment.
+
+When the frequencies are close, the two waves drift slowly in and out of step.
+For a while their crests line up and reinforce, so the sum grows tall. A moment
+later one has slipped half a cycle behind the other, crest meets trough, and they
+cancel to almost nothing. That drifting produces the swelling and fading you can
+see traced by the faint dashed outline: the **beat**.
+
+## The beat rate is the difference; the pitch is the average
+
+The sum swells and fades once for every cycle that one wave gains on the other,
+so the loud-soft pulses come at exactly the difference of the two frequencies:
+
+`f_beat = |f₁ − f₂|`
+
+Two tones four hertz apart beat four times a second. That is why musicians tune
+by ear: sound a reference note against the string, and adjust until the beating
+slows to a crawl and then stops. No beats means the two frequencies are equal.
+
+Keep the beat rate separate from the pitch. The pitch you hear is the **average**
+of the two frequencies, `(f₁ + f₂)/2`, and it barely moves while the beat rate
+changes. With 440 and 444 you hear a 442 Hz tone throbbing four times a second,
+not a 4 Hz sound.
+
+<details class="misconception">
+  <summary>Do you hear a third new frequency at 4 Hz?</summary>
+
+  No. Nothing in the sound actually vibrates at 4 Hz, and 4 Hz is far too low to
+  hear as a pitch anyway. What changes at 4 Hz is the *loudness*: the single
+  average tone gets louder and softer four times a second. The beat is a rhythm in
+  the volume of one tone, not a separate tone added alongside the other two.
+</details>

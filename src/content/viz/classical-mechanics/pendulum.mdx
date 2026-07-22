@@ -1,0 +1,128 @@
+---
+title: 'Pendulum period'
+category: classical-mechanics
+layoutArchetype: time-series
+status: live
+order: 5.2
+equationLatex: 'T = 2\pi\sqrt{\dfrac{L}{g}}'
+equationPlain: 'T = 2π·√(L/g)'
+claim: "A pendulum's swing time depends only on its length — not on how heavy the bob is or how far you pull it."
+defaults:
+  length: 1
+terms:
+  - symbol: 'T'
+    name: 'T: Latin capital T, the period'
+    role: 'the time for one full swing, over and back'
+    effect: 'the output; grows with length, shrinks with stronger gravity'
+    unit: 's'
+  - symbol: 'L'
+    name: 'L: Latin capital L, the length'
+    role: 'the distance from the pivot to the bob'
+    effect: 'longer rod -> slower swing, but only as the square root (4x length -> 2x period)'
+    unit: 'm'
+  - symbol: 'g'
+    name: 'g: Latin letter g, gravitational acceleration'
+    role: "the strength of gravity pulling the bob back toward the bottom"
+    effect: 'stronger gravity -> quicker swing; 9.81 m/s² on Earth, weaker on the Moon'
+    unit: 'm/s²'
+  - symbol: '2\pi'
+    name: 'two pi: the number 2 times the Greek lowercase pi'
+    role: 'the constant that turns the natural swing rate into a full-cycle time'
+    effect: 'fixed at about 6.283; it never changes'
+presets:
+  - label: 'Grandfather clock (1 m)'
+    icon: '🕰️'
+    caption: 'About 2 s a swing — the classic seconds-ish tick a pendulum clock is built around.'
+    values:
+      length: 1
+  - label: 'Short (0.25 m)'
+    icon: '⏱️'
+    caption: 'Quarter the length, half the period: a brisk 1 s swing.'
+    values:
+      length: 0.25
+  - label: 'Long (4 m)'
+    icon: '🎡'
+    caption: 'Four times the length, double the period: a slow, 4 s sway.'
+    values:
+      length: 4
+limits:
+  - label: 'L → short'
+    icon: '⚡'
+    collapse: 'quick, rapid ticks'
+    values:
+      length: 0.1
+  - label: 'L → long'
+    icon: '🐌'
+    collapse: 'slow, lazy swings'
+    values:
+      length: 4
+prerequisites: []
+related: []
+---
+
+import PendulumSwing from '../../../components/viz/PendulumSwing.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<PendulumSwing />
+
+<div class="viz-controls">
+  <SliderField
+    label="Length"
+    unit="m"
+    slug="classical-mechanics/pendulum"
+    storeKey="length"
+    min={0.1}
+    max={4}
+    step={0.05}
+    scale="linear"
+    sigFigs={3}
+    value={frontmatter.defaults.length}
+  />
+  <PresetButtons slug="classical-mechanics/pendulum" presets={frontmatter.presets} />
+  <LimitSnaps slug="classical-mechanics/pendulum" limits={frontmatter.limits} />
+  <ResetButton slug="classical-mechanics/pendulum" label="Reset to 1 m" />
+</div>
+
+## Only the length matters
+
+Drag the slider and watch the period readout. Just one thing on the right-hand
+side of the equation, the length, is something you can change by rebuilding the
+pendulum. Gravity `g` is fixed wherever you stand, and `2π` is just a number. So
+for a given place on Earth, the swing time is set entirely by how long the rod
+is.
+
+Notice what is *not* in the formula. There is no mass. A lead bob and a cork bob
+on rods of the same length keep exactly the same time. There is no starting
+angle either, as long as you keep the swing small. Pull it back a little more
+and it travels farther, but it also moves faster, and the two effects cancel.
+That steadiness is the whole reason a pendulum can run a clock: the swing time
+barely drifts as the swing slowly dies down.
+
+The dependence on length is gentle. Because it sits under a square root, you
+have to *quadruple* the length to *double* the period. A 1 m pendulum swings in
+about 2 s; you need a 4 m pendulum to reach 4 s.
+
+## The small-angle catch
+
+The clean formula `T = 2π√(L/g)` assumes small swings. It comes from
+approximating the restoring pull as proportional to the displacement, which only
+holds near the bottom. For a genuinely large swing (tens of degrees), the period
+grows slightly, and the neat independence from amplitude weakens. The animation
+here holds a deliberately small swing so the approximation stays honest.
+
+<details class="misconception">
+  <summary>Does a heavier bob swing slower?</summary>
+
+  No. Swap in a bob twice as heavy and the period does not budge. Gravity pulls
+  twice as hard on the heavier bob, but the heavier bob is also twice as hard to
+  get moving, and those two effects cancel exactly, so mass drops out of the
+  equation. It is the same reason Galileo saw a light and a heavy weight fall
+  together: the acceleration due to gravity does not depend on mass.
+
+  Amplitude is nearly as innocent. For small swings, pulling the bob back
+  farther makes it cover more distance but also move faster, and the swing time
+  stays put. Only once the angle gets large does the period creep upward.
+</details>
