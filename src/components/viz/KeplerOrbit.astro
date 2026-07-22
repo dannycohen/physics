@@ -1,0 +1,234 @@
+---
+import { orbitalPeriodYears } from '../../lib/physics/kepler';
+import { formatQuantity } from '../../lib/format';
+
+interface Props {
+  slug?: string;
+}
+
+const { slug = 'classical-mechanics/kepler' } = Astro.props;
+
+const DEFAULT_A = 1; // AU
+
+const axisText = (a: number) => formatQuantity(a, 'AU', { sigFigs: 3 });
+const periodText = (a: number) => formatQuantity(orbitalPeriodYears(a), 'years', { sigFigs: 3 });
+
+const defaultAxis = axisText(DEFAULT_A);
+const defaultPeriod = periodText(DEFAULT_A);
+
+// Build-time table: the planets, showing T^2 ≈ a^3.
+const PLANETS: Array<[string, number]> = [
+  ['Mercury', 0.39],
+  ['Venus', 0.72],
+  ['Earth', 1],
+  ['Mars', 1.524],
+  ['Jupiter', 5.203],
+  ['Saturn', 9.58],
+  ['Uranus', 19.2],
+  ['Neptune', 30.07],
+];
+const rows = PLANETS.map(([name, a]) => {
+  const T = orbitalPeriodYears(a);
+  return {
+    name,
+    a: formatQuantity(a, '', { sigFigs: 3 }),
+    T: formatQuantity(T, '', { sigFigs: 3 }),
+    aCubed: formatQuantity(a ** 3, '', { sigFigs: 3 }),
+    tSquared: formatQuantity(T ** 2, '', { sigFigs: 3 }),
+  };
+});
+---
+
+<kepler-orbit data-slug={slug}>
+  <figure class="orbit-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A schematic Solar-System view: the Sun sits at the centre and a single planet travels a circular orbit whose drawn radius grows with the semi-major axis (on a log-compressed scale so both close-in and far-out orbits fit). The current orbit radius and period are labelled. A wider orbit means a longer year."
+      ></canvas>
+    </div>
+    <p class="orbit-stat" aria-hidden="true">
+      Orbit radius <b class="axis-val">{defaultAxis}</b> &rarr; period
+      <b class="period-val">{defaultPeriod}</b>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      An orbit of radius {defaultAxis} takes {defaultPeriod} to go once around the Sun.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      The eight planets, with the semi-major axis a in AU and the period T in years. The last
+      two columns show that a cubed and T squared match: that is Kepler's third law.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Planet</th>
+          <th scope="col">a (AU)</th>
+          <th scope="col">T (years)</th>
+          <th scope="col">a³</th>
+          <th scope="col">T²</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.name}</td>
+              <td>{row.a}</td>
+              <td>{row.T}</td>
+              <td>{row.aCubed}</td>
+              <td>{row.tSquared}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</kepler-orbit>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { orbitalPeriodYears } from '../../lib/physics/kepler';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'classical-mechanics/kepler';
+  const DEFAULT_A = 1;
+  const A_MIN = 0.3;
+  const A_MAX = 40;
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, { axis: DEFAULT_A });
+
+  const axisText = (a: number) => formatQuantity(a, 'AU', { sigFigs: 3 });
+  const periodText = (a: number) => formatQuantity(orbitalPeriodYears(a), 'years', { sigFigs: 3 });
+
+  // Log-compress the drawn radius so both Mercury-ish and beyond-Neptune orbits
+  // land on screen. Maps [A_MIN, A_MAX] onto a normalised [0, 1] fraction.
+  const radiusFrac = (a: number) => {
+    const clamped = Math.min(Math.max(a, A_MIN), A_MAX);
+    return Math.log(clamped / A_MIN) / Math.log(A_MAX / A_MIN);
+  };
+
+  class KeplerOrbitElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const axisVal = this.querySelector('.axis-val');
+      const periodVal = this.querySelector('.period-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const a = store.values.get()['axis'] ?? DEFAULT_A;
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        const cx = size.w * 0.5;
+        const cy = size.h * 0.5;
+        const maxR = Math.min(size.w, size.h) * 0.42;
+        const minR = maxR * 0.14;
+        const orbitR = minR + radiusFrac(a) * (maxR - minR);
+
+        // Reference orbits for the innermost and outermost slider positions, so
+        // the drawn radius has visible context.
+        ctx.strokeStyle = theme.grid;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 4]);
+        for (const r of [minR, maxR]) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // The current orbit.
+        ctx.strokeStyle = theme.axis;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // The Sun at the centre.
+        ctx.save();
+        ctx.shadowColor = theme.active;
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = theme.active;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // The planet, parked at the right of its orbit.
+        const px = cx + orbitR;
+        const py = cy;
+        ctx.save();
+        ctx.shadowColor = theme.curve;
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = theme.curve;
+        ctx.beginPath();
+        ctx.arc(px, py, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Period label beside the planet.
+        ctx.fillStyle = theme.label;
+        ctx.font = '13px system-ui, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'bottom';
+        const label = periodText(a);
+        const lx = Math.min(px + 12, size.w - 4 - ctx.measureText(label).width);
+        ctx.fillText(label, lx, py - 10);
+      });
+
+      const renderStat = (a: number) => {
+        if (axisVal) axisVal.textContent = axisText(a);
+        if (periodVal) periodVal.textContent = periodText(a);
+      };
+
+      store.values.subscribe((values) => {
+        renderStat(values['axis'] ?? DEFAULT_A);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const a = values['axis'] ?? DEFAULT_A;
+        const text = `An orbit of radius ${axisText(a)} takes ${periodText(a)} to go once around the Sun.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('kepler-orbit')) {
+    customElements.define('kepler-orbit', KeplerOrbitElement);
+  }
+</script>
+
+<style>
+  .orbit-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 3 / 2;
+  }
+
+  .orbit-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .orbit-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+</style>

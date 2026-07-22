@@ -1,0 +1,151 @@
+---
+title: 'RC circuit charging'
+category: electromagnetism
+layoutArchetype: time-series
+status: live
+order: 4.5
+equationLatex: 'V(t) = V_0\left(1 - e^{-t/RC}\right)'
+equationPlain: 'V(t) = V₀(1 − e^(−t/RC))'
+claim: 'A capacitor charges fast then crawls, reaching 63% of full voltage in one time constant and never quite hitting 100%.'
+defaults:
+  resistance: 1000
+  capacitance: 100
+terms:
+  - symbol: 'V(t)'
+    name: 'V of t: Latin capital V of t, the capacitor voltage at time t'
+    role: 'how much voltage the capacitor has built up at time t'
+    effect: 'starts at 0 and climbs toward V₀ without ever quite reaching it'
+  - symbol: 'V_0'
+    name: 'V-nought: Latin capital V with subscript zero, the supply voltage'
+    role: 'the full voltage the capacitor charges toward'
+    effect: 'sets the ceiling; the curve is the same shape whatever this is'
+  - symbol: 't'
+    name: 't: Latin letter t, the elapsed time'
+    role: 'time since charging began'
+    effect: 'more time -> closer to full, gaining 63% of the remaining gap each τ'
+  - symbol: 'R'
+    name: 'R: Latin capital R, the resistance'
+    role: 'the series resistance the charging current flows through'
+    effect: 'larger R -> slower charging, since τ = RC grows'
+  - symbol: 'C'
+    name: 'C: Latin capital C, the capacitance'
+    role: 'how much charge the capacitor holds per volt'
+    effect: 'larger C -> slower charging, since τ = RC grows'
+  - symbol: 'RC = \tau'
+    name: 'R C equals tau: the product of R and C, the time constant tau'
+    role: 'the time constant that sets how fast the capacitor charges'
+    effect: 'after one τ the capacitor is 63% charged; after ~5τ it is ~99% charged'
+presets:
+  - label: 'Fast (small RC)'
+    icon: '⚡'
+    caption: 'A small resistor and capacitor: τ ≈ 24 ms, so charging is nearly done within a tenth of a second.'
+    values:
+      resistance: 500
+      capacitance: 47
+  - label: 'Medium'
+    icon: '⏱️'
+    caption: 'τ = 0.1 s: 63% charged at 0.1 s, ~99% by half a second.'
+    values:
+      resistance: 1000
+      capacitance: 100
+  - label: 'Slow (large RC)'
+    icon: '🐢'
+    caption: 'A large resistor and capacitor: τ ≈ 1 s, so it takes several seconds to fill up.'
+    values:
+      resistance: 2200
+      capacitance: 470
+limits:
+  - label: 'RC → small'
+    icon: '💨'
+    collapse: 'charges almost instantly: τ ≈ 2 ms, so the capacitor is full in a blink'
+    values:
+      resistance: 200
+      capacitance: 10
+  - label: 'RC → large'
+    icon: '🧊'
+    collapse: 'charges sluggishly: τ ≈ 4.7 s, so it creeps toward full over many seconds'
+    values:
+      resistance: 4700
+      capacitance: 1000
+prerequisites: []
+related:
+  - 'foundations/exponential-decay'
+---
+
+import RCCurve from '../../../components/viz/RCCurve.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<RCCurve />
+
+<div class="viz-controls">
+  <SliderField
+    label="Resistance"
+    unit="Ω"
+    slug="electromagnetism/rc-charging"
+    storeKey="resistance"
+    min={100}
+    max={5000}
+    step={50}
+    scale="log"
+    sigFigs={3}
+    value={frontmatter.defaults.resistance}
+  />
+  <SliderField
+    label="Capacitance"
+    unit="µF"
+    slug="electromagnetism/rc-charging"
+    storeKey="capacitance"
+    min={10}
+    max={1000}
+    step={10}
+    scale="log"
+    sigFigs={3}
+    value={frontmatter.defaults.capacitance}
+  />
+  <PresetButtons slug="electromagnetism/rc-charging" presets={frontmatter.presets} />
+  <LimitSnaps slug="electromagnetism/rc-charging" limits={frontmatter.limits} />
+  <ResetButton slug="electromagnetism/rc-charging" label="Reset to 1 kΩ, 100 µF" />
+</div>
+
+## Charging through a resistor
+
+Connect a battery to a capacitor through a resistor and the capacitor does not fill
+up all at once. The resistor limits the current, so charge dribbles onto the
+capacitor's plates. As the voltage builds, the gap between the capacitor and the
+supply shrinks, the current falls, and charging slows down. The result is a curve
+that shoots up at the start and then flattens as it eases toward the full voltage.
+
+## The rate is set by the time constant
+
+One number governs the whole curve: the time constant τ = RC. Multiply the
+resistance in ohms by the capacitance in farads and you get τ in seconds. It is the
+natural clock of the circuit. After one τ the capacitor has reached 63% of full
+voltage. After two τ it is at about 86%, after three about 95%, and by five τ it is
+at roughly 99% — close enough to call it full. Bigger R or bigger C means a bigger
+τ and slower charging; smaller values fill the capacitor faster.
+
+Each time constant closes about 63% of whatever gap is still left, so the same
+shape repeats at every scale. That is why the table reads the same whether τ is a
+millisecond or a second.
+
+## The mirror image of exponential decay
+
+This rising curve is the flip side of [exponential decay](/physics/viz/foundations/exponential-decay/).
+A capacitor *discharging* through a resistor loses its voltage on a falling
+exponential with the very same time constant τ = RC. Charging is that curve turned
+upside down: instead of falling from full toward zero, it rises from zero toward
+full. Same time-constant idea, same 63%-per-τ rhythm, just pointing the other way.
+
+<details class="misconception">
+  <summary>Does it ever reach 100%?</summary>
+
+  No. The capacitor approaches the full supply voltage forever, getting arbitrarily
+  close but never landing exactly on it. Each time constant covers 63% of the
+  remaining gap, so the gap shrinks and shrinks but never closes. In practice, after
+  about five τ the last fraction of a percent is too small to notice and we call it
+  fully charged — but mathematically it is like the decay curve that never quite
+  hits zero, just seen from the other side.
+</details>

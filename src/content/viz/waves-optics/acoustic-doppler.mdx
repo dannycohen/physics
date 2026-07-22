@@ -1,0 +1,133 @@
+---
+title: 'The Doppler effect (sound)'
+category: waves-optics
+layoutArchetype: field-space
+status: live
+order: 6.5
+equationLatex: "f' = f\\,\\dfrac{v}{v - v_s}"
+equationPlain: "f' = f · v/(v − v_s)"
+claim: 'A passing siren drops in pitch the instant it goes by — the classic ambulance effect, and it comes straight from the source outrunning its own sound waves on the way in.'
+defaults:
+  sourceFreq: 440
+  sourceSpeed: 30
+terms:
+  - symbol: "f'"
+    name: 'f-prime: the observed frequency'
+    role: 'the pitch a stationary listener actually hears'
+    effect: 'rises above the source pitch as it approaches, falls below it as it recedes'
+  - symbol: 'f'
+    name: 'f: the source frequency'
+    role: 'the pitch the source really emits, in its own frame'
+    effect: 'sets the baseline the shift is measured against'
+  - symbol: 'v'
+    name: 'v: the speed of sound in air'
+    role: 'how fast the wavefronts travel through the still medium'
+    effect: 'the fixed yardstick the source speed is compared against; here 343 m/s in still air'
+  - symbol: 'v_s'
+    name: 'v-s: the source speed toward the observer'
+    role: 'how fast the source closes on the listener along the line of sight'
+    effect: 'positive raises the pitch (approaching), negative lowers it (receding)'
+presets:
+  - label: 'Approaching (30 m/s)'
+    caption: 'Coming toward you at 30 m/s: the wavefronts pile up and the pitch rises.'
+    values:
+      sourceSpeed: 30
+  - label: 'Receding (−30 m/s)'
+    caption: 'Going away at 30 m/s: the wavefronts stretch and the pitch drops.'
+    values:
+      sourceSpeed: -30
+  - label: 'Fast car (50 m/s)'
+    caption: 'A car at 50 m/s (about 180 km/h): a clearly audible jump in pitch.'
+    values:
+      sourceSpeed: 50
+limits:
+  - label: 'v_s → +v (approaching sound speed)'
+    icon: '🚀'
+    collapse: 'pitch soars toward infinity as the source nears the speed of sound'
+    values:
+      sourceSpeed: 320
+  - label: 'stationary'
+    icon: '🔇'
+    collapse: 'no shift: you hear the true pitch'
+    values:
+      sourceSpeed: 0
+prerequisites: []
+related:
+  - relativity/relativistic-doppler
+---
+
+import AcousticDoppler from '../../../components/viz/AcousticDoppler.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<AcousticDoppler />
+
+<div class="viz-controls">
+  <SliderField
+    label="Source pitch"
+    unit="Hz"
+    slug="waves-optics/acoustic-doppler"
+    storeKey="sourceFreq"
+    min={200}
+    max={800}
+    step={10}
+    sigFigs={3}
+    value={frontmatter.defaults.sourceFreq}
+    scale="linear"
+  />
+  <SliderField
+    label="Source speed toward you"
+    unit="m/s"
+    slug="waves-optics/acoustic-doppler"
+    storeKey="sourceSpeed"
+    min={-100}
+    max={320}
+    step={5}
+    sigFigs={3}
+    value={frontmatter.defaults.sourceSpeed}
+    scale="linear"
+  />
+  <PresetButtons slug="waves-optics/acoustic-doppler" presets={frontmatter.presets} />
+  <LimitSnaps slug="waves-optics/acoustic-doppler" limits={frontmatter.limits} />
+  <ResetButton slug="waves-optics/acoustic-doppler" label="Reset to 30 m/s" />
+</div>
+
+## Bunched ahead, spread behind
+
+A moving source keeps emitting sound at a steady pitch, but it chases its own
+wavefronts. Each new crest goes out from a point a little further along than the
+last, so ahead of the source the crests bunch together and behind it they spread
+apart. Crests arriving closer together mean a higher frequency; crests spread out
+mean a lower one. Stand ahead of the source and you hear it sharp; stand behind
+and you hear it flat.
+
+The size of the shift depends on how fast the source moves compared with the
+speed of sound in the medium — here, still air at 343 m/s. Push the source speed
+toward that value and the wavefronts ahead pile up almost on top of each other,
+so the pitch you hear climbs steeply. This picture assumes the source moves
+straight along the line to you and the air is still.
+
+## Sound has a medium; light does not
+
+The everyday siren Doppler and the <a href={`${import.meta.env.BASE_URL}viz/relativity/relativistic-doppler/`}>relativistic Doppler for light</a>
+look alike: approaching raises the pitch or reddens to blue, receding does the
+reverse. But they are not the same formula. Sound travels through air, a medium,
+so it matters whether the source or the listener is the one moving relative to
+that air, and the two cases give slightly different shifts. Light in a vacuum has
+no medium: only the relative speed matters, the two observers agree symmetrically,
+and the relativistic version also folds in time dilation, which the sound formula
+has no reason to include.
+
+<details class="misconception">
+  <summary>Does the siren itself change pitch as it passes?</summary>
+
+  No. The siren emits the same steady pitch the whole time, and the driver sitting
+  with it hears that true pitch unchanged. Only a listener the source is moving
+  relative to hears a shift, and it flips from high to low the moment the source
+  passes: approaching, the crests crowd together and the pitch is high; the instant
+  it goes by and starts receding, the crests stretch out and the pitch drops. What
+  you hear is a property of the geometry between you and the source, not a change in
+  the source itself.
+</details>

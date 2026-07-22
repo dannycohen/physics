@@ -1,0 +1,116 @@
+---
+title: "Kepler's third law"
+category: classical-mechanics
+layoutArchetype: field-space
+status: live
+order: 5.5
+equationLatex: 'T^2 = a^3'
+equationPlain: 'T² = a³  (years, AU)'
+claim: 'The farther a planet sits from the Sun, the slower it orbits — and the exact trade is that the period squared equals the orbit radius cubed.'
+defaults:
+  axis: 1
+terms:
+  - symbol: 'T'
+    name: 'T: Latin capital T, the orbital period'
+    role: 'the time for one full trip around the Sun, measured in years'
+    effect: 'the output; grows as the 3/2 power of the orbit radius, so distant planets have long years'
+    unit: 'years'
+  - symbol: 'a'
+    name: 'a: Latin letter a, the semi-major axis'
+    role: 'the average orbit radius, half the long axis of the ellipse, measured in AU'
+    effect: 'larger orbit -> longer period; quadruple a and the year grows eightfold'
+    unit: 'AU'
+presets:
+  - label: 'Earth (1 AU)'
+    icon: '🌍'
+    caption: 'One AU, one year — the yardstick both units are pinned to.'
+    values:
+      axis: 1
+  - label: 'Mars (1.52 AU)'
+    icon: '🔴'
+    caption: 'Half again as far out, and the year stretches to about 1.9 of ours.'
+    values:
+      axis: 1.524
+  - label: 'Jupiter (5.2 AU)'
+    icon: '🪐'
+    caption: 'Five times Earth-Sun, so nearly 12 years for one lap.'
+    values:
+      axis: 5.203
+  - label: 'Neptune (30 AU)'
+    icon: '🔵'
+    caption: 'Thirty AU out; one Neptune year is about 165 Earth years.'
+    values:
+      axis: 30.07
+limits:
+  - label: 'close in'
+    icon: '⚡'
+    collapse: 'short year: fast orbit near the Sun'
+    values:
+      axis: 0.39
+  - label: 'far out'
+    icon: '🐌'
+    collapse: 'long year: slow, distant orbit'
+    values:
+      axis: 40
+prerequisites: []
+related: []
+---
+
+import KeplerOrbit from '../../../components/viz/KeplerOrbit.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<KeplerOrbit />
+
+<div class="viz-controls">
+  <SliderField
+    label="Orbit radius"
+    unit="AU"
+    slug="classical-mechanics/kepler"
+    storeKey="axis"
+    min={0.3}
+    max={40}
+    step={0.01}
+    scale="log"
+    sigFigs={3}
+    value={frontmatter.defaults.axis}
+  />
+  <PresetButtons slug="classical-mechanics/kepler" presets={frontmatter.presets} />
+  <LimitSnaps slug="classical-mechanics/kepler" limits={frontmatter.limits} />
+  <ResetButton slug="classical-mechanics/kepler" label="Reset to 1 AU" />
+</div>
+
+## Farther out means a longer year
+
+Drag the orbit wider and watch the period climb. A planet farther from the Sun
+is doing two things at once, both of which slow it down. It has a longer path to
+travel all the way around, and the Sun's pull out there is weaker, so it moves
+more slowly along that longer path. Put those together and the year grows fast.
+
+In Solar-System units the bookkeeping is clean. Measure distance in
+astronomical units (AU), where 1 AU is the Earth-Sun distance, and time in
+years. Then the law is simply `T² = a³`. Earth checks out at once: `1² = 1³`.
+Mars at 1.52 AU gives a year of about 1.9; Jupiter at 5.2 AU takes almost 12;
+Neptune way out at 30 AU takes about 165.
+
+## Where the law comes from
+
+The bare `T² = a³` hides a constant that happens to equal 1 in these units. The
+fuller form is `T² = 4π²a³/(GM)`, where `G` is the gravitational constant and
+`M` is the Sun's mass. Written that way the law is no coincidence: it falls
+straight out of the same inverse-square gravity that holds any orbit together.
+It also does real work. Measure a planet's `a` and `T`, and the full equation
+hands you the mass of the body being orbited. That is how the Sun's mass, and
+the masses of planets with moons, are weighed.
+
+<details class="misconception">
+  <summary>Do outer planets just move slower?</summary>
+
+  Not just slower — they also have farther to go, and both effects push the same
+  way, so the period grows faster than the distance does. Quadruple the orbit
+  radius and the path length only doubles, but the planet also crawls along it
+  more slowly, and the two combine to make the year eight times longer, not four.
+  That steeper-than-linear growth is exactly what `T² = a³` encodes.
+</details>

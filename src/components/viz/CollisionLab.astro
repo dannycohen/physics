@@ -1,0 +1,301 @@
+---
+import { finalVelocities, kineticEnergy } from '../../lib/physics/collision';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const DEFAULT_E = 1;
+const DEFAULT_M1 = 1;
+const DEFAULT_M2 = 1;
+const DEFAULT_U1 = 3;
+const DEFAULT_U2 = -1;
+
+const velText = (v: number) => formatQuantity(v, 'm/s', { sigFigs: 3 });
+const keptPercent = (m1: number, m2: number, u1: number, u2: number, e: number) => {
+  const before = kineticEnergy(m1, m2, u1, u2);
+  const { v1, v2 } = finalVelocities(m1, m2, u1, u2, e);
+  if (before === 0) return 100;
+  return Math.round((kineticEnergy(m1, m2, v1, v2) / before) * 100);
+};
+
+const def = finalVelocities(DEFAULT_M1, DEFAULT_M2, DEFAULT_U1, DEFAULT_U2, DEFAULT_E);
+const defKept = keptPercent(DEFAULT_M1, DEFAULT_M2, DEFAULT_U1, DEFAULT_U2, DEFAULT_E);
+
+const SAMPLE_E = [1, 0.75, 0.5, 0.25, 0];
+const rows = SAMPLE_E.map((e) => {
+  const { v1, v2 } = finalVelocities(DEFAULT_M1, DEFAULT_M2, DEFAULT_U1, DEFAULT_U2, e);
+  return {
+    e: formatQuantity(e, '', { sigFigs: 2 }),
+    v1: velText(v1),
+    v2: velText(v2),
+    kept: `${keptPercent(DEFAULT_M1, DEFAULT_M2, DEFAULT_U1, DEFAULT_U2, e)}%`,
+  };
+});
+---
+
+<collision-lab>
+  <figure class="field-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Two balls on a horizontal track. The top panel (before) shows each ball's incoming velocity as an arrow; the bottom panel (after) shows the velocities they leave with, computed from the bounciness. Ball size grows with mass. Total momentum is the same before and after; total kinetic energy stays the same only when the bounciness is one and drops as it falls."
+      ></canvas>
+    </div>
+    <p class="collision-stat" aria-hidden="true">
+      After: v₁ = <b class="v1-val">{velText(def.v1)}</b>, v₂ = <b class="v2-val">{velText(def.v2)}</b>
+      <span class="kept-note">· momentum conserved, KE <span class="kept-val">{defKept}%</span></span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      After the collision ball one moves at {velText(def.v1)} and ball two at {velText(def.v2)}.
+      Momentum is conserved and {defKept}% of the kinetic energy is kept.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      Final velocities and kinetic energy retained as the bounciness changes, for two
+      {DEFAULT_M1}&nbsp;kg balls closing at {velText(DEFAULT_U1)} and {velText(DEFAULT_U2)}.
+      Momentum is identical in every row; only the energy kept changes.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Bounciness e</th>
+          <th scope="col">Final v₁ (m/s)</th>
+          <th scope="col">Final v₂ (m/s)</th>
+          <th scope="col">KE kept</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.e}</td>
+              <td>{row.v1}</td>
+              <td>{row.v2}</td>
+              <td>{row.kept}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</collision-lab>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { finalVelocities, kineticEnergy } from '../../lib/physics/collision';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+  import type { VizTheme } from '../../lib/theme';
+
+  const SLUG = 'classical-mechanics/collisions';
+  const DEFAULT_E = 1;
+  const DEFAULT_M1 = 1;
+  const DEFAULT_M2 = 1;
+  const DEFAULT_U1 = 3;
+  const DEFAULT_U2 = -1;
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, {
+    e: DEFAULT_E,
+    m1: DEFAULT_M1,
+    m2: DEFAULT_M2,
+    u1: DEFAULT_U1,
+    u2: DEFAULT_U2,
+  });
+
+  const num = (values: Record<string, number>, key: string, fallback: number) =>
+    values[key] ?? fallback;
+  const velText = (v: number) => formatQuantity(v, 'm/s', { sigFigs: 3 });
+  const ballRadius = (m: number) => 8 + 16 * Math.sqrt(Math.min(Math.max(m, 0.5), 5) / 5);
+  const keptPercent = (before: number, after: number) =>
+    before === 0 ? 100 : Math.round((after / before) * 100);
+
+  function arrow(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    dx: number,
+    color: string,
+  ): void {
+    if (Math.abs(dx) < 1) return;
+    const dir = Math.sign(dx);
+    const hx = x + dx;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(hx, y);
+    ctx.stroke();
+    const head = 8;
+    ctx.beginPath();
+    ctx.moveTo(hx, y);
+    ctx.lineTo(hx - dir * head, y - head * 0.6);
+    ctx.lineTo(hx - dir * head, y + head * 0.6);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawBall(
+    ctx: CanvasRenderingContext2D,
+    theme: VizTheme,
+    x: number,
+    y: number,
+    m: number,
+    color: string,
+    label: string,
+  ): void {
+    const radius = ballRadius(m);
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.fillStyle = theme.bg;
+    ctx.font = `bold ${Math.round(radius)}px system-ui, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y + 1);
+  }
+
+  function drawPanel(
+    ctx: CanvasRenderingContext2D,
+    theme: VizTheme,
+    width: number,
+    top: number,
+    height: number,
+    title: string,
+    m1: number,
+    m2: number,
+    vel1: number,
+    vel2: number,
+  ): void {
+    const baseline = top + height * 0.62;
+    const x1 = width * 0.34;
+    const x2 = width * 0.66;
+    const speedScale = width * 0.055; // pixels per (m/s)
+
+    // Panel title.
+    ctx.fillStyle = theme.label;
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(title, 8, top + 4);
+
+    // Track.
+    ctx.strokeStyle = theme.axis;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(width * 0.08, baseline + ballRadius(5) + 6);
+    ctx.lineTo(width * 0.92, baseline + ballRadius(5) + 6);
+    ctx.stroke();
+
+    drawBall(ctx, theme, x1, baseline, m1, theme.curve, '1');
+    drawBall(ctx, theme, x2, baseline, m2, theme.curveSecondary, '2');
+
+    // Clamp each arrow tip inside the panel so fast balls don't run off the edge.
+    const clampDx = (startX: number, dx: number): number =>
+      Math.max(width * 0.08, Math.min(width * 0.92, startX + dx)) - startX;
+    const s1 = x1 + Math.sign(vel1) * ballRadius(m1);
+    const s2 = x2 + Math.sign(vel2) * ballRadius(m2);
+    arrow(ctx, s1, baseline, clampDx(s1, vel1 * speedScale), theme.label);
+    arrow(ctx, s2, baseline, clampDx(s2, vel2 * speedScale), theme.label);
+  }
+
+  class CollisionLabElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const v1El = this.querySelector('.v1-val');
+      const v2El = this.querySelector('.v2-val');
+      const keptEl = this.querySelector('.kept-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(canvas, (ctx, size, theme) => {
+        const values = store.values.get();
+        const e = num(values, 'e', DEFAULT_E);
+        const m1 = num(values, 'm1', DEFAULT_M1);
+        const m2 = num(values, 'm2', DEFAULT_M2);
+        const u1 = num(values, 'u1', DEFAULT_U1);
+        const u2 = num(values, 'u2', DEFAULT_U2);
+        const { v1, v2 } = finalVelocities(m1, m2, u1, u2, e);
+
+        ctx.fillStyle = theme.bg;
+        ctx.fillRect(0, 0, size.w, size.h);
+
+        drawPanel(ctx, theme, size.w, 0, size.h * 0.5, 'Before', m1, m2, u1, u2);
+        drawPanel(ctx, theme, size.w, size.h * 0.5, size.h * 0.5, 'After', m1, m2, v1, v2);
+      });
+
+      const render = (values: Record<string, number>) => {
+        const e = num(values, 'e', DEFAULT_E);
+        const m1 = num(values, 'm1', DEFAULT_M1);
+        const m2 = num(values, 'm2', DEFAULT_M2);
+        const u1 = num(values, 'u1', DEFAULT_U1);
+        const u2 = num(values, 'u2', DEFAULT_U2);
+        const { v1, v2 } = finalVelocities(m1, m2, u1, u2, e);
+        const kept = keptPercent(kineticEnergy(m1, m2, u1, u2), kineticEnergy(m1, m2, v1, v2));
+        if (v1El) v1El.textContent = velText(v1);
+        if (v2El) v2El.textContent = velText(v2);
+        if (keptEl) keptEl.textContent = `${kept}%`;
+      };
+
+      store.values.subscribe((values) => {
+        render(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const e = num(values, 'e', DEFAULT_E);
+        const m1 = num(values, 'm1', DEFAULT_M1);
+        const m2 = num(values, 'm2', DEFAULT_M2);
+        const u1 = num(values, 'u1', DEFAULT_U1);
+        const u2 = num(values, 'u2', DEFAULT_U2);
+        const { v1, v2 } = finalVelocities(m1, m2, u1, u2, e);
+        const kept = keptPercent(kineticEnergy(m1, m2, u1, u2), kineticEnergy(m1, m2, v1, v2));
+        const text = `After the collision ball one moves at ${velText(v1)} and ball two at ${velText(v2)}. Momentum is conserved and ${kept}% of the kinetic energy is kept.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('collision-lab')) {
+    customElements.define('collision-lab', CollisionLabElement);
+  }
+</script>
+
+<style>
+  .field-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 3 / 2;
+  }
+
+  .collision-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .collision-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .kept-note {
+    color: var(--color-text-muted);
+  }
+</style>

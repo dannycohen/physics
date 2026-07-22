@@ -32,3 +32,6 @@ export const ELEMENTARY_CHARGE = 1.602176634e-19;
 
 /** Standard gravitational acceleration at Earth's surface, m/s^2 (defined value). */
 export const STANDARD_GRAVITY = 9.80665;
+
+/** Speed of sound in dry air at 20 degrees C, m/s. */
+export const SPEED_OF_SOUND_AIR = 343;

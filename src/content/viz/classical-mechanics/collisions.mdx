@@ -1,0 +1,149 @@
+---
+title: 'Collisions'
+category: classical-mechanics
+layoutArchetype: field-space
+status: live
+order: 5.7
+equationLatex: 'e = \dfrac{v_2 - v_1}{u_1 - u_2}'
+equationPlain: 'e = (v₂ − v₁)/(u₁ − u₂)'
+claim: 'Momentum is always conserved when two things collide. Whether the kinetic energy survives depends on one number: how bouncy the collision is.'
+defaults:
+  e: 1
+  m1: 1
+  m2: 1
+  u1: 3
+  u2: -1
+terms:
+  - symbol: 'e'
+    name: 'e: the coefficient of restitution'
+    role: 'the bounciness of the collision, from 0 to 1'
+    effect: 'sets how much kinetic energy survives: 1 keeps all of it, 0 keeps the least; momentum is conserved either way'
+  - symbol: 'v_1'
+    name: 'v-one: the first ball''s final velocity'
+    role: 'how fast ball one moves after the collision'
+    effect: 'what we solve for, together with the other velocities momentum and e pin down the outcome'
+  - symbol: 'v_2'
+    name: 'v-two: the second ball''s final velocity'
+    role: 'how fast ball two moves after the collision'
+    effect: 'what we solve for, together with the other velocities momentum and e pin down the outcome'
+  - symbol: 'u_1'
+    name: 'u-one: the first ball''s initial velocity'
+    role: 'how fast ball one moves before the collision'
+    effect: 'a positive value moves right, a negative value moves left'
+  - symbol: 'u_2'
+    name: 'u-two: the second ball''s initial velocity'
+    role: 'how fast ball two moves before the collision'
+    effect: 'a positive value moves right, a negative value moves left'
+presets:
+  - label: 'Elastic (e=1)'
+    caption: 'A perfect bounce: all the kinetic energy comes back out.'
+    values:
+      e: 1
+  - label: 'Perfectly inelastic (e=0)'
+    caption: 'They stick together and move off as one, losing the most energy possible.'
+    values:
+      e: 0
+  - label: 'Partly bouncy (e=0.5)'
+    caption: 'A real-world bounce: some energy survives, some is lost to heat and sound.'
+    values:
+      e: 0.5
+limits:
+  - label: 'e = 1'
+    icon: '🎾'
+    collapse: 'elastic: kinetic energy is fully conserved'
+    values:
+      e: 1
+  - label: 'e = 0'
+    icon: '🧱'
+    collapse: 'inelastic: they move off together, the maximum energy is lost'
+    values:
+      e: 0
+prerequisites: []
+related: []
+---
+
+import CollisionLab from '../../../components/viz/CollisionLab.astro';
+import SliderField from '../../../components/SliderField.astro';
+import PresetButtons from '../../../components/PresetButtons.astro';
+import LimitSnaps from '../../../components/LimitSnaps.astro';
+import ResetButton from '../../../components/ResetButton.astro';
+
+<CollisionLab />
+
+<div class="viz-controls">
+  <SliderField
+    label="Bounciness (restitution)"
+    unit=""
+    slug="classical-mechanics/collisions"
+    storeKey="e"
+    min={0}
+    max={1}
+    step={0.05}
+    sigFigs={2}
+    value={frontmatter.defaults.e}
+    scale="linear"
+  />
+  <SliderField
+    label="Mass 1"
+    unit="kg"
+    slug="classical-mechanics/collisions"
+    storeKey="m1"
+    min={0.5}
+    max={5}
+    step={0.5}
+    sigFigs={2}
+    value={frontmatter.defaults.m1}
+    scale="linear"
+  />
+  <SliderField
+    label="Mass 2"
+    unit="kg"
+    slug="classical-mechanics/collisions"
+    storeKey="m2"
+    min={0.5}
+    max={5}
+    step={0.5}
+    sigFigs={2}
+    value={frontmatter.defaults.m2}
+    scale="linear"
+  />
+  <PresetButtons slug="classical-mechanics/collisions" presets={frontmatter.presets} />
+  <LimitSnaps slug="classical-mechanics/collisions" limits={frontmatter.limits} />
+  <ResetButton slug="classical-mechanics/collisions" label="Reset" />
+</div>
+
+## What is always true in a collision
+
+Momentum is the mass of an object times its velocity, and the total momentum of
+the two balls, added together, is the same before and after they hit. This holds
+in every collision, no exceptions: a bouncy super-ball, two lumps of clay, cars
+in a crash. Whatever momentum goes in comes back out. That single rule is why the
+readout above always says "momentum conserved" no matter where you drag the
+sliders.
+
+## The one number that changes everything
+
+Kinetic energy is a different story. How much of it survives the collision is set
+by the coefficient of restitution `e`, the bounciness. It runs from 0 to 1.
+At `e = 1` the collision is elastic and every joule of kinetic energy comes back
+out. At `e = 0` the collision is perfectly inelastic: the balls stick together
+and move off at a single speed, and the most energy possible is lost. Anything in
+between keeps part of the energy. Slide the bounciness down and watch the "KE kept"
+percentage fall while the momentum reading stays put.
+
+When two equal masses collide elastically, they simply swap velocities. That is
+the trick behind a Newton's cradle: the incoming ball stops dead and the one at
+the far end flies off at the speed the first one had. Set both masses equal, leave
+the bounciness at 1, and the before and after panels show exactly that trade.
+
+<details class="misconception">
+  <summary>Is energy always conserved in a collision?</summary>
+
+  Momentum always is, but kinetic energy is only conserved when the collision is
+  perfectly elastic, `e = 1`. Real collisions lose some kinetic energy to heat,
+  sound, and permanent deformation, which is why a dropped ball never quite
+  bounces back to the height it started from. The lower the bounciness, the more
+  energy is lost, and at `e = 0` the loss is as large as it can be while still
+  keeping momentum fixed. Total energy is still conserved overall; it just leaves
+  the motion and turns into other forms.
+</details>

@@ -1,0 +1,182 @@
+---
+import { formatQuantity } from '../../lib/format';
+import { chargeFraction, timeConstant } from '../../lib/physics/rc';
+
+const SLUG = 'electromagnetism/rc-charging';
+const DEFAULT_RESISTANCE = 1000; // ohms
+const DEFAULT_CAPACITANCE = 100; // microfarads
+const secs = (x: number) => formatQuantity(x, 's', { sigFigs: 3 });
+const pct = (x: number) => formatQuantity(x * 100, '%', { sigFigs: 3 });
+
+const tau0 = timeConstant(DEFAULT_RESISTANCE, DEFAULT_CAPACITANCE * 1e-6);
+
+// Build-time table so the data exists without JavaScript. Time is shown in units
+// of tau so the 63% / 86% / 95% / 99% steps read the same whatever R and C are.
+const SAMPLE_MULTIPLES = [0, 0.5, 1, 2, 3, 4, 5];
+const rows = SAMPLE_MULTIPLES.map((m) => ({
+  m: formatQuantity(m, ''),
+  frac: pct(chargeFraction(m * tau0, tau0)),
+}));
+---
+
+<rc-curve data-slug={SLUG}>
+  <figure class="rc-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="Graph of the fraction of full voltage against time as a capacitor charges. The curve starts at zero and rises steeply at first, then flattens as it approaches full voltage without ever reaching it. A dashed marker line at one time constant meets the curve at about 63 percent charged."
+      ></canvas>
+    </div>
+    <p class="rc-readout" aria-hidden="true">
+      Time constant τ = <b class="tau-val">{secs(tau0)}</b> — 63% charged at one τ, ~99% by 5τ
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      The time constant τ = R·C is {secs(tau0)}. The capacitor reaches about 63% of full voltage
+      after one τ and about 99% after five τ, approaching full voltage without ever reaching it.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      Fraction of full voltage over time, with time measured in multiples of the time constant τ.
+      Each τ closes about 63% of the gap that is left, so the curve climbs fast then crawls.
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">t (in units of τ)</th>
+          <th scope="col">Charge V/V₀</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.m}</td>
+              <td>{row.frac}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</rc-curve>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { plotCurve, type Series } from '../../lib/plotCurve';
+  import { chargeFraction, timeConstant } from '../../lib/physics/rc';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'electromagnetism/rc-charging';
+  const DEFAULT_RESISTANCE = 1000; // ohms
+  const DEFAULT_CAPACITANCE = 100; // microfarads
+  const Y_DOMAIN: [number, number] = [0, 1.05];
+  const STEPS = 240;
+
+  // Seed the shared store before the controls connect.
+  const store = getVizStore(SLUG, {
+    resistance: DEFAULT_RESISTANCE,
+    capacitance: DEFAULT_CAPACITANCE,
+  });
+  const clampR = (r: number | undefined) => Math.min(Math.max(r ?? DEFAULT_RESISTANCE, 100), 5000);
+  const clampC = (c: number | undefined) =>
+    Math.min(Math.max(c ?? DEFAULT_CAPACITANCE, 10), 1000);
+  const secs = (x: number) => formatQuantity(x, 's', { sigFigs: 3 });
+
+  const tauFrom = (values: Record<string, number>) =>
+    timeConstant(clampR(values['resistance']), clampC(values['capacitance']) * 1e-6);
+
+  class RCCurveElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const tauVal = this.querySelector('.tau-val');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(
+        canvas,
+        (ctx, size, theme) => {
+          const tau = tauFrom(store.values.get());
+          // The x-axis follows the current tau so the curve keeps its shape as R
+          // and C change: the full window is always five time constants.
+          const xMax = 5 * tau;
+
+          const chargePoints: Array<[number, number]> = [];
+          for (let i = 0; i <= STEPS; i++) {
+            const t = (i / STEPS) * xMax;
+            chargePoints.push([t, chargeFraction(t, tau)]);
+          }
+
+          // Vertical marker at one time constant, rising from the axis to the
+          // curve at 1 - 1/e (~63%). A dash array keeps it apart beyond colour.
+          const tauMarker: Array<[number, number]> = [
+            [tau, 0],
+            [tau, chargeFraction(tau, tau)],
+          ];
+
+          const series: Series[] = [
+            { points: chargePoints, color: theme.curve, label: 'V/V₀' },
+            { points: tauMarker, color: theme.active, dash: [6, 4], label: '63%' },
+          ];
+
+          plotCurve(ctx, size, theme, {
+            series,
+            xLabel: 'time t (s)',
+            yLabel: 'V / V₀',
+            xDomain: [0, xMax],
+            yDomain: Y_DOMAIN,
+          });
+        },
+        { animate: false },
+      );
+
+      const renderReadout = (values: Record<string, number>) => {
+        if (tauVal) tauVal.textContent = secs(tauFrom(values));
+      };
+
+      store.values.subscribe((values) => {
+        renderReadout(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const tau = tauFrom(values);
+        const text = `The time constant τ = R·C is ${secs(tau)}. The capacitor reaches about 63% of full voltage after one τ and about 99% after five τ, approaching full voltage without ever reaching it.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('rc-curve')) {
+    customElements.define('rc-curve', RCCurveElement);
+  }
+</script>
+
+<style>
+  .rc-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 16 / 10;
+  }
+
+  .rc-readout {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+    color: var(--color-text-muted);
+  }
+
+  .rc-readout b {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+  }
+</style>

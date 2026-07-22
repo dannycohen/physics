@@ -1,0 +1,257 @@
+---
+import { observedFrequency } from '../../lib/physics/acoustic-doppler';
+import { formatQuantity } from '../../lib/format';
+
+// Build-time snapshot for the no-JS / screen-reader table and default readout.
+const DEFAULT_FREQ = 440; // Hz
+const DEFAULT_SPEED = 30; // m/s toward the observer
+
+const freqText = (f: number) => formatQuantity(f, 'Hz', { sigFigs: 3 });
+const pitchWord = (vs: number) => (vs > 0 ? 'higher' : vs < 0 ? 'lower' : 'the same');
+
+const defaultObserved = observedFrequency(DEFAULT_FREQ, DEFAULT_SPEED);
+
+const SAMPLE_SPEEDS = [-100, -50, -30, 0, 30, 50, 100, 200, 320];
+const rows = SAMPLE_SPEEDS.map((vs) => ({
+  speed: formatQuantity(vs, ''),
+  observed: freqText(observedFrequency(DEFAULT_FREQ, vs)),
+}));
+---
+
+<acoustic-doppler>
+  <figure class="wave-figure">
+    <div class="canvas-box">
+      <canvas
+        role="img"
+        aria-label="A sound source moving to the right, emitting circular wavefronts. Each ring is centred where the source was when it emitted it, so the rings bunch together ahead of the source and spread out behind it. An observer stands ahead, in the bunched-up region, where the crowded wavefronts arrive more often and the pitch is higher. Behind the source the rings are stretched and the pitch is lower."
+      ></canvas>
+    </div>
+    <p class="pitch-stat" aria-hidden="true">
+      Source {freqText(DEFAULT_FREQ)} → heard as <b class="observed-val">{freqText(defaultObserved)}</b>
+      <span class="pitch-word">({pitchWord(DEFAULT_SPEED)})</span>
+    </p>
+    <span class="visually-hidden" aria-live="polite">
+      A {freqText(DEFAULT_FREQ)} source is heard as {freqText(defaultObserved)}: {pitchWord(DEFAULT_SPEED)} pitch.
+    </span>
+  </figure>
+  <details class="view-table">
+    <summary>View as table</summary>
+    <p>
+      The pitch heard by a stationary observer for a {freqText(DEFAULT_FREQ)} source at
+      different speeds. Positive speeds move toward the observer (higher pitch); negative
+      speeds move away (lower pitch).
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Source speed toward you (m/s)</th>
+          <th scope="col">Observed frequency (Hz)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((row) => (
+            <tr>
+              <td>{row.speed}</td>
+              <td>{row.observed}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </details>
+</acoustic-doppler>
+
+<script>
+  import { createVizCanvas } from '../../lib/canvas';
+  import { observedFrequency } from '../../lib/physics/acoustic-doppler';
+  import { SPEED_OF_SOUND_AIR } from '../../lib/physics/constants';
+  import { formatQuantity } from '../../lib/format';
+  import { getVizStore } from '../../lib/vizStore';
+
+  const SLUG = 'waves-optics/acoustic-doppler';
+  const DEFAULT_FREQ = 440;
+  const DEFAULT_SPEED = 30;
+
+  // This island seeds the shared store; it precedes the controls in the MDX and
+  // module scripts run in document order, so it seeds before they connect.
+  const store = getVizStore(SLUG, { sourceFreq: DEFAULT_FREQ, sourceSpeed: DEFAULT_SPEED });
+
+  const num = (values: Record<string, number>, key: string, fallback: number) =>
+    values[key] ?? fallback;
+  const freqText = (f: number) => formatQuantity(f, 'Hz', { sigFigs: 3 });
+  const pitchWord = (vs: number) => (vs > 0 ? 'higher' : vs < 0 ? 'lower' : 'the same');
+
+  class AcousticDopplerElement extends HTMLElement {
+    #bound = false;
+
+    connectedCallback() {
+      if (this.#bound) return;
+      this.#bound = true;
+
+      const canvas = this.querySelector('canvas');
+      if (!canvas) return;
+
+      const observedVal = this.querySelector('.observed-val');
+      const pitchSpan = this.querySelector('.pitch-word');
+      const live = this.querySelector('.visually-hidden');
+
+      const handle = createVizCanvas(
+        canvas,
+        (ctx, size, theme) => {
+          const v = store.values.get();
+          const sourceSpeed = num(v, 'sourceSpeed', DEFAULT_SPEED);
+
+          ctx.fillStyle = theme.bg;
+          ctx.fillRect(0, 0, size.w, size.h);
+
+          const cy = size.h * 0.5;
+          const midX = size.w * 0.5;
+
+          // Mach fraction sets how far the source drifts between emissions
+          // relative to how far each wavefront spreads. Positive = rightward.
+          const mach = Math.max(Math.min(sourceSpeed / SPEED_OF_SOUND_AIR, 0.95), -0.95);
+
+          const nWaves = 5; // wavefronts still on screen, oldest first
+          const dt = 1; // arbitrary emission interval
+          const waveSpeedPx = size.w * 0.11; // pixels the ring grows per dt
+          const sourceStepPx = waveSpeedPx * mach; // source drift per dt
+
+          // Place the source so its spread of rings stays roughly centred.
+          const sourceX = midX - sourceStepPx * (nWaves - 1) * 0.5 + sourceStepPx * (nWaves - 1);
+
+          const bunchColor = theme.curve; // colour the compressed side
+
+          // Concentric wavefronts: ring k was emitted (nWaves-1-k) intervals ago
+          // from where the source then was, so it has radius r and an offset centre.
+          for (let k = 0; k < nWaves; k++) {
+            const age = nWaves - 1 - k; // intervals since emission
+            const radius = waveSpeedPx * age * dt;
+            if (radius <= 0) continue;
+            const emitX = sourceX - sourceStepPx * age;
+            ctx.strokeStyle = k === nWaves - 1 ? theme.axis : theme.grid;
+            ctx.lineWidth = 1.75;
+            ctx.globalAlpha = 0.45 + 0.4 * (k / (nWaves - 1));
+            ctx.beginPath();
+            ctx.arc(emitX, cy, radius, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
+
+          // The observer sits ahead of the source, in the compressed region when
+          // approaching. Draw them on the side the source is heading toward.
+          const dir = mach >= 0 ? 1 : -1;
+          const obsX = midX + dir * size.w * 0.4;
+          const obsColor = sourceSpeed !== 0 ? bunchColor : theme.rest;
+
+          // Line of sight from source to observer.
+          ctx.strokeStyle = theme.grid;
+          ctx.lineWidth = 1;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(sourceX, cy);
+          ctx.lineTo(obsX, cy);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Observer marker (ear).
+          ctx.fillStyle = obsColor;
+          ctx.beginPath();
+          ctx.arc(obsX, cy, 8, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = theme.label;
+          ctx.font = '12px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText('observer', obsX, cy + 14);
+
+          // Source marker with a motion arrow.
+          ctx.save();
+          ctx.shadowColor = theme.active;
+          ctx.shadowBlur = 12;
+          ctx.fillStyle = theme.active;
+          ctx.beginPath();
+          ctx.arc(sourceX, cy, 9, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          ctx.fillStyle = theme.label;
+          ctx.font = '12px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('source', sourceX, cy - 14);
+
+          if (sourceSpeed !== 0) {
+            const arrowLen = 18 + 26 * Math.min(Math.abs(mach), 1);
+            const ax = dir;
+            ctx.strokeStyle = theme.label;
+            ctx.fillStyle = theme.label;
+            ctx.lineWidth = 2;
+            const startX = sourceX + ax * 12;
+            const endX = startX + ax * arrowLen;
+            ctx.beginPath();
+            ctx.moveTo(startX, cy);
+            ctx.lineTo(endX, cy);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(endX, cy);
+            ctx.lineTo(endX - ax * 6, cy - 4);
+            ctx.lineTo(endX - ax * 6, cy + 4);
+            ctx.closePath();
+            ctx.fill();
+          }
+        },
+        { animate: false },
+      );
+
+      const render = (values: Record<string, number>) => {
+        const sourceFreq = num(values, 'sourceFreq', DEFAULT_FREQ);
+        const sourceSpeed = num(values, 'sourceSpeed', DEFAULT_SPEED);
+        const observed = observedFrequency(sourceFreq, sourceSpeed);
+        if (observedVal) observedVal.textContent = freqText(observed);
+        if (pitchSpan) pitchSpan.textContent = `(${pitchWord(sourceSpeed)})`;
+      };
+
+      store.values.subscribe((values) => {
+        render(values);
+        handle.redraw();
+      });
+
+      store.onSettled((values) => {
+        const sourceFreq = num(values, 'sourceFreq', DEFAULT_FREQ);
+        const sourceSpeed = num(values, 'sourceSpeed', DEFAULT_SPEED);
+        const observed = observedFrequency(sourceFreq, sourceSpeed);
+        const text = `A ${freqText(sourceFreq)} source is heard as ${freqText(observed)}: ${pitchWord(sourceSpeed)} pitch.`;
+        if (live && live.textContent?.trim() !== text) live.textContent = text;
+      });
+    }
+  }
+
+  if (!customElements.get('acoustic-doppler')) {
+    customElements.define('acoustic-doppler', AcousticDopplerElement);
+  }
+</script>
+
+<style>
+  .wave-figure {
+    margin: 0;
+  }
+
+  .canvas-box {
+    aspect-ratio: 16 / 10;
+  }
+
+  .pitch-stat {
+    margin-block: var(--space-2) 0;
+    font-size: 1.05rem;
+  }
+
+  .pitch-stat b {
+    font-variant-numeric: tabular-nums;
+    color: var(--viz-curve);
+  }
+
+  .pitch-word {
+    color: var(--color-text-muted);
+  }
+</style>
