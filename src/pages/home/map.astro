@@ -1,7 +1,5 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import LandingSwitcher from '../../components/LandingSwitcher.astro';
-import LandingIntro from '../../components/LandingIntro.astro';
+import LandingLayout from '../../components/LandingLayout.astro';
 import { getCatalog, vizHref } from '../../lib/catalog';
 
 const { byCategory, live } = await getCatalog();
@@ -20,14 +18,11 @@ const domainAccent: Record<string, string> = {
 };
 ---
 
-<BaseLayout
+<LandingLayout
+  current="home/map"
   title="A map of physics"
   description="See the whole field at once: every domain and the equations inside it, colour-coded on one map."
 >
-  <LandingIntro />
-
-  <LandingSwitcher current="home/map" />
-
   <div class="domain-map">
     {
       byCategory.map((group) => {
@@ -64,7 +59,7 @@ const domainAccent: Record<string, string> = {
   </div>
 
   <p class="map-total">{live.length} interactive equations across {byCategory.length} domains.</p>
-</BaseLayout>
+</LandingLayout>
 
 <style>
   .domain-map {

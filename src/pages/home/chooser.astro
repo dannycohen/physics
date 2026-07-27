@@ -1,7 +1,5 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import LandingSwitcher from '../../components/LandingSwitcher.astro';
-import LandingIntro from '../../components/LandingIntro.astro';
+import LandingLayout from '../../components/LandingLayout.astro';
 import { getCatalog, archetypeAccent, vizHref } from '../../lib/catalog';
 
 const { live } = await getCatalog();
@@ -29,14 +27,11 @@ const cards = questions
   .filter((c): c is typeof c & { entry: NonNullable<typeof c.entry> } => Boolean(c.entry));
 ---
 
-<BaseLayout
+<LandingLayout
+  current="home/chooser"
   title="What are you curious about?"
   description="Pick a question in plain language and jump straight to the physics that answers it."
 >
-  <LandingIntro />
-
-  <LandingSwitcher current="home/chooser" />
-
   <ul class="question-grid">
     {
       cards.map((c) => (
@@ -56,7 +51,7 @@ const cards = questions
       ))
     }
   </ul>
-</BaseLayout>
+</LandingLayout>
 
 <style>
   .question-grid {

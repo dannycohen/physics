@@ -1,7 +1,5 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import LandingSwitcher from '../components/LandingSwitcher.astro';
-import LandingIntro from '../components/LandingIntro.astro';
+import LandingLayout from '../components/LandingLayout.astro';
 import VizPoster from '../components/VizPoster.astro';
 import { getCatalog, vizHref, archetypeAccent, categoryLabels } from '../lib/catalog';
 
@@ -9,14 +7,11 @@ const { live } = await getCatalog();
 const base = import.meta.env.BASE_URL;
 ---
 
-<BaseLayout
+<LandingLayout
+  current=""
   title="Physics, one equation at a time"
   description="Every equation as a small poster drawn from its own physics: the curve, field, or distribution it actually describes."
 >
-  <LandingIntro />
-
-  <LandingSwitcher current="" />
-
   <ul class="gallery">
     {
       live.map((e) => {
@@ -48,7 +43,7 @@ const base = import.meta.env.BASE_URL;
   </ul>
 
   <p class="gallery-total">{live.length} interactive equations.</p>
-</BaseLayout>
+</LandingLayout>
 
 <style>
   .gallery {

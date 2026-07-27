@@ -1,7 +1,5 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import LandingSwitcher from '../../components/LandingSwitcher.astro';
-import LandingIntro from '../../components/LandingIntro.astro';
+import LandingLayout from '../../components/LandingLayout.astro';
 import { getCatalog, archetypeAccent, categoryLabels, vizHref, type VizEntry } from '../../lib/catalog';
 
 const { live, byCategory } = await getCatalog();
@@ -18,14 +16,11 @@ for (const group of byCategory) {
 }
 ---
 
-<BaseLayout
+<LandingLayout
+  current="home/spotlight"
   title="Physics spotlight"
   description="A curated front door to interactive physics: one featured equation plus a few hand-picked starts."
 >
-  <LandingIntro />
-
-  <LandingSwitcher current="home/spotlight" />
-
   {
     hero && (
       <a
@@ -71,7 +66,7 @@ for (const group of byCategory) {
   <p class="see-all">
     Want the whole set? <a href={base}>Browse all {live.length} equations →</a>
   </p>
-</BaseLayout>
+</LandingLayout>
 
 <style>
   .hero-feature {
