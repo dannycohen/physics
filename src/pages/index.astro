@@ -1,63 +1,158 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import LandingSwitcher from '../components/LandingSwitcher.astro';
-import { getCatalog } from '../lib/catalog';
+import LandingIntro from '../components/LandingIntro.astro';
+import VizPoster from '../components/VizPoster.astro';
+import { getCatalog, vizHref, archetypeAccent, categoryLabels } from '../lib/catalog';
 
-const { live, byCategory } = await getCatalog();
-const hero = live[0];
+const { live } = await getCatalog();
 const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout
   title="Physics, one equation at a time"
-  description="Interactive visualizations that explain the meaning and structure of the equations of physics."
+  description="Every equation as a small poster drawn from its own physics: the curve, field, or distribution it actually describes."
 >
-  <h1>Grab a slider. Bend the universe.</h1>
-  <p>
-    Every page here is one famous equation of physics turned into a toy. Drag a slider,
-    watch clocks slow down and curves shoot up, and find out why the equation has the
-    shape it does. No prior physics needed, just curiosity.
-  </p>
-  {
-    hero && (
-      <p class="hero-link">
-        <strong>Start here:</strong>{' '}
-        <a href={`${base}viz/${hero.id}/`}>{hero.data.title}</a> — {hero.data.claim}
-      </p>
-    )
-  }
+  <LandingIntro />
 
   <LandingSwitcher current="" />
 
-  {
-    byCategory.map((group) => (
-      <section>
-        <h2>{group.label}</h2>
-        <ul>
-          {group.entries.map((e) =>
-            e.data.status === 'live' ? (
-              <li>
-                <a href={`${base}viz/${e.id}/`}>{e.data.title}</a> — {e.data.claim}
-              </li>
-            ) : (
-              <li>
-                <span class="coming-soon">{e.data.title} (coming soon)</span>
-              </li>
-            ),
-          )}
-        </ul>
-      </section>
-    ))
-  }
+  <ul class="gallery">
+    {
+      live.map((e) => {
+        const tipId = `tip-${e.id.replace(/[^a-z0-9]+/gi, '-')}`;
+        return (
+          <li>
+            <a
+              class="card"
+              href={vizHref(base, e)}
+              aria-describedby={tipId}
+              style={`--card-accent: ${archetypeAccent[e.data.layoutArchetype] ?? 'var(--viz-curve)'}`}
+            >
+              <span class="poster-frame">
+                <span aria-hidden="true">
+                  <VizPoster entry={e} />
+                </span>
+                <span class="tip" id={tipId} role="tooltip">
+                  <span class="tip-head">{categoryLabels[e.data.category] ?? e.data.category} · {e.data.title}</span>
+                  <span class="tip-desc">{e.data.claim}</span>
+                </span>
+              </span>
+              <span class="card-title">{e.data.title}</span>
+              <span class="card-eq">{e.data.equationPlain}</span>
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+
+  <p class="gallery-total">{live.length} interactive equations.</p>
 </BaseLayout>
 
 <style>
-  .coming-soon {
-    color: var(--color-text-muted);
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    padding: 0;
+    list-style: none;
   }
-  .hero-link {
-    background: var(--color-surface);
+
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    height: 100%;
     padding: var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-bottom: 3px solid var(--card-accent);
     border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .card:hover {
+    border-color: var(--card-accent);
+  }
+
+  .poster-frame {
+    position: relative;
+    display: block;
+    margin-bottom: var(--space-2);
+    padding: var(--space-2);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: calc(var(--radius) - 4px);
+  }
+
+  /* Hover/focus tooltip: category + name + the equation's claim paragraph.
+     Constrained to the frame's own box so it can never clip at the grid edge;
+     always in the a11y tree (opacity, not display) so aria-describedby works. */
+  .tip {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    min-height: 100%;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--card-accent);
+    border-radius: calc(var(--radius) - 4px);
+    box-shadow: 0 6px 20px oklch(0% 0 0 / 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms ease;
+  }
+
+  .tip-head {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--card-accent);
+  }
+
+  .tip-desc {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--color-text);
+  }
+
+  .card:hover .tip,
+  .card:focus-visible .tip {
+    opacity: 1;
+  }
+
+  .card-title {
+    font-weight: 600;
+    font-size: 0.98rem;
+  }
+
+  .card-eq {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  .gallery-total {
+    margin-top: var(--space-4);
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .card {
+      transition: border-color 120ms ease, transform 120ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
   }
 </style>

@@ -1,0 +1,42 @@
+---
+// An inline-SVG "poster" for one equation, drawn from its physics (see
+// src/lib/posters). Colour comes from the archetype accent, set as --glyph-accent
+// on the wrapper and inherited by the paint on every child mark, so the whole
+// poster re-themes from tokens.css with no JS. Geometry is intrinsic and fixed.
+import type { VizEntry } from '../lib/catalog';
+import { archetypeAccent } from '../lib/catalog';
+import { renderPoster } from '../lib/posters';
+
+interface Props {
+  entry: VizEntry;
+}
+
+const { entry } = Astro.props;
+const { body, desc } = renderPoster(entry);
+const accent = archetypeAccent[entry.data.layoutArchetype] ?? 'var(--viz-curve)';
+const safeId = entry.id.replace(/[^a-z0-9]+/gi, '-');
+const titleId = `poster-${safeId}-t`;
+const descId = `poster-${safeId}-d`;
+const label = `${entry.data.title}: ${entry.data.equationPlain}`;
+---
+
+<svg
+  class="viz-poster"
+  viewBox="0 0 160 100"
+  role="img"
+  aria-labelledby={`${titleId} ${descId}`}
+  preserveAspectRatio="xMidYMid meet"
+  style={`--glyph-accent: ${accent}`}
+>
+  <title id={titleId}>{label}</title>
+  <desc id={descId}>{desc}</desc>
+  <Fragment set:html={body} />
+</svg>
+
+<style>
+  .viz-poster {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+</style>
