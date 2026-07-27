@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import LandingSwitcher from '../../components/LandingSwitcher.astro';
+import LandingIntro from '../../components/LandingIntro.astro';
 import { getCatalog, archetypeAccent, categoryLabels, vizHref, type VizEntry } from '../../lib/catalog';
 
 const { live, byCategory } = await getCatalog();
@@ -21,6 +22,8 @@ for (const group of byCategory) {
   title="Physics spotlight"
   description="A curated front door to interactive physics: one featured equation plus a few hand-picked starts."
 >
+  <LandingIntro />
+
   <LandingSwitcher current="home/spotlight" />
 
   {
@@ -32,7 +35,7 @@ for (const group of byCategory) {
       >
         <span class="kicker">Start here · {categoryLabels[hero.data.category]}</span>
         <span class="hero-eq">{hero.data.equationPlain}</span>
-        <h1 class="hero-title">{hero.data.title}</h1>
+        <h2 class="hero-title">{hero.data.title}</h2>
         <p class="hero-claim">{hero.data.claim}</p>
         <span class="hero-cta">Open it →</span>
       </a>

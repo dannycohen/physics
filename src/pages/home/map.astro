@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import LandingSwitcher from '../../components/LandingSwitcher.astro';
+import LandingIntro from '../../components/LandingIntro.astro';
 import { getCatalog, vizHref } from '../../lib/catalog';
 
 const { byCategory, live } = await getCatalog();
@@ -23,11 +24,7 @@ const domainAccent: Record<string, string> = {
   title="A map of physics"
   description="See the whole field at once: every domain and the equations inside it, colour-coded on one map."
 >
-  <h1>The map of physics</h1>
-  <p>
-    The whole collection on one screen. Each panel is a domain; each tile inside is one
-    interactive equation. Take in the shape of the field, then dive into a corner.
-  </p>
+  <LandingIntro />
 
   <LandingSwitcher current="home/map" />
 

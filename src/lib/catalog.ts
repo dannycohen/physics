@@ -45,7 +45,8 @@ export interface LandingVariant {
 }
 
 export const landingVariants: LandingVariant[] = [
-  { slug: '', label: 'List', blurb: 'The full catalog, by domain' },
+  { slug: '', label: 'Gallery', blurb: 'A picture per equation' },
+  { slug: 'home/list', label: 'List', blurb: 'The full catalog, by domain' },
   { slug: 'home/spotlight', label: 'Spotlight', blurb: 'A few curated picks' },
   { slug: 'home/chooser', label: 'Curious?', blurb: 'Pick a plain-language question' },
   { slug: 'home/map', label: 'Map', blurb: 'The whole field at a glance' },
