@@ -1,7 +1,5 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import LandingSwitcher from '../../components/LandingSwitcher.astro';
-import LandingIntro from '../../components/LandingIntro.astro';
+import LandingLayout from '../../components/LandingLayout.astro';
 import { getCatalog } from '../../lib/catalog';
 
 const { live, byCategory } = await getCatalog();
@@ -9,14 +7,11 @@ const hero = live[0];
 const base = import.meta.env.BASE_URL;
 ---
 
-<BaseLayout
+<LandingLayout
+  current="home/list"
   title="The full catalog"
   description="Every interactive physics equation on the site, listed by domain."
 >
-  <LandingIntro />
-
-  <LandingSwitcher current="home/list" />
-
   {
     hero && (
       <p class="hero-link">
@@ -46,7 +41,7 @@ const base = import.meta.env.BASE_URL;
       </section>
     ))
   }
-</BaseLayout>
+</LandingLayout>
 
 <style>
   .coming-soon {

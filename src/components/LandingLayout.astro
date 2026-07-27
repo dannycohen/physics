@@ -1,0 +1,26 @@
+---
+// Shared shell for every landing-page variant. Owns the parts that must be
+// identical across variants - the page chrome, the title + intro paragraph, and
+// the "See this catalog as" switcher - so no variant can drift out of alignment
+// or reorder them. Each page passes its own `current` (plus meta title and
+// description) and supplies only its distinctive layout via the default slot.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LandingSwitcher from './LandingSwitcher.astro';
+import LandingIntro from './LandingIntro.astro';
+
+interface Props {
+  current: string; // matches a landingVariants slug ('' for the gallery at the root)
+  title: string;
+  description: string;
+}
+
+const { current, title, description } = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <LandingIntro />
+
+  <LandingSwitcher current={current} />
+
+  <slot />
+</BaseLayout>
