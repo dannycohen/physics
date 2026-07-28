@@ -106,7 +106,6 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
-import HistoryNote from '../../../components/HistoryNote.astro';
 
 <MaxwellDistribution />
 
@@ -152,8 +151,6 @@ speed both sit a bit above the peak. That order never changes: most probable,
 then average, then rms. (The root-mean-square speed is found by squaring every
 molecule's speed, averaging those, then taking the square root; because squaring
 weights the fast molecules more, it sits a little above the plain average.)
-
-<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Is the peak the average speed?</summary>

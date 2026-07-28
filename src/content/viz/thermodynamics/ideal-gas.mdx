@@ -106,7 +106,6 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
-import HistoryNote from '../../../components/HistoryNote.astro';
 
 <GasPiston />
 
@@ -176,8 +175,6 @@ grows in step with the amount of gas and with temperature, and it falls as the
 volume opens up. Double the temperature and the pressure doubles; halve the
 volume and the pressure doubles again. `R` never moves; it is just the constant
 that makes the units agree.
-
-<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Is "ideal" real?</summary>

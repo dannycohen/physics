@@ -1,6 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from 'astro:content';
 import BaseLayout from './BaseLayout.astro';
+import HistoryNote from '../components/HistoryNote.astro';
 import { renderLatex, renderLatexInline } from '../lib/renderLatex';
 
 interface Props {
@@ -8,7 +9,7 @@ interface Props {
 }
 
 const { entry } = Astro.props;
-const { title, claim, equationLatex, terms } = entry.data;
+const { title, claim, equationLatex, terms, history } = entry.data;
 
 const base = import.meta.env.BASE_URL;
 
@@ -69,6 +70,8 @@ const related = entry.data.related
         )
       }
     </details>
+
+    <HistoryNote history={history} />
 
     {
       (related.length > 0 || prev || next) && (

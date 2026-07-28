@@ -107,7 +107,6 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
-import HistoryNote from '../../../components/HistoryNote.astro';
 
 <CoulombField />
 
@@ -169,8 +168,6 @@ not drop to a half, it drops to a quarter. Slide them half as far apart and the
 force does not double, it quadruples. The constant `k` out front is enormous,
 which is why a few millionths of a coulomb already produce a force you could
 feel in your hand.
-
-<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does the bigger charge push harder on the smaller one?</summary>
