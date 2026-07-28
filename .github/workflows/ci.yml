@@ -29,3 +29,24 @@ jobs:
             echo "::error::Client JS budget exceeded"
             exit 1
           fi
+
+  # Static analysis: cyclomatic/cognitive complexity + duplication (ESLint) and
+  # test-coverage thresholds (Vitest). Kept as a distinct job so a complexity or
+  # coverage failure is visibly separate from the type/test/build/link job above.
+  analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Complexity & lint (ESLint)
+        run: npm run lint
+      - name: Test coverage thresholds (Vitest)
+        run: |
+          if ! npm run coverage; then
+            echo "::error::Coverage below threshold — see the summary above for the metric and target (thresholds in vitest.config.ts)."
+            exit 1
+          fi

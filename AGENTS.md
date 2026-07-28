@@ -87,3 +87,14 @@ or logic, check whether it already exists and reuse it.
 
 `npm run test` (physics anchors), `npx astro check` (0 errors), and `npm run build` must all
 pass. CI also runs a client-JS bundle-size gate.
+
+A separate CI **analysis** job enforces static-analysis budgets — run these locally before
+committing logic changes:
+
+- `npm run lint` — ESLint over `src/**/*.ts` and `scripts/**`. Budgets: cyclomatic
+  `complexity` ≤ 17 and `sonarjs/cognitive-complexity` ≤ 15 per function, `max-depth` ≤ 4,
+  plus `no-identical-functions`/`no-duplicated-branches`. The 17 is the current tree's
+  ceiling (`createVizCanvas`); the intent is to ratchet it down toward 12.
+- `npm run coverage` — Vitest coverage over `src/lib/physics/**` (the anchor logic). Minimums:
+  statements/functions/lines 95%, branches 90%. Failures name the metric, actual value, and
+  threshold; ratchet the minimums up as coverage improves.
