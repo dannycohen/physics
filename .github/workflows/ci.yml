@@ -29,3 +29,40 @@ jobs:
             echo "::error::Client JS budget exceeded"
             exit 1
           fi
+
+  # Mechanical guards so *new* duplication fails CI instead of relying on review;
+  # enforces the "Don't duplicate" rules in AGENTS.md. jscpd and the constant-literal
+  # grep gate are blocking; stylelint and knip run warn-only for a rollout period
+  # (continue-on-error) before being promoted to blocking once clean.
+  duplication:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      - name: Copy-paste detector (jscpd, blocking)
+        run: npm run check:dup
+
+      - name: No physical-constant literals in content or islands (blocking)
+        run: |
+          # Physical constants live only in src/lib/physics/constants.ts (AGENTS.md).
+          # Flag their signatures — scientific-notation floats (e.g. 6.626e-34) and the
+          # bare speed of light — leaking into page content or island source. Prose
+          # mentions like "299,792,458 m/s" (comma-grouped, explanatory) are allowed.
+          if grep -rnE '[0-9]\.[0-9]+[eE][-+]?[0-9]+|(^|[^0-9,])299792458([^0-9]|$)' src/content src/components; then
+            echo "::error::Physical-constant literal found in content/island. Import it from src/lib/physics/constants.ts instead."
+            exit 1
+          fi
+          echo "No physical-constant literals in content or islands."
+
+      - name: CSS lint + token discipline (stylelint, warn-only)
+        continue-on-error: true
+        run: npm run check:styles
+
+      - name: Dead-export detection (knip, warn-only)
+        continue-on-error: true
+        run: npm run check:knip
