@@ -97,3 +97,14 @@ A CI **duplication** job mechanically enforces the "Don't duplicate" rules above
 - `npm run check:styles` (stylelint: duplicate properties/selectors + colour-literal discipline)
   and `npm run check:knip` (dead exports) run **warn-only** for now, to be promoted to blocking
   once the current tree is clean.
+
+A separate CI **analysis** job enforces static-analysis budgets — run these locally before
+committing logic changes:
+
+- `npm run lint` — ESLint over `src/**/*.ts` and `scripts/**`. Budgets: cyclomatic
+  `complexity` ≤ 17 and `sonarjs/cognitive-complexity` ≤ 15 per function, `max-depth` ≤ 4,
+  plus `no-identical-functions`/`no-duplicated-branches`. The 17 is the current tree's
+  ceiling (`createVizCanvas`); the intent is to ratchet it down toward 12.
+- `npm run coverage` — Vitest coverage over `src/lib/physics/**` (the anchor logic). Minimums:
+  statements/functions/lines 95%, branches 90%. Failures name the metric, actual value, and
+  threshold; ratchet the minimums up as coverage improves.
