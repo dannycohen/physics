@@ -54,6 +54,34 @@ limits:
 prerequisites: []
 related:
   - relativity/relativistic-doppler
+history:
+  year: '1842-1845'
+  people:
+    - Christian Doppler
+    - Christophorus Buys Ballot
+  summary:
+    - >-
+      Christian Doppler set out the effect in 1842 in a paper on the coloured
+      light of double stars, read to the Royal Bohemian Society of Sciences in
+      Prague. He argued that motion between a source and an observer should
+      shift the received frequency of a wave, and worked the idea out for both
+      light and sound.
+    - >-
+      The Dutch scientist Christophorus Buys Ballot put the sound version to a
+      direct test in 1845. He had a group of horn players hold a steady note on
+      an open railway car running the line between Utrecht and Maarssen, with
+      musicians beside the track judging the pitch. Listeners heard the note
+      sharp as the train approached and flat as it receded, matching Doppler's
+      prediction.
+    - >-
+      The formula now underlies everyday and precision technology alike, from
+      Doppler weather radar and marine sonar to medical ultrasound blood-flow
+      imaging and the speed guns used in traffic enforcement and sport.
+  references:
+    - label: 'Wikipedia: Doppler effect'
+      url: https://en.wikipedia.org/wiki/Doppler_effect
+    - label: 'Utrecht University: Buys Ballot investigates the Doppler effect'
+      url: https://muurformules.sites.uu.nl/mural-paintings/christophorus-buys-ballot/?lang=en
 ---
 
 import AcousticDoppler from '../../../components/viz/AcousticDoppler.astro';
@@ -61,6 +89,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <AcousticDoppler />
 
@@ -119,6 +148,8 @@ that air, and the two cases give slightly different shifts. Light in a vacuum ha
 no medium: only the relative speed matters, the two observers agree symmetrically,
 and the relativistic version also folds in time dilation, which the sound formula
 has no reason to include.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does the siren itself change pitch as it passes?</summary>

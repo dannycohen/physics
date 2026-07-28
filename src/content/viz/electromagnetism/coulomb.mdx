@@ -70,6 +70,36 @@ limits:
       q2: 0
 prerequisites: []
 related: []
+history:
+  year: '1785'
+  people:
+    - Charles-Augustin de Coulomb
+    - Joseph Priestley
+    - Henry Cavendish
+  summary:
+    - >-
+      Charles-Augustin de Coulomb, a French military engineer turned physicist,
+      published the law in 1785 in his first memoir on electricity and
+      magnetism. He measured the force between charged spheres with a torsion
+      balance he had designed, reading off tiny forces from the twist of a thin
+      fiber, and showed the force falls as the inverse square of the distance
+      and scales with the product of the charges. Joseph Priestley had guessed
+      at an inverse-square law in 1767, and Henry Cavendish had measured it
+      earlier but never published, so Coulomb's careful experiments settled the
+      question.
+    - >-
+      The law became the foundation of electrostatics and, through the work of
+      Gauss, Poisson and later Maxwell, fed into the full theory of
+      electromagnetism. The coulomb, the SI unit of electric charge, is named
+      after him. Today the same inverse-square force sets the structure of
+      atoms and molecules and underlies every capacitor and electronic device.
+  references:
+    - label: 'Wikipedia: Coulomb''s law'
+      url: https://en.wikipedia.org/wiki/Coulomb%27s_law
+    - label: 'Wikipedia: Charles-Augustin de Coulomb'
+      url: https://en.wikipedia.org/wiki/Charles-Augustin_de_Coulomb
+    - label: 'HyperPhysics: Coulomb''s law'
+      url: http://hyperphysics.gsu.edu/hbase/electric/elefor.html
 ---
 
 import CoulombField from '../../../components/viz/CoulombField.astro';
@@ -77,6 +107,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <CoulombField />
 
@@ -138,6 +169,8 @@ not drop to a half, it drops to a quarter. Slide them half as far apart and the
 force does not double, it quadruples. The constant `k` out front is enormous,
 which is why a few millionths of a coulomb already produce a force you could
 feel in your hand.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does the bigger charge push harder on the smaller one?</summary>

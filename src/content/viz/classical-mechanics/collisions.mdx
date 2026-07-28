@@ -60,6 +60,35 @@ limits:
       e: 0
 prerequisites: []
 related: []
+history:
+  year: '1668-1669'
+  people:
+    - John Wallis
+    - Christopher Wren
+    - Christiaan Huygens
+  summary:
+    - >-
+      The rule that momentum survives a collision was worked out at London's
+      Royal Society in 1668 and 1669. Asked to explain what happens when two
+      bodies strike, John Wallis, Christopher Wren and Christiaan Huygens each
+      sent in solutions built on the same idea: the total momentum, mass times
+      velocity counted with direction, is the same before and after impact.
+      This corrected René Descartes, who had proposed that a scalar quantity of
+      motion was conserved and got the direction wrong. Wallis handled
+      imperfectly elastic bodies, while Wren and Huygens treated the perfectly
+      elastic case.
+    - >-
+      Isaac Newton folded the result into his laws of motion in the 1687
+      Principia, where conservation of momentum follows directly from action
+      and reaction. It remains one of the most general rules in physics: it
+      holds for collisions of any bounciness, carries over into relativity and
+      quantum mechanics, and underlies everything from rocket propulsion to the
+      analysis of particle-collider experiments.
+  references:
+    - label: 'Wikipedia: Momentum'
+      url: https://en.wikipedia.org/wiki/Momentum
+    - label: 'MacTutor: Christiaan Huygens biography (University of St Andrews)'
+      url: https://mathshistory.st-andrews.ac.uk/Biographies/Huygens/
 ---
 
 import CollisionLab from '../../../components/viz/CollisionLab.astro';
@@ -67,6 +96,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <CollisionLab />
 
@@ -135,6 +165,8 @@ When two equal masses collide elastically, they simply swap velocities. That is
 the trick behind a Newton's cradle: the incoming ball stops dead and the one at
 the far end flies off at the speed the first one had. Set both masses equal, leave
 the bounciness at 1, and the before and after panels show exactly that trade.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Is energy always conserved in a collision?</summary>

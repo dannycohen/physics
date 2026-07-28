@@ -60,9 +60,36 @@ limits:
 prerequisites: []
 related:
   - foundations/lorentz-factor
+history:
+  year: '1905'
+  people:
+    - Albert Einstein
+    - Hendrik Lorentz
+  summary:
+    - >-
+      Time dilation dropped out of Albert Einstein's 1905 special theory of
+      relativity. Einstein built on the coordinate transformations Hendrik
+      Lorentz and Henri Poincaré had written down to reconcile Maxwell's
+      electromagnetism with motion, but reinterpreted them: rather than an
+      artefact of moving through a luminiferous ether, the slowing of moving
+      clocks was a real property of space and time once the speed of light is
+      the same for every observer.
+    - >-
+      The effect went from theory to routine measurement over the twentieth
+      century, from the 1941 Rossi-Hall muon experiment to the 1971
+      Hafele-Keating flights with atomic clocks. Today it is an engineering
+      constant: the atomic clocks aboard GPS satellites are deliberately
+      offset for relativistic time shifts, without which positioning would
+      drift kilometres per day.
+  references:
+    - label: 'Wikipedia: Time dilation'
+      url: https://en.wikipedia.org/wiki/Time_dilation
+    - label: 'Wikipedia: Annus Mirabilis papers (Einstein, 1905)'
+      url: https://en.wikipedia.org/wiki/Annus_Mirabilis_papers
 ---
 
 import TimeDilationClocks from '../../../components/viz/TimeDilationClocks.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 import GammaCurve from '../../../components/viz/GammaCurve.astro';
 import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
@@ -115,6 +142,8 @@ At everyday speeds the diagonal is barely longer than the vertical hop, which
 is why you have never noticed this. The effect only becomes visible when the
 sideways motion is a decent fraction of the speed of light - roughly half of c
 before it amounts to much.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Doesn't the moving clock just <em>look</em> slow?</summary>

@@ -54,6 +54,30 @@ limits:
       axis: 40
 prerequisites: []
 related: []
+history:
+  year: '1619'
+  people:
+    - Johannes Kepler
+    - Tycho Brahe
+  summary:
+    - >-
+      Johannes Kepler published the third law in 1619 in Harmonice Mundi, the
+      last of three laws he drew out of Tycho Brahe's decades of naked-eye
+      observations of the planets. Kepler had spent years fitting curves to
+      Brahe's Mars data before he found that the period squared tracks the
+      orbit radius cubed for every planet, a relationship he had been hunting
+      for as part of his search for harmony in the heavens.
+    - >-
+      The law gave Copernican astronomy a quantitative backbone and later fed
+      directly into Isaac Newton's work. Newton showed the same pattern falls
+      out of inverse-square gravity, which turned Kepler's empirical fit into a
+      way to weigh the Sun and any planet with a moon, and it still underpins
+      how orbits are planned for spacecraft today.
+  references:
+    - label: 'Wikipedia: Kepler''s laws of planetary motion'
+      url: https://en.wikipedia.org/wiki/Kepler%27s_laws_of_planetary_motion
+    - label: 'NASA Science: Orbits and Kepler''s Laws'
+      url: https://science.nasa.gov/resource/orbits-and-keplers-laws/
 ---
 
 import KeplerOrbit from '../../../components/viz/KeplerOrbit.astro';
@@ -61,6 +85,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <KeplerOrbit />
 
@@ -105,6 +130,8 @@ straight out of the same inverse-square gravity that holds any orbit together.
 It also does real work. Measure a planet's `a` and `T`, and the full equation
 hands you the mass of the body being orbited. That is how the Sun's mass, and
 the masses of planets with moons, are weighed.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Do outer planets just move slower?</summary>

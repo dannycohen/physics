@@ -60,6 +60,35 @@ limits:
       incident: 0
 prerequisites: []
 related: []
+history:
+  year: '984-1637'
+  people:
+    - Ibn Sahl
+    - Willebrord Snellius
+    - Rene Descartes
+  summary:
+    - >-
+      The rule that light bends by a fixed ratio of sines was worked out several
+      times over six centuries. The Persian mathematician Ibn Sahl wrote it down
+      around 984 in a treatise on burning mirrors and lenses, using it to shape
+      surfaces that focus light without aberration. In Europe it was rediscovered
+      independently: Thomas Harriot found it around 1602 but never published,
+      Willebrord Snellius derived it in 1621 and also left it unpublished, and
+      Rene Descartes printed the modern sine form in his 1637 essay La Dioptrique.
+      The law carries Snell's name in English, though in French it is often called
+      Descartes' law.
+    - >-
+      The equation became the backbone of geometric optics. It sets how lenses,
+      prisms and telescopes bend light, and it explains total internal
+      reflection, the effect that keeps light trapped inside a fibre-optic cable
+      and makes a cut diamond sparkle. Pierre de Fermat later showed the same law
+      falls out of his principle of least time, tying refraction to a deeper idea
+      about the paths light takes.
+  references:
+    - label: 'Wikipedia: Snell''s law'
+      url: https://en.wikipedia.org/wiki/Snell%27s_law
+    - label: 'Wikipedia: Ibn Sahl (mathematician)'
+      url: https://en.wikipedia.org/wiki/Ibn_Sahl_(mathematician)
 ---
 
 import SnellRay from '../../../components/viz/SnellRay.astro';
@@ -67,6 +96,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <SnellRay />
 
@@ -141,6 +171,8 @@ reflection, and it happens exactly when
 It is not a defect. It is how a fibre-optic cable pipes light around bends for
 kilometres without leaking, and why a cut diamond, with its very high index,
 traps and throws back so much light that it sparkles.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does light always pass through into the next material?</summary>

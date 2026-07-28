@@ -56,6 +56,37 @@ limits:
       f2: 470
 prerequisites: []
 related: []
+history:
+  year: '1694-1701'
+  people:
+    - Joseph Sauveur
+    - Marin Mersenne
+  summary:
+    - >-
+      Musicians and organ builders had heard beats for centuries before anyone
+      turned them into a measurement. Around 1694 the French mathematician
+      Joseph Sauveur, working with the musician Etienne Loulie, used them to pin
+      down absolute pitch: he found two organ pipes that beat six times a second,
+      reasoned that their frequencies had to differ by six, and worked out that
+      the lower pipe sounded 90 Hz and the higher one 96 Hz. From that anchor he
+      measured many other notes and presented the results to the Paris Academy of
+      Sciences in 1701. Sauveur coined the word acoustique for this new science,
+      building on the earlier vibration studies of Marin Mersenne.
+    - >-
+      The trick still works the same way. Tuning by ear means listening for the
+      beats between a reference and a string and adjusting until they slow to a
+      stop, since equal frequencies produce no beat at all. The same idea runs
+      through radio and radar as heterodyning: mixing two signals and reading the
+      difference frequency lets operators zero-beat a carrier or measure a Doppler
+      shift, so a phenomenon first heard in organ pipes now underlies frequency
+      measurement across physics and engineering.
+  references:
+    - label: 'Wikipedia: Beat (acoustics)'
+      url: https://en.wikipedia.org/wiki/Beat_(acoustics)
+    - label: 'Wikipedia: Joseph Sauveur'
+      url: https://en.wikipedia.org/wiki/Joseph_Sauveur
+    - label: 'HyperPhysics (Georgia State University): Beats'
+      url: https://hyperphysics.gsu.edu/hbase/Sound/beat.html
 ---
 
 import BeatsWave from '../../../components/viz/BeatsWave.astro';
@@ -63,6 +94,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <BeatsWave />
 
@@ -124,6 +156,8 @@ Keep the beat rate separate from the pitch. The pitch you hear is the **average*
 of the two frequencies, `(f₁ + f₂)/2`, and it barely moves while the beat rate
 changes. With 440 and 444 you hear a 442 Hz tone throbbing four times a second,
 not a 4 Hz sound.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Do you hear a third new frequency at 4 Hz?</summary>

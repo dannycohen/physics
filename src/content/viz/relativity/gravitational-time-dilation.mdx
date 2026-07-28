@@ -57,6 +57,33 @@ prerequisites: []
 related:
   - relativity/time-dilation
   - foundations/lorentz-factor
+history:
+  year: '1907'
+  people:
+    - Albert Einstein
+    - Karl Schwarzschild
+    - Robert Pound
+    - Glen Rebka
+  summary:
+    - >-
+      Albert Einstein first described gravitational time dilation in 1907, before
+      general relativity was complete, by arguing from the equivalence principle
+      that a clock deep in a gravitational field must run slow. He worked out a
+      quantitative prediction in 1911 and folded the effect into general relativity
+      in 1915. In 1916 Karl Schwarzschild solved Einstein's field equations for a
+      spherical mass, giving the exact expression that fixes the clock rate at any
+      distance and defines the horizon where it falls to zero.
+    - >-
+      The prediction stayed hard to test until 1959, when Robert Pound and Glen
+      Rebka measured the tiny frequency shift of gamma rays rising through 22.5
+      metres of a Harvard tower and confirmed it. Today the effect is routine
+      engineering: GPS satellite clocks are corrected for it continuously, since
+      their weaker gravity makes them tick faster than clocks on the ground.
+  references:
+    - label: 'Wikipedia: Gravitational time dilation'
+      url: https://en.wikipedia.org/wiki/Gravitational_time_dilation
+    - label: 'Wikipedia: Pound-Rebka experiment'
+      url: https://en.wikipedia.org/wiki/Pound%E2%80%93Rebka_experiment
 ---
 
 import GravitationalClock from '../../../components/viz/GravitationalClock.astro';
@@ -64,6 +91,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <GravitationalClock />
 
@@ -106,6 +134,8 @@ correct for it every day. This is the opposite-sign partner to the speed effect
 on the <a href={`${import.meta.env.BASE_URL}viz/relativity/time-dilation/`}>special-relativity
 time-dilation page</a>: motion slows a satellite's clock, while its weaker gravity
 speeds it up, and engineers account for both.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Would you feel your own clock slow down?</summary>

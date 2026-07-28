@@ -54,6 +54,35 @@ prerequisites: []
 related:
   - relativity/time-dilation
   - foundations/lorentz-factor
+history:
+  year: '1842-1905'
+  people:
+    - Christian Doppler
+    - Albert Einstein
+  summary:
+    - >-
+      Christian Doppler described the everyday frequency shift in 1842, working
+      from the coloured light of binary stars. His formula worked for sound in
+      air and for slow-moving light sources, but it treated the wave as
+      travelling through a fixed medium and left the source and observer on
+      unequal footing.
+    - >-
+      Albert Einstein derived the relativistic version in his 1905 paper on
+      special relativity. By fixing the speed of light for every observer and
+      folding in time dilation, he replaced the medium-based picture with one
+      that depends only on the relative speed of source and observer, which is
+      why the two agree symmetrically.
+    - >-
+      The prediction was confirmed directly in 1938, when Herbert Ives and
+      G. R. Stilwell measured the shift in light from fast ion beams and found
+      the extra time-dilation term Einstein's formula demanded. Today the same
+      relation lets astronomers read a galaxy's recession speed straight from
+      the redshift of its light.
+  references:
+    - label: 'Wikipedia: Relativistic Doppler effect'
+      url: https://en.wikipedia.org/wiki/Relativistic_Doppler_effect
+    - label: 'Wikipedia: Ives-Stilwell experiment (1938)'
+      url: https://en.wikipedia.org/wiki/Ives%E2%80%93Stilwell_experiment
 ---
 
 import DopplerShift from '../../../components/viz/DopplerShift.astro';
@@ -61,6 +90,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <DopplerShift />
 
@@ -105,6 +135,8 @@ always toward the red. That transverse case is pure time dilation: the source's
 clock runs slow, so its light arrives at a lower frequency, `f_obs = f_src / γ`.
 The formula on this page is the head-on case, where that time-dilation slowdown
 is combined with the crest-piling of ordinary motion.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Is this just the ambulance-siren Doppler?</summary>

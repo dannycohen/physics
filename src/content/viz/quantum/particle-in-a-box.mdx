@@ -60,6 +60,35 @@ prerequisites: []
 related:
   - quantum/de-broglie
   - quantum/heisenberg
+history:
+  year: '1926'
+  people:
+    - Erwin Schrödinger
+    - Louis de Broglie
+  summary:
+    - >-
+      The particle in a box was not discovered by one person so much as it fell
+      straight out of Erwin Schrödinger's wave equation, published in 1926. It
+      builds on Louis de Broglie's 1924 proposal that matter travels as a wave:
+      confine that wave between two hard walls and only whole numbers of
+      half-waves fit, which forces the energy onto a discrete ladder. It was one
+      of the first exact solutions of the new wave mechanics and remains one of
+      the very few quantum problems that can be solved with nothing but algebra
+      and boundary conditions.
+    - >-
+      Because it is so clean, it became a standard first example in every quantum
+      course, the place where students meet quantization and zero-point energy.
+      The same confinement physics is not just a teaching toy: it sets the energy
+      levels in real semiconductor quantum wells and quantum dots, which is why
+      the color of a quantum-dot display shifts as the dots are made larger or
+      smaller.
+  references:
+    - label: 'Wikipedia: Particle in a box'
+      url: https://en.wikipedia.org/wiki/Particle_in_a_box
+    - label: 'Wikipedia: Schrödinger equation'
+      url: https://en.wikipedia.org/wiki/Schr%C3%B6dinger_equation
+    - label: 'HyperPhysics (Georgia State University): Particle in a box'
+      url: http://hyperphysics.gsu.edu/hbase/quantum/pbox.html
 ---
 
 import ParticleBox from '../../../components/viz/ParticleBox.astro';
@@ -67,6 +96,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <ParticleBox />
 
@@ -135,6 +165,8 @@ is tied to
 principle</a>: pin the
 particle inside a box and you have limited how much you can also pin down its
 motion, so it can never be perfectly at rest.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Can it have any energy in between the rungs?</summary>
