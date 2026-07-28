@@ -69,6 +69,36 @@ limits:
 prerequisites: []
 related:
   - 'thermodynamics/maxwell-boltzmann'
+history:
+  year: '1900'
+  people:
+    - Max Planck
+    - Wilhelm Wien
+  summary:
+    - >-
+      Max Planck published this law in 1900. Experimenters in Berlin had by then
+      measured the glow of a heated cavity across a wide band of wavelengths, and
+      no single formula from classical physics matched the data. Wien's law fit
+      the short-wavelength end, the Rayleigh-Jeans formula fit the long end, and
+      neither worked everywhere. Planck first guessed a formula that fit the whole
+      curve, then found he could derive it only by assuming that energy is
+      exchanged in discrete lumps proportional to frequency, with the constant of
+      proportionality now called the Planck constant.
+    - >-
+      Planck treated that quantum step as a mathematical trick rather than a real
+      feature of nature, but it was the start of quantum physics. Albert Einstein
+      took the quanta literally in 1905 to explain the photoelectric effect, and
+      Planck received the 1918 Nobel Prize in Physics for the work. The law is now
+      routine across science and technology: it sets the temperature of stars from
+      their colour, underpins infrared thermal imaging, and describes the cosmic
+      microwave background, one of the most exact blackbody spectra ever measured.
+  references:
+    - label: 'Wikipedia: Planck''s law'
+      url: https://en.wikipedia.org/wiki/Planck%27s_law
+    - label: 'Wikipedia: Ultraviolet catastrophe'
+      url: https://en.wikipedia.org/wiki/Ultraviolet_catastrophe
+    - label: 'HyperPhysics (Georgia State University): Blackbody radiation'
+      url: https://hyperphysics.gsu.edu/hbase/mod6.html
 ---
 
 import PlanckSpectrum from '../../../components/viz/PlanckSpectrum.astro';
@@ -77,6 +107,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <PlanckSpectrum />
 
@@ -137,6 +168,8 @@ is about sixteen times brighter. The real curves span so many orders of
 magnitude that a cool one would vanish next to a hot one, so the plot rescales
 each temperature to its own peak — you are seeing the shape and the colour
 shift, while this fourth-power growth in true brightness happens off the chart.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does a hotter object just get brighter?</summary>

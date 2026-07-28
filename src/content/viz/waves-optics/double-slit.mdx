@@ -58,6 +58,35 @@ limits:
 prerequisites: []
 related:
   - 'quantum/de-broglie'
+history:
+  year: '1801-1803'
+  people:
+    - Thomas Young
+    - Augustin-Jean Fresnel
+  summary:
+    - >-
+      Thomas Young made the case for the wave nature of light in a series of
+      Royal Society lectures from 1801 to 1803, describing an experiment in
+      which light passing two closely spaced openings paints a row of bright
+      and dark bands. Newton's particle picture of light had held for a
+      century, and Young's interference argument was met with sharp resistance
+      at first. Augustin-Jean Fresnel put the wave theory on firm mathematical
+      footing over the following two decades, and the banded pattern became the
+      standard demonstration that light travels as a wave.
+    - >-
+      The experiment outlived its original purpose. When single particles are
+      sent through the slits one at a time and still build up the same fringes,
+      the same setup shows that matter has wave properties too, which made it a
+      touchstone for quantum mechanics. The fringe spacing also gives a direct
+      way to measure wavelength, and the physics carries straight over to
+      diffraction gratings used in spectroscopy.
+  references:
+    - label: 'Wikipedia: Double-slit experiment'
+      url: https://en.wikipedia.org/wiki/Double-slit_experiment
+    - label: 'Wikipedia: Young''s interference experiment'
+      url: https://en.wikipedia.org/wiki/Young%27s_interference_experiment
+    - label: 'University of Texas: Young''s double-slit experiment'
+      url: https://farside.ph.utexas.edu/teaching/316/lectures/node151.html
 ---
 
 import DoubleSlit from '../../../components/viz/DoubleSlit.astro';
@@ -65,6 +94,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <DoubleSlit />
 
@@ -129,6 +159,8 @@ This banded pattern is the classic proof that light travels as a wave, since
 only waves interfere. Send particles through one at a time and the same fringes
 still build up, which is how the experiment also demonstrates matter waves; see
 the <a href={`${import.meta.env.BASE_URL}viz/quantum/de-broglie/`}>de Broglie page</a>.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Do the slits just cast two bright lines?</summary>

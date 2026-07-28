@@ -54,6 +54,36 @@ limits:
       speed: 20000000
 prerequisites: []
 related: []
+history:
+  year: '1924'
+  people:
+    - Louis de Broglie
+    - Clinton Davisson
+    - George Paget Thomson
+  summary:
+    - >-
+      Louis de Broglie proposed matter waves in his 1924 doctoral thesis. Light
+      had already been shown to carry momentum in discrete quanta, and de Broglie
+      turned that idea around: if waves can act like particles, then particles
+      should act like waves. He assigned every moving object a wavelength equal
+      to the Planck constant divided by its momentum, the relation on this page.
+    - >-
+      The claim was confirmed in 1927, when Clinton Davisson and Lester Germer at
+      Bell Labs, and independently George Paget Thomson, fired electrons at
+      crystals and saw them diffract exactly as waves do. De Broglie received the
+      1929 Nobel Prize in Physics for the discovery; Davisson and Thomson shared
+      the 1937 prize for the experiments.
+    - >-
+      Matter waves became one of the foundations of quantum mechanics and fed
+      directly into Schrodinger's wave equation. The same electron diffraction
+      that proved the idea now drives everyday tools, most visibly the electron
+      microscope, whose short matter wavelength resolves detail far finer than
+      any light microscope.
+  references:
+    - label: 'Wikipedia: Matter wave'
+      url: https://en.wikipedia.org/wiki/Matter_wave
+    - label: 'Wikipedia: Louis de Broglie'
+      url: https://en.wikipedia.org/wiki/Louis_de_Broglie
 ---
 
 import DeBroglieWave from '../../../components/viz/DeBroglieWave.astro';
@@ -61,6 +91,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <DeBroglieWave />
 
@@ -110,6 +141,8 @@ atoms of a crystal, exactly as X-rays do. It is also what makes electron
 microscopes work: a shorter wavelength resolves finer detail, and a fast
 electron's wavelength is far shorter than any wavelength of visible light, so an
 electron microscope sees things a light microscope never could.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>If everything is a wave, why don't I see myself ripple?</summary>

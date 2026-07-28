@@ -47,6 +47,32 @@ limits:
 prerequisites: []
 related:
   - 'quantum/de-broglie'
+history:
+  year: '1927'
+  people:
+    - Werner Heisenberg
+    - Earle Hesse Kennard
+  summary:
+    - >-
+      Werner Heisenberg introduced the uncertainty relations in 1927, in a paper
+      written in Copenhagen while he was working with Niels Bohr on the
+      foundations of the new quantum mechanics. His original argument leaned on a
+      thought experiment about locating an electron with a gamma-ray microscope.
+      The sharper inequality shown here, with the product of the two spreads
+      bounded below by half of the reduced Planck constant, was derived later that
+      same year by Earle Hesse Kennard.
+    - >-
+      The result reframed a running argument about whether the graininess came
+      from clumsy instruments or from nature itself, and it became a cornerstone
+      of the Copenhagen interpretation. Heisenberg received the Nobel Prize in
+      Physics in 1932 for his part in creating quantum mechanics. The principle
+      still underpins working physics, from the stability of atoms to the
+      zero-point energy of light and the noise floor of precision measurements.
+  references:
+    - label: 'Wikipedia: Uncertainty principle'
+      url: https://en.wikipedia.org/wiki/Uncertainty_principle
+    - label: 'Stanford Encyclopedia of Philosophy: The Uncertainty Principle'
+      url: https://plato.stanford.edu/entries/qt-uncertainty/
 ---
 
 import UncertaintyPacket from '../../../components/viz/UncertaintyPacket.astro';
@@ -54,6 +80,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <UncertaintyPacket />
 
@@ -110,6 +137,8 @@ out. A state with a narrow position spread is built, mathematically, from a wide
 spread of momenta; there is no state hiding underneath with both pinned down
 that our tools are too crude to reach. Narrowing one spread necessarily widens
 the other, because they are two faces of the same wave.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Is this just because measuring disturbs the particle?</summary>

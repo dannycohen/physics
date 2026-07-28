@@ -88,6 +88,16 @@ or logic, check whether it already exists and reuse it.
 `npm run test` (physics anchors), `npx astro check` (0 errors), and `npm run build` must all
 pass. CI also runs a client-JS bundle-size gate.
 
+A CI **duplication** job mechanically enforces the "Don't duplicate" rules above:
+
+- `npm run check:dup` — jscpd copy-paste detector (fails over 3% duplicated tokens). **Blocking.**
+- The constant-literal grep gate — fails if a physical-constant value (scientific notation,
+  or the bare speed of light) appears in `src/content/**` or an island; put it in
+  `src/lib/physics/constants.ts`. **Blocking.**
+- `npm run check:styles` (stylelint: duplicate properties/selectors + colour-literal discipline)
+  and `npm run check:knip` (dead exports) run **warn-only** for now, to be promoted to blocking
+  once the current tree is clean.
+
 A separate CI **analysis** job enforces static-analysis budgets — run these locally before
 committing logic changes:
 

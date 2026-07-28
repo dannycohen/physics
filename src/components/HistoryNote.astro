@@ -1,0 +1,83 @@
+---
+// Renders the optional per-equation "Historical background" section from the
+// frontmatter `history` object (schema in src/content.config.ts). One component
+// for all pages so the citation markup and external-link handling live in a
+// single place (AGENTS.md "Don't duplicate"). Drop it into an MDX body as the
+// last prose section, before any <details class="misconception">.
+interface Reference {
+  label: string;
+  url: string;
+}
+interface History {
+  summary: string[];
+  people?: string[];
+  year: string;
+  references: Reference[];
+}
+interface Props {
+  history?: History;
+}
+
+const { history } = Astro.props;
+const people = history?.people ?? [];
+---
+
+{
+  history && (
+    <section class="history" aria-labelledby="history-heading">
+      <h2 id="history-heading">Historical background</h2>
+      {history.summary.map((paragraph) => (
+        <p>{paragraph}</p>
+      ))}
+      <p class="history-meta">
+        {people.length > 0 && (
+          <>
+            <span class="visually-hidden">Key figures: </span>
+            {people.join(', ')}
+            <span aria-hidden="true"> · </span>
+          </>
+        )}
+        <span class="visually-hidden">Year: </span>
+        {history.year}
+      </p>
+      <p class="refs-label">References</p>
+      <ul class="history-refs">
+        {history.references.map((ref) => (
+          <li>
+            <a href={ref.url} rel="noopener noreferrer" target="_blank">
+              {ref.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  .history {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .history-meta {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+  }
+
+  .refs-label {
+    margin: var(--space-2) 0 0;
+    font-weight: 600;
+  }
+
+  .history-refs {
+    margin: 0;
+    padding-left: var(--space-4);
+  }
+
+  .history-refs li {
+    margin-block: var(--space-1);
+  }
+</style>

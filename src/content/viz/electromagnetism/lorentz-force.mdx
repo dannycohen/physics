@@ -58,6 +58,34 @@ limits:
 prerequisites: []
 related:
   - 'electromagnetism/coulomb'
+history:
+  year: '1889-1895'
+  people:
+    - Hendrik Lorentz
+    - Oliver Heaviside
+    - J. J. Thomson
+  summary:
+    - >-
+      The force law grew out of efforts to connect Maxwell's electromagnetism to
+      the push felt by a moving charge. J. J. Thomson took a first pass in 1881
+      but landed on a wrong numerical factor. Oliver Heaviside, who recast
+      Maxwell's equations in modern vector notation, arrived at the correct
+      magnetic force around 1889. The Dutch physicist Hendrik Lorentz gave it its
+      final form in 1895, combining the electric and magnetic contributions into
+      the single expression that now carries his name.
+    - >-
+      The law is what ties an abstract field to something you can measure, the
+      sideways push on a charge. It underpins electric motors, the cyclotron and
+      later particle accelerators, mass spectrometers that sort ions by their
+      curvature, and the cathode-ray tubes that steered electron beams in early
+      televisions and oscilloscopes.
+  references:
+    - label: 'Wikipedia: Lorentz force'
+      url: https://en.wikipedia.org/wiki/Lorentz_force
+    - label: 'Wikipedia: Hendrik Lorentz'
+      url: https://en.wikipedia.org/wiki/Hendrik_Lorentz
+    - label: 'HyperPhysics (Georgia State University): Magnetic force on a moving charge'
+      url: http://hyperphysics.gsu.edu/hbase/magnetic/magfor.html
 ---
 
 import LorentzForce from '../../../components/viz/LorentzForce.astro';
@@ -65,6 +93,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <LorentzForce />
 
@@ -133,6 +162,8 @@ force along the direction of travel, and here there is none. So the charge's
 kinetic energy, and therefore its speed, never changes in a purely magnetic
 field. Only an electric field can add or remove energy. A magnetic field is a
 steering wheel, not an accelerator pedal.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does a magnetic field speed the charge up?</summary>

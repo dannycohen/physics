@@ -58,6 +58,37 @@ prerequisites: []
 related:
   - foundations/lorentz-factor
   - relativity/time-dilation
+history:
+  year: '1889-1905'
+  people:
+    - George FitzGerald
+    - Hendrik Lorentz
+    - Albert Einstein
+  summary:
+    - >-
+      Length contraction started as a fix for a puzzle, not as a prediction. When
+      the 1887 Michelson-Morley experiment failed to detect the Earth's motion
+      through the supposed aether, George FitzGerald suggested in 1889 that
+      moving bodies physically shrink along their direction of travel by just the
+      amount needed to hide the effect. Hendrik Lorentz reached the same idea
+      independently in 1892 and folded it into his electron theory.
+    - >-
+      In both hands it was an ad hoc hypothesis bolted onto the aether. Albert
+      Einstein changed its status in 1905: in special relativity the contraction
+      drops out of the two postulates directly, with no aether and no extra
+      assumption, as a statement about how length depends on the observer's
+      frame. What had been a rescue for a failing theory became a basic feature
+      of space and time.
+    - >-
+      The same factor now shows up wherever things move near light speed. Particle
+      accelerators treat it as routine bookkeeping, and in the rest frame of a fast
+      cosmic-ray muon the thick atmosphere is contracted enough that the particle
+      reaches the ground before it decays.
+  references:
+    - label: 'Wikipedia: Length contraction'
+      url: https://en.wikipedia.org/wiki/Length_contraction
+    - label: 'Wikipedia: History of special relativity'
+      url: https://en.wikipedia.org/wiki/History_of_special_relativity
 ---
 
 import LengthContraction from '../../../components/viz/LengthContraction.astro';
@@ -65,6 +96,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <LengthContraction />
 
@@ -104,6 +136,8 @@ The contraction factor is `1/γ`, built from the very same Lorentz factor that
 stretches time. Time dilation multiplies by γ; length contraction divides by it.
 One number, two mirror-image effects. See γ on its own on the{' '}
 <a href={`${import.meta.env.BASE_URL}viz/foundations/lorentz-factor/`}>Lorentz factor page</a>.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does the object get crushed or squished?</summary>

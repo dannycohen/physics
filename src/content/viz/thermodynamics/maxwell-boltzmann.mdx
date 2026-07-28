@@ -69,6 +69,35 @@ limits:
       tempK: 1200
 prerequisites: []
 related: []
+history:
+  year: '1860-1877'
+  people:
+    - James Clerk Maxwell
+    - Ludwig Boltzmann
+  summary:
+    - >-
+      James Clerk Maxwell first wrote down the distribution of molecular speeds
+      in 1860, reasoning that the three velocity components of a gas molecule
+      must be independent and that the speeds should follow a bell-shaped law.
+      It was an early triumph of treating a gas as a statistical crowd rather
+      than tracking each molecule, part of the kinetic theory that Rudolf
+      Clausius had been building. Ludwig Boltzmann then put the result on firmer
+      ground, deriving it from mechanical collisions in 1872 and again from
+      statistical thermodynamics in 1877, which is why the curve carries both
+      their names.
+    - >-
+      The distribution became one of the foundations of statistical mechanics.
+      It explains why gases exert the pressures they do, how fast reactions
+      proceed once you count the molecules moving fast enough to react, and why
+      light gases like hydrogen and helium leak out of a planet's atmosphere
+      over geological time. The same exponential energy factor at its heart, the
+      Boltzmann factor, reappears across physics and chemistry wherever
+      particles share thermal energy.
+  references:
+    - label: 'Wikipedia: Maxwell–Boltzmann distribution'
+      url: https://en.wikipedia.org/wiki/Maxwell%E2%80%93Boltzmann_distribution
+    - label: 'HyperPhysics (Georgia State University): Maxwell speed distribution'
+      url: https://hyperphysics.gsu.edu/hbase/Kinetic/maxspe.html
 ---
 
 import MaxwellDistribution from '../../../components/viz/MaxwellDistribution.astro';
@@ -77,6 +106,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <MaxwellDistribution />
 
@@ -122,6 +152,8 @@ speed both sit a bit above the peak. That order never changes: most probable,
 then average, then rms. (The root-mean-square speed is found by squaring every
 molecule's speed, averaging those, then taking the square root; because squaring
 weights the fast molecules more, it sits a little above the plain average.)
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Is the peak the average speed?</summary>
