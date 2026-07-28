@@ -107,7 +107,6 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
-import HistoryNote from '../../../components/HistoryNote.astro';
 
 <PlanckSpectrum />
 
@@ -168,8 +167,6 @@ is about sixteen times brighter. The real curves span so many orders of
 magnitude that a cool one would vanish next to a hot one, so the plot rescales
 each temperature to its own peak — you are seeing the shape and the colour
 shift, while this fourth-power growth in true brightness happens off the chart.
-
-<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does a hotter object just get brighter?</summary>

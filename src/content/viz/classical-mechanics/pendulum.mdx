@@ -95,7 +95,6 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
-import HistoryNote from '../../../components/HistoryNote.astro';
 
 <PendulumSwing />
 
@@ -143,8 +142,6 @@ approximating the restoring pull as proportional to the <abbr title="how far the
 holds near the bottom. For a genuinely large swing (tens of degrees), the period
 grows slightly, and the neat independence from <abbr title="how far the bob is pulled back before you release it">amplitude</abbr> weakens. The animation
 here holds a deliberately small swing so the approximation stays honest.
-
-<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does a heavier bob swing slower?</summary>

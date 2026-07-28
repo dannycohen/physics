@@ -94,7 +94,6 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
-import HistoryNote from '../../../components/HistoryNote.astro';
 
 <BeatsWave />
 
@@ -156,8 +155,6 @@ Keep the beat rate separate from the pitch. The pitch you hear is the **average*
 of the two frequencies, `(f₁ + f₂)/2`, and it barely moves while the beat rate
 changes. With 440 and 444 you hear a 442 Hz tone throbbing four times a second,
 not a 4 Hz sound.
-
-<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Do you hear a third new frequency at 4 Hz?</summary>
