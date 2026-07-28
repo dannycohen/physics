@@ -61,6 +61,28 @@ content plus its island(s); `VizLayout` is not edited per page.
 - Formatting: route every number through `formatQuantity` so the visible readout and the
   `aria-valuetext` are identical strings.
 
+## Don't duplicate
+
+The shared layer above exists so pages and islands stay thin. Before adding markup, CSS,
+or logic, check whether it already exists and reuse it.
+
+- **Reuse before adding.** A new page, island, or builder should lean on the existing
+  components (`SliderField`, `PresetButtons`/`LimitSnaps`, `TempConversions`), helpers
+  (`createVizCanvas`, `plotCurve`, `getVizStore`, `formatQuantity`), and shared classes in
+  `src/styles/{tokens,viz}.css`. Extend the shared thing; don't copy it into a new file.
+- **CSS shared by two or more files lives in the shared layer.** Put common visual patterns
+  in `src/styles/viz.css` (viz) or `tokens.css` (chrome) as a class; a per-file `<style>`
+  block is only for genuinely one-off rules. Never write a colour literal outside
+  `tokens.css` — reference `var(--…)`.
+- **Constants live once.** Physical constants and per-viz defaults belong in
+  `src/lib/physics/` and are imported where needed — never retyped across an island's
+  frontmatter and its client `<script>`, and never as a literal in MDX frontmatter (this
+  extends "no physical-constant literals" above to content).
+- **MDX pages carry only their unique content.** Control scaffolding, `slug` wiring, and the
+  presets/limits/reset row come from the shared components, not copy-paste across pages.
+- **Rule of three.** The third copy of a pattern is the signal to extract it into the shared
+  layer. If you deliberately leave duplication, say why in the PR.
+
 ## Before committing
 
 `npm run test` (physics anchors), `npx astro check` (0 errors), and `npm run build` must all
