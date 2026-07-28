@@ -1,8 +1,6 @@
-import { DEFAULT_BOX, identityScale, circle, dot, paint, type Pt } from '../../svgPoster';
+import { identityScale, circle, dot, paint, type Pt } from '../../svgPoster';
 import { observedFrequency } from '../../physics/acoustic-doppler';
 import type { PosterBuilder } from '../types';
-
-const box = DEFAULT_BOX;
 
 // Acoustic Doppler as a scene: concentric wavefronts emitted by a source moving
 // to the right. Each older ring keeps its emission centre, so rings bunch ahead

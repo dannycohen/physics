@@ -1,8 +1,6 @@
-import { DEFAULT_BOX, sampleCurve, polyline, rect, identityScale, type Pt } from '../../svgPoster';
+import { sampleCurve, polyline, rect, identityScale, type Pt } from '../../svgPoster';
 import { transmission } from '../../physics/tunneling';
 import type { PosterBuilder } from '../types';
-
-const box = DEFAULT_BOX;
 
 // Quantum tunnelling: a wave arrives at full amplitude from the left, decays
 // exponentially through a barrier (limit-tinted rectangle), and leaves with a
