@@ -56,6 +56,36 @@ limits:
       width: 0.15
 prerequisites: []
 related: ['quantum/de-broglie']
+history:
+  year: '1927-1928'
+  people:
+    - Friedrich Hund
+    - George Gamow
+    - Ronald Gurney
+    - Edward Condon
+  summary:
+    - >-
+      Tunnelling fell out of the Schrödinger equation almost as soon as it was
+      written down in 1926. Friedrich Hund was the first to work through it in
+      1927, studying how a particle in a double-well molecular potential can
+      cross the barrier between the wells. Within a year George Gamow, and
+      independently Ronald Gurney and Edward Condon, used the same idea to
+      explain alpha decay: the alpha particle is not thrown over the nuclear
+      barrier but leaks through it, which is why decay half-lives depend so
+      steeply on energy.
+    - >-
+      The effect turned out to be everywhere once people knew to look. It drives
+      alpha decay, nuclear fusion in stars, and the field emission of electrons
+      from a surface. Its most direct technological payoff is the scanning
+      tunnelling microscope, built by Gerd Binnig and Heinrich Rohrer at IBM
+      Zurich in 1981, which reads the tiny tunnelling current across a sub-
+      nanometre gap to image single atoms and earned them the 1986 Nobel Prize
+      in Physics.
+  references:
+    - label: 'Wikipedia: Quantum tunnelling'
+      url: https://en.wikipedia.org/wiki/Quantum_tunnelling
+    - label: 'Wikipedia: Scanning tunneling microscope'
+      url: https://en.wikipedia.org/wiki/Scanning_tunneling_microscope
 ---
 
 import TunnelBarrier from '../../../components/viz/TunnelBarrier.astro';
@@ -63,6 +93,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <TunnelBarrier />
 
@@ -145,6 +176,8 @@ tunnelling microscope holds a sharp tip a fraction of a nanometre above a
 surface and measures the tiny tunnelling current across the gap; because that
 current changes so violently with distance, the instrument can map individual
 atoms.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does the particle "borrow" energy to jump over the wall?</summary>

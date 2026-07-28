@@ -58,6 +58,36 @@ limits:
       length: 4
 prerequisites: []
 related: []
+history:
+  year: '1602-1673'
+  people:
+    - Galileo Galilei
+    - Christiaan Huygens
+  summary:
+    - >-
+      Galileo Galilei noticed around 1602 that a pendulum's swing time barely
+      changed as the swing slowly died down, a property now called isochronism,
+      and that the time depended on the length rather than the weight of the
+      bob. He sketched a pendulum-regulated clock late in his life but never
+      built a working one.
+    - >-
+      Christiaan Huygens turned the idea into a device, building the first
+      pendulum clock in 1656 and patenting it in 1657. His 1673 book Horologium
+      Oscillatorium worked out the mathematics of the swinging pendulum and set
+      out the relation behind T = 2 pi times the square root of L over g, tying
+      the period to the square root of the length.
+    - >-
+      The pendulum clock cut timekeeping error from about 15 minutes a day to
+      around 15 seconds, and it stayed the most accurate clock available for
+      nearly three centuries, underpinning navigation, astronomy and everyday
+      timekeeping until quartz oscillators overtook it in the twentieth century.
+  references:
+    - label: 'Wikipedia: Pendulum'
+      url: https://en.wikipedia.org/wiki/Pendulum
+    - label: 'Wikipedia: Pendulum clock'
+      url: https://en.wikipedia.org/wiki/Pendulum_clock
+    - label: 'The Seiko Museum Ginza: The invention of the pendulum clock'
+      url: https://museum.seiko.co.jp/en/knowledge/MechanicalTimepieces03/
 ---
 
 import PendulumSwing from '../../../components/viz/PendulumSwing.astro';
@@ -65,6 +95,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <PendulumSwing />
 
@@ -112,6 +143,8 @@ approximating the restoring pull as proportional to the <abbr title="how far the
 holds near the bottom. For a genuinely large swing (tens of degrees), the period
 grows slightly, and the neat independence from <abbr title="how far the bob is pulled back before you release it">amplitude</abbr> weakens. The animation
 here holds a deliberately small swing so the approximation stays honest.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does a heavier bob swing slower?</summary>

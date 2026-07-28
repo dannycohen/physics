@@ -70,6 +70,37 @@ limits:
 prerequisites: []
 related:
   - 'foundations/exponential-decay'
+history:
+  year: '1827-1855'
+  people:
+    - Georg Ohm
+    - Gustav Kirchhoff
+    - William Thomson (Lord Kelvin)
+  summary:
+    - >-
+      The charging curve is not one person's discovery but the solution of a
+      simple circuit equation. It rests on Georg Ohm's 1827 law linking voltage
+      and current across a resistor and on the capacitor's own rule that stored
+      charge is proportional to voltage. Gustav Kirchhoff's 1845 circuit laws
+      supplied the bookkeeping that ties the two together, and combining them
+      gives a first-order equation whose answer is the rising exponential, with
+      the product RC setting the circuit's natural clock.
+    - >-
+      The transient behaviour first mattered in a large engineering problem when
+      William Thomson, later Lord Kelvin, analysed signalling through submarine
+      telegraph cables in 1855. Treating a long cable as spread-out resistance
+      and capacitance and borrowing Fourier's mathematics of heat flow, he found
+      that the delay grows with the square of the cable's length, a result that
+      shaped the design of the first transatlantic cable. The same RC time
+      constant is now one of the most-used numbers in electronics, fixing the
+      pace of timing circuits, filters, and oscillators.
+  references:
+    - label: 'Wikipedia: RC circuit'
+      url: https://en.wikipedia.org/wiki/RC_circuit
+    - label: 'Wikipedia: Time constant'
+      url: https://en.wikipedia.org/wiki/Time_constant
+    - label: 'HyperPhysics (Georgia State University): Capacitor charging'
+      url: https://hyperphysics.gsu.edu/hbase/electric/capchg.html
 ---
 
 import RCCurve from '../../../components/viz/RCCurve.astro';
@@ -77,6 +108,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <RCCurve />
 
@@ -140,6 +172,8 @@ A capacitor *discharging* through a resistor loses its voltage on a falling
 exponential with the very same time constant τ = RC. Charging is that curve turned
 upside down: instead of falling from full toward zero, it rises from zero toward
 full. Same time-constant idea, same 63%-per-τ rhythm, just pointing the other way.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Does it ever reach 100%?</summary>

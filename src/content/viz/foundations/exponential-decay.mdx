@@ -59,6 +59,39 @@ limits:
       halfLife: 30
 prerequisites: []
 related: []
+history:
+  year: '1902-1903'
+  people:
+    - Ernest Rutherford
+    - Frederick Soddy
+    - Henri Becquerel
+  summary:
+    - >-
+      The exponential law of decay grew out of the study of radioactivity. Henri
+      Becquerel found the phenomenon by accident in 1896, and over the next few
+      years experimenters noticed that the activity of a radioactive sample fell
+      off at a steady rate: in each fixed stretch of time the same fraction
+      disappeared. Working at McGill University in Montreal, Ernest Rutherford
+      and Frederick Soddy tied this together in their disintegration theory of
+      1902-1903, showing that atoms break apart one by one and that the surviving
+      count follows N = N0 e^(-t/tau). Their measurements of thorium emanation
+      gave the first clear picture of a characteristic decay rate, later
+      expressed as the half-life.
+    - >-
+      Because the law rests only on each item having a fixed chance of decaying
+      per unit time, independent of its neighbours or its age, the same equation
+      turns up far beyond the nucleus. Carbon-14 dating reads it backwards to age
+      bones and wood, medicine uses drug half-lives to set dosing schedules, and
+      the same curve describes a capacitor discharging through a resistor. What
+      began as a puzzle about glowing minerals became one of the most reused
+      formulas in physics.
+  references:
+    - label: 'Wikipedia: Radioactive decay'
+      url: https://en.wikipedia.org/wiki/Radioactive_decay
+    - label: 'Wikipedia: Exponential decay'
+      url: https://en.wikipedia.org/wiki/Exponential_decay
+    - label: 'AIP Center for History of Physics: Rutherford, exploring radioactivity'
+      url: https://history.aip.org/exhibits/rutherford/sections/exploring-radioactivity.html
 ---
 
 import DecayCurve from '../../../components/viz/DecayCurve.astro';
@@ -66,6 +99,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <DecayCurve />
 
@@ -110,6 +144,8 @@ This one shape governs far more than radioactivity. A capacitor discharging thro
 a resistor (the RC circuit) loses voltage the same way, with τ = RC. A drug clears
 from the bloodstream on the same curve, which is why doctors talk about its half-life.
 Same maths, different N₀ and τ.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>After two half-lives, is it all gone?</summary>

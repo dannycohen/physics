@@ -53,6 +53,31 @@ limits:
       angle: 88
 prerequisites: []
 related: []
+history:
+  year: '1638'
+  people:
+    - Galileo Galilei
+    - Niccolo Tartaglia
+  summary:
+    - >-
+      The range equation grew out of Galileo Galilei's 1638 book Two New
+      Sciences. Galileo showed that a projectile's path is the sum of two
+      simpler motions, a steady horizontal drift and a downward acceleration
+      from gravity, and that combining them traces a parabola. From that he read
+      off the results this page shows: range is largest at a 45 degree launch,
+      and two angles that add to 90 degrees land at the same spot.
+    - >-
+      Gunners had argued about the best firing angle long before the math
+      existed. Niccolo Tartaglia guessed 45 degrees in his 1537 Nova Scientia,
+      but he lacked a correct trajectory and treated the flight as straight
+      lines joined by an arc. Galileo's parabola gave ballistics its first
+      quantitative footing, and it became a standard worked example once Newton
+      set out the laws of motion and gravity later in the century.
+  references:
+    - label: 'Wikipedia: Range of a projectile'
+      url: https://en.wikipedia.org/wiki/Range_of_a_projectile
+    - label: 'Wikipedia: Two New Sciences (Galileo, 1638)'
+      url: https://en.wikipedia.org/wiki/Two_New_Sciences
 ---
 
 import ProjectileArc from '../../../components/viz/ProjectileArc.astro';
@@ -60,6 +85,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <ProjectileArc />
 
@@ -117,6 +143,8 @@ resistance, and a constant gravity `g`. Those idealizations are why the arc is a
 clean parabola. Real throws land short of it: drag bleeds off speed, and a ball
 launched from shoulder height lands below where it started, both of which nudge
 the best angle a little under 45°.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Is steeper always farther?</summary>

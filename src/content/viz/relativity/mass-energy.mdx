@@ -62,6 +62,34 @@ prerequisites: []
 related:
   - foundations/lorentz-factor
   - relativity/time-dilation
+history:
+  year: '1905'
+  people:
+    - Albert Einstein
+  summary:
+    - >-
+      Mass-energy equivalence came out of Albert Einstein's special relativity
+      work in 1905, in a short follow-up paper titled "Does the inertia of a
+      body depend upon its energy content?" His claim was that if a body gives
+      off energy as radiation, its mass drops by that energy divided by c
+      squared. Others such as Henri Poincare and J. J. Thomson had noticed
+      links between mass and energy before him, but Einstein was the first to
+      state it as a general principle for all energy, not just electromagnetic
+      effects. The compact E = mc squared form was polished by later physicists,
+      including Max Planck.
+    - >-
+      The relation became the accounting rule for nuclear and particle physics.
+      It explains where the energy in fission and fusion comes from, why the sun
+      shines, and how much mass turns into energy when particles are created or
+      destroyed in accelerators. Precise mass measurements of atomic nuclei read
+      directly as binding energies through the same factor of c squared.
+  references:
+    - label: 'Wikipedia: Mass-energy equivalence'
+      url: https://en.wikipedia.org/wiki/Mass%E2%80%93energy_equivalence
+    - label: 'Wikipedia: Annus Mirabilis papers (Einstein, 1905)'
+      url: https://en.wikipedia.org/wiki/Annus_Mirabilis_papers
+    - label: 'Einstein Online: E = mc²'
+      url: https://www.einstein-online.info/en/explandict/e-mc2/
 ---
 
 import MassEnergy from '../../../components/viz/MassEnergy.astro';
@@ -69,6 +97,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import HistoryNote from '../../../components/HistoryNote.astro';
 
 <MassEnergy />
 
@@ -110,6 +139,8 @@ Written out, the total energy is `E = γmc²` and the momentum term is `pc =
 length. As the speed climbs, γ climbs, the triangle grows, and reaching `c`
 would demand infinite energy. See γ by itself on the{' '}
 <a href={`${import.meta.env.BASE_URL}viz/foundations/lorentz-factor/`}>Lorentz factor page</a>.
+
+<HistoryNote history={frontmatter.history} />
 
 <details class="misconception">
   <summary>Isn't E = mc² the energy of a moving object?</summary>

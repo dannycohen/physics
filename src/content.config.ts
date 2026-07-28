@@ -31,6 +31,30 @@ const limit = z.object({
   values: z.record(z.string(), z.number()),
 });
 
+// A single external reference for the "Historical background" section. Rendered
+// by HistoryNote.astro as an external link (rel="noopener noreferrer").
+const reference = z.object({
+  label: z.string(), // human-readable source name, e.g. 'Wikipedia: Special relativity'
+  url: z.string().url(),
+});
+
+// Optional per-equation history: who discovered it, when, and why it mattered.
+// Rendered uniformly by HistoryNote.astro so references stay consistent and no
+// page hand-rolls its own citation markup (AGENTS.md "Don't duplicate").
+const history = z
+  .object({
+    summary: z.array(z.string()).min(1).max(3), // 1-3 short paragraphs
+    people: z.array(z.string()).default([]), // discoverer(s) / key figures
+    year: z.string(), // string to allow ranges, e.g. '1905' or '1900-1901'
+    references: z.array(reference).min(2),
+  })
+  // Acceptance criterion, enforced at build time: at least one Wikipedia link
+  // plus at least one other reputable source.
+  .refine((h) => h.references.some((r) => /(\.|\/\/)wikipedia\.org\//.test(r.url)), {
+    message: 'history.references must include at least one wikipedia.org link',
+    path: ['references'],
+  });
+
 const viz = defineCollection({
   loader: glob({ pattern: '**/*.mdx', base: './src/content/viz' }),
   schema: z.object({
@@ -56,6 +80,7 @@ const viz = defineCollection({
     limits: z.array(limit).default([]),
     prerequisites: z.array(z.string()).default([]),
     related: z.array(z.string()).default([]),
+    history: history.optional(),
   }),
 });
 
