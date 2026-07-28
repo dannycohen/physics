@@ -9,7 +9,10 @@
     "preview": "astro preview",
     "typecheck": "astro check",
     "test": "vitest run",
-    "check:links": "node scripts/check-links.mjs"
+    "check:links": "node scripts/check-links.mjs",
+    "check:dup": "jscpd --config .jscpd.json",
+    "check:styles": "stylelint \"src/**/*.{astro,css}\"",
+    "check:knip": "knip"
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.3",
@@ -22,6 +25,11 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "jscpd": "^4.2.5",
+    "knip": "^5.88.1",
+    "postcss-html": "^1.8.1",
+    "stylelint": "^16.26.1",
+    "stylelint-config-standard": "^39.0.1",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
   }
