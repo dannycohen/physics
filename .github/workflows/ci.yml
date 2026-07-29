@@ -87,3 +87,19 @@ jobs:
             echo "::error::Coverage below threshold — see the summary above for the metric and target (thresholds in vitest.config.ts)."
             exit 1
           fi
+
+  # Security: fail the build on a known-vulnerable dependency (npm advisory DB).
+  # Kept as its own job so a dependency CVE is visibly separate from the type/test/
+  # build and static-analysis jobs. Complements Dependabot by blocking a PR that
+  # pulls in a high-severity advisory before it reaches main.
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Dependency audit (high+ severity, blocking)
+        run: npm audit --audit-level=high
