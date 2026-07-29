@@ -52,4 +52,9 @@ describe('thresholdWavelengthNm', () => {
     // exactly at threshold, no kinetic energy left over
     expect(maxKineticEnergyEv(lambda, 2.3)).toBeCloseTo(0, 6);
   });
+
+  it('throws on non-positive work function', () => {
+    expect(() => thresholdWavelengthNm(0)).toThrow(RangeError);
+    expect(() => thresholdWavelengthNm(-2)).toThrow(RangeError);
+  });
 });
