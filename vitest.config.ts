@@ -12,13 +12,13 @@ export default defineConfig({
       // so including them here would make the threshold meaningless.
       include: ['src/lib/physics/**'],
       reporter: ['text-summary', 'text'],
-      // Tuned to pass the current tree (stmts 99%, branches 98%, funcs 100%,
-      // lines 99%) with a little headroom, then ratcheted up. See AGENTS.md.
+      // The physics anchors are fully covered, so every metric is held at 100%:
+      // any uncovered line, branch, or function in src/lib/physics fails CI. See AGENTS.md.
       thresholds: {
-        statements: 95,
-        branches: 90,
-        functions: 95,
-        lines: 95,
+        statements: 100,
+        branches: 100,
+        functions: 100,
+        lines: 100,
       },
     },
   },

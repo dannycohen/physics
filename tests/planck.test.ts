@@ -41,4 +41,10 @@ describe('spectral radiance (Planck law)', () => {
     expect(() => spectralRadiance(500e-9, 0)).toThrow(RangeError);
     expect(() => spectralRadiance(0, SUN_K)).toThrow(RangeError);
   });
+
+  it('returns 0 in the short-wavelength limit instead of overflowing', () => {
+    // At 1 nm the exponent (~2500) overflows Math.exp to Infinity; the guard
+    // must read this as 0 radiance, not NaN/Infinity.
+    expect(spectralRadiance(1e-9, SUN_K)).toBe(0);
+  });
 });

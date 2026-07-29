@@ -105,9 +105,9 @@ committing logic changes:
   `complexity` ≤ 17 and `sonarjs/cognitive-complexity` ≤ 15 per function, `max-depth` ≤ 4,
   plus `no-identical-functions`/`no-duplicated-branches`. The 17 is the current tree's
   ceiling (`createVizCanvas`); the intent is to ratchet it down toward 12.
-- `npm run coverage` — Vitest coverage over `src/lib/physics/**` (the anchor logic). Minimums:
-  statements/functions/lines 95%, branches 90%. Failures name the metric, actual value, and
-  threshold; ratchet the minimums up as coverage improves.
+- `npm run coverage` — Vitest coverage over `src/lib/physics/**` (the anchor logic). Minimum:
+  100% on every metric (statements, branches, functions, lines) — any uncovered line in the
+  anchors fails CI. Failures name the metric, actual value, and threshold.
 
 ## Before opening a PR
 
