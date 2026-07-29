@@ -5,6 +5,15 @@
 // Usage: eslint ... -f ./scripts/eslint-gh-formatter.mjs
 import { relative } from 'node:path';
 
+// GitHub workflow-command escaping. Command data (the message after `::`) needs
+// %, CR, and LF encoded; property values (file=, title=) additionally need `,`
+// and `:`. Applied to the file path and rule id, which are untrusted — a path
+// with an embedded newline could otherwise forge a `::error`/`::add-mask`/... on
+// its own stdout line, which the runner parses as a real workflow command.
+const escapeData = (s) =>
+  String(s).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+const escapeProp = (s) => escapeData(s).replace(/:/g, '%3A').replace(/,/g, '%2C');
+
 export default function githubFormatter(results) {
   const lines = [];
   let errors = 0;
@@ -18,12 +27,13 @@ export default function githubFormatter(results) {
       if (m.severity === 2) errors++;
       else warnings++;
       const rule = m.ruleId ?? 'eslint';
-      // Escape per GitHub workflow-command rules (single-line messages here).
-      const msg = String(m.message).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+      const msg = escapeData(m.message);
       lines.push(
-        `::${severity} file=${file},line=${m.line ?? 1},col=${m.column ?? 1},title=${rule}::${msg}`,
+        `::${severity} file=${escapeProp(file)},line=${m.line ?? 1},col=${m.column ?? 1},title=${escapeProp(rule)}::${msg}`,
       );
-      lines.push(`  ${severity} ${file}:${m.line}:${m.column}  ${m.message}  (${rule})`);
+      // Escape the path here too: this line also reaches CI stdout, where a raw
+      // newline in the path would start its own `::` command.
+      lines.push(`  ${severity} ${escapeData(file)}:${m.line}:${m.column}  ${m.message}  (${rule})`);
     }
   }
 
