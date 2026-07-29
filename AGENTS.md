@@ -108,3 +108,8 @@ committing logic changes:
 - `npm run coverage` — Vitest coverage over `src/lib/physics/**` (the anchor logic). Minimums:
   statements/functions/lines 95%, branches 90%. Failures name the metric, actual value, and
   threshold; ratchet the minimums up as coverage improves.
+
+## Before opening a PR
+
+Run `/security-review` on the branch changes before creating a PR, and address anything it
+flags. This is required for every PR, even docs-only ones.
