@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
 
+# Least privilege: every job only checks out the repo and runs npm checks —
+# none write to the repo, post comments, or deploy. Read-only contents is enough.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
