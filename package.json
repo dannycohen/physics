@@ -19,9 +19,9 @@
   "dependencies": {
     "@astrojs/mdx": "^7.0.3",
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^7.1.4",
-    "katex": "^0.17.0",
-    "nanostores": "^1.4.0",
+    "astro": "^7.1.6",
+    "katex": "^0.18.1",
+    "nanostores": "^1.4.2",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },
