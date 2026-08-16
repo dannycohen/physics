@@ -93,6 +93,7 @@ import SliderField from '../../../components/SliderField.astro';
 import PresetButtons from '../../../components/PresetButtons.astro';
 import LimitSnaps from '../../../components/LimitSnaps.astro';
 import ResetButton from '../../../components/ResetButton.astro';
+import { TUNNEL_ENERGY_STEP_EV } from '../../../lib/tunnelingState';
 
 <TunnelBarrier />
 
@@ -105,7 +106,7 @@ import ResetButton from '../../../components/ResetButton.astro';
     storeKey="energy"
     min={0.2}
     max={1.9}
-    step={0.05}
+    step={TUNNEL_ENERGY_STEP_EV}
     sigFigs={3}
     value={frontmatter.defaults.energy}
     scale="linear"
