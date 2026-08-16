@@ -4,11 +4,16 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
-# Least privilege: every job only checks out the repo and runs npm checks —
-# none write to the repo, post comments, or deploy. Read-only contents is enough.
+# Checks and the Pages build only read the repository. The deployment job grants
+# its own Pages and OIDC permissions below.
 permissions:
   contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check:
@@ -108,3 +113,33 @@ jobs:
       - run: npm ci
       - name: Dependency audit (high+ severity, blocking)
         run: npm audit --audit-level=high
+
+  pages-build:
+    name: Build Pages artifact for ${{ github.sha }}
+    if: github.event_name != 'pull_request'
+    needs: [check, duplication, analysis, security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+      - uses: withastro/action@v6
+        with:
+          node-version: 24
+
+  deploy:
+    name: Deploy tested ${{ github.sha }} from CI run ${{ github.run_id }}
+    needs: pages-build
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
