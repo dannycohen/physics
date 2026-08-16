@@ -1,6 +1,7 @@
 ---
 import { maxHeight, range, timeOfFlight } from '../../lib/physics/projectile';
 import { formatQuantity } from '../../lib/format';
+import { PROJECTILE_PLOT_X_MAX_M, PROJECTILE_PLOT_Y_MAX_M } from '../../lib/projectilePlot';
 
 // Build-time snapshot for the no-JS / screen-reader table and default readout.
 const DEFAULT_SPEED = 20; // m/s
@@ -28,12 +29,15 @@ const rows = SAMPLE_ANGLES.map((angle) => ({
     <div class="canvas-box">
       <canvas
         role="img"
-        aria-label="A projectile's flight over level ground. The curve is the parabolic path for the current launch speed and angle, starting from a launch marker on the left and landing at a point marked on the ground to the right. A faint dashed curve shows the complementary launch angle, which lands at the same spot. The range is longest at a 45-degree launch."
+        aria-label={`A projectile's flight over level ground on a fixed scale from 0 to ${PROJECTILE_PLOT_X_MAX_M} metres horizontally and 0 to ${PROJECTILE_PLOT_Y_MAX_M} metres vertically. The curve is the parabolic path for the current launch speed and angle, starting from a launch marker on the left and landing at a point marked on the ground to the right. A faint dashed curve shows the complementary launch angle, which lands at the same spot. The range is longest at a 45-degree launch.`}
       ></canvas>
     </div>
     <p class="arc-stat" aria-hidden="true">
       Range <b class="range-val">{defR}</b>, peak height <span class="height-val">{defH}</span>, airtime
       <span class="time-val">{defT}</span>
+    </p>
+    <p class="arc-scale">
+      Fixed canvas scale: 0 to {PROJECTILE_PLOT_X_MAX_M} m horizontally and 0 to {PROJECTILE_PLOT_Y_MAX_M} m vertically.
     </p>
     <span class="visually-hidden" aria-live="polite">
       Launched at {DEFAULT_SPEED} metres per second and {DEFAULT_ANGLE} degrees, the projectile
@@ -74,6 +78,7 @@ const rows = SAMPLE_ANGLES.map((angle) => ({
   import { STANDARD_GRAVITY } from '../../lib/physics/constants';
   import { formatQuantity } from '../../lib/format';
   import { getVizStore } from '../../lib/vizStore';
+  import { PROJECTILE_PLOT_X_MAX_M, PROJECTILE_PLOT_Y_MAX_M } from '../../lib/projectilePlot';
   import type { VizTheme } from '../../lib/theme';
 
   const SLUG = 'classical-mechanics/projectile-range';
@@ -139,14 +144,9 @@ const rows = SAMPLE_ANGLES.map((angle) => ({
         const main = trajectory(v, angle, 96);
         const comp = trajectory(v, 90 - angle, 96);
 
-        // Auto-scale so the current arc (and its complement) fit the plot. The
-        // two arcs share the same range, so scale from the taller of the pair.
         const r = range(v, angle);
-        const peak = Math.max(maxHeight(v, angle), maxHeight(v, 90 - angle));
-        const xSpan = Math.max(r, 1e-6);
-        const ySpan = Math.max(peak, 1e-6);
-        const sx = plotW / xSpan;
-        const sy = plotH / ySpan;
+        const sx = plotW / PROJECTILE_PLOT_X_MAX_M;
+        const sy = plotH / PROJECTILE_PLOT_Y_MAX_M;
 
         const toX = (x: number) => padL + x * sx;
         const toY = (y: number) => groundY - y * sy;
@@ -236,6 +236,12 @@ const rows = SAMPLE_ANGLES.map((angle) => ({
   .arc-stat {
     margin-block: var(--space-2) 0;
     font-size: 1.05rem;
+  }
+
+  .arc-scale {
+    margin-block: var(--space-1) 0;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
   }
 
   .arc-stat b {
