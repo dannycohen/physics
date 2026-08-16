@@ -1,5 +1,27 @@
 import { describe, expect, it } from 'vitest';
-import { magneticForceMagnitude, radius } from '../src/lib/physics/lorentz';
+import {
+  magneticForceDirection,
+  magneticForceMagnitude,
+  radius,
+} from '../src/lib/physics/lorentz';
+
+describe('magneticForceDirection', () => {
+  it('points upward for positive charge and an out-of-page field', () => {
+    expect(magneticForceDirection(1, 1)).toBe('upward');
+  });
+
+  it('points downward for negative charge and an out-of-page field', () => {
+    expect(magneticForceDirection(-1, 1)).toBe('downward');
+  });
+
+  it('points downward for positive charge and an into-page field', () => {
+    expect(magneticForceDirection(1, -1)).toBe('downward');
+  });
+
+  it('points upward for negative charge and an into-page field', () => {
+    expect(magneticForceDirection(-1, -1)).toBe('upward');
+  });
+});
 
 describe('magneticForceMagnitude', () => {
   it('is |q|·v·B when v is perpendicular to B (default 90°)', () => {

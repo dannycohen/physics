@@ -6,6 +6,20 @@
 // The magnetic force is always perpendicular to v, so it does no work and cannot
 // change the charge's speed; it only steers, curving the path into a circle.
 
+export type DirectionSign = -1 | 1;
+type VerticalDirection = 'upward' | 'downward';
+
+/**
+ * Physical y direction of q(v x B) for velocity along +x and a field along the
+ * signed z-axis. Canvas code must map upward to negative canvas y.
+ */
+export function magneticForceDirection(
+  chargeSign: DirectionSign,
+  bFieldDirection: DirectionSign,
+): VerticalDirection {
+  return chargeSign === bFieldDirection ? 'upward' : 'downward';
+}
+
 /**
  * Magnitude of the magnetic force (N) on a charge q (C) moving at speed v (m/s)
  * through a magnetic field B (T): |F| = |q|·v·B·sin(angle between v and B).

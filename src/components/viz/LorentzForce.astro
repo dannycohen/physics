@@ -1,5 +1,9 @@
 ---
-import { magneticForceMagnitude, radius } from '../../lib/physics/lorentz';
+import {
+  magneticForceDirection,
+  magneticForceMagnitude,
+  radius,
+} from '../../lib/physics/lorentz';
 import { formatQuantity } from '../../lib/format';
 
 // Build-time snapshot for the no-JS / screen-reader table and default readout.
@@ -13,6 +17,7 @@ const radiusText = (r: number) => formatQuantity(r, 'm', { sigFigs: 3 });
 
 const defaultForce = magneticForceMagnitude(DEFAULT_CHARGE, DEFAULT_SPEED, DEFAULT_B);
 const defaultRadius = radius(MASS, DEFAULT_CHARGE, DEFAULT_SPEED, DEFAULT_B);
+const defaultDirection = magneticForceDirection(DEFAULT_CHARGE, 1);
 
 const SAMPLE_V = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const rows = SAMPLE_V.map((v) => ({
@@ -27,7 +32,7 @@ const rows = SAMPLE_V.map((v) => ({
     <div class="canvas-box">
       <canvas
         role="img"
-        aria-label="A charge moving through a magnetic field drawn as a grid of dot or cross symbols. A velocity arrow points along the motion, and a force arrow points at a right angle to it, toward the centre of a circle. The magnetic force is always perpendicular to the velocity, so the charge is steered around a circular path. A stronger field or a slower charge makes a tighter circle; flipping the charge or the field reverses the turn."
+        aria-label={`A positive charge moves right through an out-of-page magnetic field. The magnetic force points ${defaultDirection}, perpendicular to the velocity, and curves the charge around a circular path. A stronger field or a slower charge makes a tighter circle; flipping the charge or the field reverses the turn.`}
       ></canvas>
     </div>
     <p class="force-stat" aria-hidden="true">
@@ -35,15 +40,16 @@ const rows = SAMPLE_V.map((v) => ({
       <b class="radius-val">{radiusText(defaultRadius)}</b>
     </p>
     <span class="visually-hidden" aria-live="polite">
-      The magnetic force is {forceText(defaultForce)}, perpendicular to the velocity, curving the
-      charge into a circle of radius {radiusText(defaultRadius)}.
+      The magnetic force is {forceText(defaultForce)}, pointing {defaultDirection} perpendicular to
+      the velocity, curving the charge into a circle of radius {radiusText(defaultRadius)}.
     </span>
   </figure>
   <details class="view-table">
     <summary>View as table</summary>
     <p>
-      Force and circle radius as the speed changes, in a {DEFAULT_B} T field (mass fixed at {MASS} kg,
-      charge magnitude 1). Force grows with speed, and so does the radius.
+      Force and circle radius as the speed changes, in an out-of-page {DEFAULT_B} T field (mass fixed
+      at {MASS} kg, positive charge with magnitude 1). The force points {defaultDirection}. Force
+      grows with speed, and so does the radius.
     </p>
     <table>
       <thead>
@@ -70,7 +76,12 @@ const rows = SAMPLE_V.map((v) => ({
 
 <script>
   import { createVizCanvas } from '../../lib/canvas';
-  import { magneticForceMagnitude, radius } from '../../lib/physics/lorentz';
+  import {
+    magneticForceDirection,
+    magneticForceMagnitude,
+    radius,
+    type DirectionSign,
+  } from '../../lib/physics/lorentz';
   import { formatQuantity } from '../../lib/format';
   import { getVizStore } from '../../lib/vizStore';
   import type { VizTheme } from '../../lib/theme';
@@ -98,7 +109,7 @@ const rows = SAMPLE_V.map((v) => ({
   // direction is fixed out of the page (+z). The turn direction is set by the
   // product of the charge sign and the field direction; flipping the charge
   // reverses the circle, which is what the presets demonstrate.
-  const B_DIR = 1; // +1 = out of the page (⊙); -1 would be into the page (⊗)
+  const B_DIR: DirectionSign = 1; // +1 = out of the page (⊙); -1 = into the page (⊗)
 
   function arrow(
     ctx: CanvasRenderingContext2D,
@@ -199,14 +210,14 @@ const rows = SAMPLE_V.map((v) => ({
         // 2·rPx away and must stay on-canvas.
         const rPx = Math.max(30, Math.min(rPhys * 18, minDim * 0.22));
 
-        // Velocity points to the right (+x). The magnetic force F = q v × B is
-        // vertical here; its canvas-y sign is (charge sign × field direction):
-        // positive points down (centre below), negative points up.
-        const forceSign = chargeSign * B_DIR; // +1 down, -1 up (canvas y grows down)
+        // For v along +x, q(v × B) points along physical -y when q and B have
+        // the same sign. Canvas y grows downward, so upward maps to -1.
+        const forceDirection = magneticForceDirection(chargeSign, B_DIR);
+        const canvasYSign = forceDirection === 'upward' ? -1 : 1;
         const chargeX = size.w * 0.42;
         const chargeY = size.h * 0.5;
         const centerX = chargeX;
-        const centerY = chargeY + forceSign * rPx;
+        const centerY = chargeY + canvasYSign * rPx;
 
         // Circular path.
         ctx.save();
@@ -220,7 +231,7 @@ const rows = SAMPLE_V.map((v) => ({
 
         // Force arrow: from the charge toward the centre (perpendicular to v).
         const forceLen = Math.min(rPx, 70);
-        arrow(ctx, chargeX, chargeY, forceSign > 0 ? Math.PI / 2 : -Math.PI / 2, forceLen, 3, theme.active);
+        arrow(ctx, chargeX, chargeY, canvasYSign > 0 ? Math.PI / 2 : -Math.PI / 2, forceLen, 3, theme.active);
 
         // Velocity arrow: tangent, pointing right.
         const velLen = 30 + speed * 5;
@@ -248,8 +259,8 @@ const rows = SAMPLE_V.map((v) => ({
         ctx.textBaseline = 'middle';
         ctx.fillText('v', chargeX + velLen + 6, chargeY);
         ctx.fillStyle = theme.active;
-        ctx.textBaseline = forceSign > 0 ? 'top' : 'bottom';
-        ctx.fillText('F', chargeX + 8, chargeY + forceSign * (forceLen + 4));
+        ctx.textBaseline = canvasYSign > 0 ? 'top' : 'bottom';
+        ctx.fillText('F', chargeX + 8, chargeY + canvasYSign * (forceLen + 4));
       });
 
       const renderStat = (values: Record<string, number>) => {
@@ -258,8 +269,13 @@ const rows = SAMPLE_V.map((v) => ({
         const bField = num(values, 'bField', DEFAULT_B);
         const f = magneticForceMagnitude(chargeSign, speed, bField);
         const r = radius(MASS, chargeSign, speed, bField);
+        const direction = magneticForceDirection(chargeSign, B_DIR);
         if (forceVal) forceVal.textContent = formatQuantity(f, '', { sigFigs: 3 });
         if (radiusEl) radiusEl.textContent = radiusText(r);
+        canvas.setAttribute(
+          'aria-label',
+          `A ${chargeSign > 0 ? 'positive' : 'negative'} charge moves right through an out-of-page magnetic field. The magnetic force points ${direction}, perpendicular to the velocity, and curves the charge around a circular path. A stronger field or a slower charge makes a tighter circle; flipping the charge or the field reverses the turn.`,
+        );
       };
 
       store.values.subscribe((values) => {
@@ -273,7 +289,8 @@ const rows = SAMPLE_V.map((v) => ({
         const bField = num(values, 'bField', DEFAULT_B);
         const f = magneticForceMagnitude(chargeSign, speed, bField);
         const r = radius(MASS, chargeSign, speed, bField);
-        const text = `The magnetic force is ${forceText(f)}, perpendicular to the velocity, curving the charge into a circle of radius ${radiusText(r)}.`;
+        const direction = magneticForceDirection(chargeSign, B_DIR);
+        const text = `The magnetic force is ${forceText(f)}, pointing ${direction} perpendicular to the velocity, curving the charge into a circle of radius ${radiusText(r)}.`;
         if (live && live.textContent?.trim() !== text) live.textContent = text;
       });
     }
