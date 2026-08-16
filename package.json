@@ -28,7 +28,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@vitest/coverage-v8": "^4.1.10",
-    "eslint": "^9.39.5",
+    "eslint": "^10.8.1",
     "eslint-plugin-sonarjs": "^4.2.0",
     "globals": "^17.11.0",
     "jscpd": "^4.2.5",
