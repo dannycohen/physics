@@ -23,7 +23,7 @@ const rows = SAMPLE_SPEEDS.map((vs) => ({
     <div class="canvas-box">
       <canvas
         role="img"
-        aria-label="A sound source moving to the right, emitting circular wavefronts. Each ring is centred where the source was when it emitted it, so the rings bunch together ahead of the source and spread out behind it. An observer stands ahead, in the bunched-up region, where the crowded wavefronts arrive more often and the pitch is higher. Behind the source the rings are stretched and the pitch is lower."
+        aria-label="A sound source moving right toward a stationary observer on its right. The circular wavefronts are compressed between the source and observer, so they arrive more often and produce a higher pitch."
       ></canvas>
     </div>
     <p class="pitch-stat" aria-hidden="true">
@@ -81,6 +81,15 @@ const rows = SAMPLE_SPEEDS.map((vs) => ({
     values[key] ?? fallback;
   const freqText = (f: number) => formatQuantity(f, 'Hz', { sigFigs: 3 });
   const pitchWord = (vs: number) => (vs > 0 ? 'higher' : vs < 0 ? 'lower' : 'the same');
+  const canvasDescription = (sourceSpeed: number) => {
+    if (sourceSpeed > 0) {
+      return 'A sound source moving right toward a stationary observer on its right. The circular wavefronts are compressed between the source and observer, so they arrive more often and produce a higher pitch.';
+    }
+    if (sourceSpeed < 0) {
+      return 'A sound source moving left away from the observer, who remains on its right. The circular wavefronts are expanded between the source and observer, so they arrive less often and produce a lower pitch.';
+    }
+    return 'A stationary sound source sits to the left of a stationary observer. Its circular wavefronts are evenly spaced toward the observer, so the observed pitch is unchanged.';
+  };
 
   class AcousticDopplerElement extends HTMLElement {
     #bound = false;
@@ -120,8 +129,6 @@ const rows = SAMPLE_SPEEDS.map((vs) => ({
           // Place the source so its spread of rings stays roughly centred.
           const sourceX = midX - sourceStepPx * (nWaves - 1) * 0.5 + sourceStepPx * (nWaves - 1);
 
-          const bunchColor = theme.curve; // colour the compressed side
-
           // Concentric wavefronts: ring k was emitted (nWaves-1-k) intervals ago
           // from where the source then was, so it has radius r and an offset centre.
           for (let k = 0; k < nWaves; k++) {
@@ -138,11 +145,11 @@ const rows = SAMPLE_SPEEDS.map((vs) => ({
           }
           ctx.globalAlpha = 1;
 
-          // The observer sits ahead of the source, in the compressed region when
-          // approaching. Draw them on the side the source is heading toward.
+          // The observer remains on the right. The speed sign says whether the
+          // source moves toward that observer (positive) or away (negative).
           const dir = mach >= 0 ? 1 : -1;
-          const obsX = midX + dir * size.w * 0.4;
-          const obsColor = sourceSpeed !== 0 ? bunchColor : theme.rest;
+          const obsX = midX + size.w * 0.4;
+          const obsColor = sourceSpeed > 0 ? theme.curve : sourceSpeed < 0 ? theme.limit : theme.rest;
 
           // Line of sight from source to observer.
           ctx.strokeStyle = theme.grid;
@@ -210,6 +217,7 @@ const rows = SAMPLE_SPEEDS.map((vs) => ({
         const observed = observedFrequency(sourceFreq, sourceSpeed);
         if (observedVal) observedVal.textContent = freqText(observed);
         if (pitchSpan) pitchSpan.textContent = `(${pitchWord(sourceSpeed)})`;
+        canvas.setAttribute('aria-label', canvasDescription(sourceSpeed));
       };
 
       store.values.subscribe((values) => {
