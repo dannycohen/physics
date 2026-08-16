@@ -65,6 +65,7 @@ const rows = SAMPLE_WIDTHS.map((w) => ({
   import { createVizCanvas } from '../../lib/canvas';
   import { transmission } from '../../lib/physics/tunneling';
   import { formatQuantity } from '../../lib/format';
+  import { constrainTunnelingState } from '../../lib/tunnelingState';
   import { getVizStore } from '../../lib/vizStore';
 
   const SLUG = 'quantum/tunneling';
@@ -80,24 +81,23 @@ const rows = SAMPLE_WIDTHS.map((w) => ({
 
   // This island seeds the shared store; it precedes the controls in the MDX and
   // module scripts run in document order, so it seeds before they connect.
-  const store = getVizStore(SLUG, {
-    energy: DEFAULT_ENERGY,
-    barrier: DEFAULT_BARRIER,
-    width: DEFAULT_WIDTH,
-  });
+  const store = getVizStore(
+    SLUG,
+    {
+      energy: DEFAULT_ENERGY,
+      barrier: DEFAULT_BARRIER,
+      width: DEFAULT_WIDTH,
+    },
+    constrainTunnelingState,
+  );
 
   const percentT = (T: number) => formatQuantity(T * 100, '%', { sigFigs: 3 });
 
-  // Read the store and keep the energy strictly below the barrier top so the
-  // tunnelling formula is always in range. If a user drives E up to or past V0,
-  // clamp it to just under V0 for the display and note it in the live text.
   function readState(values: Record<string, number>) {
     const barrier = values['barrier'] ?? DEFAULT_BARRIER;
     const width = values['width'] ?? DEFAULT_WIDTH;
-    const rawEnergy = values['energy'] ?? DEFAULT_ENERGY;
-    const clamped = rawEnergy >= barrier;
-    const energy = clamped ? barrier * 0.99 : rawEnergy;
-    return { energy, barrier, width, clamped };
+    const energy = values['energy'] ?? DEFAULT_ENERGY;
+    return { energy, barrier, width };
   }
 
   class TunnelBarrierElement extends HTMLElement {
@@ -236,12 +236,9 @@ const rows = SAMPLE_WIDTHS.map((w) => ({
       });
 
       store.onSettled((values) => {
-        const { energy, barrier, width, clamped } = readState(values);
+        const { energy, barrier, width } = readState(values);
         const T = transmission(energy, barrier, width);
-        const note = clamped
-          ? ' (the energy was held just below the barrier top, which is where tunnelling applies)'
-          : '';
-        const text = `The particle tunnels through the barrier with a probability of ${percentT(T)}.${note}`;
+        const text = `The particle tunnels through the barrier with a probability of ${percentT(T)}.`;
         if (live && live.textContent?.trim() !== text) live.textContent = text;
       });
     }

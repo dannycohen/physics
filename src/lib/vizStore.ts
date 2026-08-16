@@ -7,6 +7,8 @@ export interface VizStore {
   onSettled(cb: (values: Record<string, number>) => void, delayMs?: number): () => void;
 }
 
+type VizStateConstraint = (values: Record<string, number>) => Record<string, number>;
+
 interface SettledListener {
   cb: (values: Record<string, number>) => void;
   delayMs: number;
@@ -16,18 +18,27 @@ interface SettledListener {
 // Module-level registry so every island on a page shares one store per slug.
 const registry = new Map<string, VizStore>();
 
-export function getVizStore(slug: string, defaults?: Record<string, number>): VizStore {
+export function getVizStore(
+  slug: string,
+  defaults?: Record<string, number>,
+  constrain?: VizStateConstraint,
+): VizStore {
   const existing = registry.get(slug);
   if (existing) return existing;
 
-  const initial: Record<string, number> = { ...(defaults ?? {}) };
+  const defaultValues: Record<string, number> = { ...(defaults ?? {}) };
+  const initial = constrain ? constrain(defaultValues) : defaultValues;
   const values = map<Record<string, number>>({ ...initial });
   const listeners = new Set<SettledListener>();
 
   const store: VizStore = {
     values,
     set(key, value) {
-      values.setKey(key, value);
+      if (constrain) {
+        values.set(constrain({ ...values.get(), [key]: value }));
+      } else {
+        values.setKey(key, value);
+      }
       for (const l of listeners) {
         if (l.timer !== undefined) clearTimeout(l.timer);
         l.timer = setTimeout(() => {
