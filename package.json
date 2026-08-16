@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "typecheck": "astro check",
     "test": "vitest run",
+    "test:browser": "playwright test; status=$?; astro preview stop; exit $status",
     "coverage": "vitest run --coverage",
     "lint": "eslint \"src/**/*.ts\" \"scripts/**/*.mjs\" -f ./scripts/eslint-gh-formatter.mjs",
     "check:links": "node scripts/check-links.mjs",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@playwright/test": "^1.62.1",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.8.1",
     "eslint-plugin-sonarjs": "^4.2.0",
