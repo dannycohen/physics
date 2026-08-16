@@ -19,9 +19,9 @@
   "dependencies": {
     "@astrojs/mdx": "^7.0.3",
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^7.1.4",
-    "katex": "^0.17.0",
-    "nanostores": "^1.4.0",
+    "astro": "^7.2.1",
+    "katex": "^0.18.4",
+    "nanostores": "^1.4.2",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },
@@ -30,14 +30,14 @@
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.39.5",
     "eslint-plugin-sonarjs": "^4.2.0",
-    "globals": "^17.8.0",
+    "globals": "^17.11.0",
     "jscpd": "^4.2.5",
     "knip": "^5.88.1",
     "postcss-html": "^1.8.1",
     "stylelint": "^16.26.1",
     "stylelint-config-standard": "^39.0.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0",
+    "typescript-eslint": "^8.67.0",
     "vitest": "^4.1.10"
   },
   "overrides": {
