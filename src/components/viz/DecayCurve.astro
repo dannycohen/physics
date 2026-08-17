@@ -23,29 +23,30 @@ const tau0 = meanLifetime(DEFAULT_HALF_LIFE);
     <div class="canvas-box">
       <canvas
         role="img"
-        aria-label="Graph of the fraction remaining against time. The curve starts at 1 and falls steeply at first, then flattens as it approaches zero without ever reaching it. A dashed marker line at the half-life meets the curve at one half remaining; a second dashed line at the mean lifetime meets it at about 37 percent."
+        aria-label="Graph of the expected fraction remaining against time. The smooth curve starts at 1 and falls steeply at first, then flattens as it approaches zero without reaching it at a finite time; a finite sample instead has a random integer count that can reach zero. A dashed marker line at the half-life meets the curve at one half expected to remain; a second dashed line at the mean lifetime meets it at about 37 percent."
       ></canvas>
     </div>
     <p class="decay-legend" aria-hidden="true">
-      Half-life <b class="hl-val">{secs(DEFAULT_HALF_LIFE)}</b> (50% left) ·
-      Mean lifetime <b class="tau-val">{secs(tau0)}</b> (37% left)
+      Half-life <b class="hl-val">{secs(DEFAULT_HALF_LIFE)}</b> (50% expected) ·
+      Mean lifetime <b class="tau-val">{secs(tau0)}</b> (37% expected)
     </p>
     <span class="visually-hidden" aria-live="polite">
-      Half-life {secs(DEFAULT_HALF_LIFE)}, so the mean lifetime is {secs(tau0)}. Half the sample
-      remains after one half-life; about 37% remains after one mean lifetime.
+      Half-life {secs(DEFAULT_HALF_LIFE)}, so the mean lifetime is {secs(tau0)}. The expected
+      fractions remaining are one half after one half-life and about 37% after one mean lifetime.
     </span>
   </figure>
   <details class="view-table">
     <summary>View as table</summary>
     <p>
-      Fraction remaining over time at a half-life of {secs(DEFAULT_HALF_LIFE)}. Each half-life halves
-      what is left: 50% at {secs(DEFAULT_HALF_LIFE)}, 25% at {secs(2 * DEFAULT_HALF_LIFE)}.
+      Expected fraction remaining over time at a half-life of {secs(DEFAULT_HALF_LIFE)}. Each
+      half-life halves the expected amount: 50% at {secs(DEFAULT_HALF_LIFE)}, 25% at{' '}
+      {secs(2 * DEFAULT_HALF_LIFE)}. A finite sample has a random integer count instead.
     </p>
     <table>
       <thead>
         <tr>
           <th scope="col">t (s)</th>
-          <th scope="col">Fraction remaining N/N₀</th>
+          <th scope="col">Expected fraction remaining N/N₀</th>
         </tr>
       </thead>
       <tbody>
@@ -148,7 +149,7 @@ const tau0 = meanLifetime(DEFAULT_HALF_LIFE);
 
       store.onSettled((values) => {
         const halfLife = clampHalf(values['halfLife']);
-        const text = `Half-life ${secs(halfLife)}, so the mean lifetime is ${secs(meanLifetime(halfLife))}. Half the sample remains after one half-life; about 37% remains after one mean lifetime.`;
+        const text = `Half-life ${secs(halfLife)}, so the mean lifetime is ${secs(meanLifetime(halfLife))}. The expected fractions remaining are one half after one half-life and about 37% after one mean lifetime.`;
         if (live && live.textContent?.trim() !== text) live.textContent = text;
       });
     }
