@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import {
   BETA_MAX,
@@ -11,6 +12,12 @@ import {
   taylorGamma2,
   totalEnergy,
 } from '../src/lib/physics/relativity';
+
+const lorentzContentPath = new URL(
+  '../src/content/viz/foundations/lorentz-factor.mdx',
+  import.meta.url,
+);
+const gammaCurvePath = new URL('../src/components/viz/GammaCurve.astro', import.meta.url);
 
 describe('lorentzFactor', () => {
   it('is 1 at rest', () => {
@@ -109,6 +116,27 @@ describe('contractedLength', () => {
   it('shrinks toward zero as beta grows', () => {
     expect(contractedLength(100, 0.999)).toBeLessThan(contractedLength(100, 0.5));
     expect(contractedLength(100, 0.999)).toBeGreaterThan(0);
+  });
+
+  it('uses the reciprocal Lorentz factor for longitudinal length', () => {
+    for (const beta of [0, 0.6, 0.9, 0.999]) {
+      expect(contractedLength(1, beta)).toBeCloseTo(1 / lorentzFactor(beta), 12);
+    }
+  });
+});
+
+describe('Lorentz-factor scope', () => {
+  it('distinguishes longitudinal contraction from unchanged transverse lengths', async () => {
+    const [content, component] = await Promise.all([
+      readFile(lorentzContentPath, 'utf8'),
+      readFile(gammaCurvePath, 'utf8'),
+    ]);
+
+    expect(content).toContain('longitudinal length factor 1/γ → 0');
+    expect(content).toContain('transverse lengths do not contract');
+    expect(content).not.toContain('the factor everything relativistic gets multiplied by');
+    expect(content).not.toContain('time, length, and energy factors all run away');
+    expect(component).toContain('Graph of the Lorentz factor γ against speed.');
   });
 });
 
