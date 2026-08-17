@@ -1,5 +1,12 @@
+import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { meanLifetime, remainingFraction } from '../src/lib/physics/decay';
+
+const contentPath = new URL(
+  '../src/content/viz/foundations/exponential-decay.mdx',
+  import.meta.url,
+);
+const componentPath = new URL('../src/components/viz/DecayCurve.astro', import.meta.url);
 
 describe('remainingFraction', () => {
   const h = 10;
@@ -45,5 +52,22 @@ describe('meanLifetime', () => {
     for (const h of [1, 10, 25, 30]) {
       expect(meanLifetime(h)).toBeGreaterThan(h);
     }
+  });
+});
+
+describe('finite-sample interpretation', () => {
+  it('distinguishes expected fractions from random integer counts throughout the page', async () => {
+    const [content, component] = await Promise.all([
+      readFile(contentPath, 'utf8'),
+      readFile(componentPath, 'utf8'),
+    ]);
+
+    expect(content).toContain('expected population keeps halving without reaching zero');
+    expect(content).toContain('its final atom\neventually decays with probability one');
+    expect(content).toContain('Those are expected fractions, not guaranteed integer counts.');
+    expect(component).toContain('Graph of the expected fraction remaining against time.');
+    expect(component).toContain('Expected fraction remaining over time');
+    expect(content).not.toContain('the total never reaches zero');
+    expect(content).not.toContain('always leaving a little behind');
   });
 });
