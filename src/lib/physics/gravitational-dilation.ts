@@ -1,10 +1,14 @@
 /**
- * Rate of a clock at radial coordinate r relative to a far-away clock, in the
- * Schwarzschild geometry: rate = sqrt(1 - r_s/r) = sqrt(1 - 1/rOverRs), where
- * rOverRs = r / r_s and r_s is the Schwarzschild (event-horizon) radius.
+ * Proper-time rate of a stationary observer held at fixed radial coordinate r
+ * relative to a stationary observer at infinity, outside a nonrotating,
+ * spherically symmetric mass: rate = sqrt(1 - r_s/r) = sqrt(1 - 1/rOverRs).
+ * Here rOverRs = r / r_s. The Schwarzschild radius r_s is an event horizon only
+ * when the mass lies within it; for a larger body it is only a derived scale.
  *
- * Throws RangeError unless rOverRs > 1: at the horizon (rOverRs = 1) the rate
- * is zero and at/inside it (rOverRs <= 1) proper time is frozen or undefined.
+ * Throws RangeError unless rOverRs > 1. The stationary lapse formally tends to
+ * zero as r approaches r_s from outside, but no physical observer can hover at
+ * a black-hole horizon. This function does not describe an infalling observer,
+ * whose proper time remains regular at the horizon.
  */
 export function clockRate(rOverRs: number): number {
   if (!(rOverRs > 1)) {
