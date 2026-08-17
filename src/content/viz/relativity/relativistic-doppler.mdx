@@ -6,7 +6,7 @@ status: live
 order: 1.8
 equationLatex: 'f_{obs} = f_{src}\sqrt{\dfrac{1+\beta}{1-\beta}}'
 equationPlain: 'f_obs = f_src·√((1+β)/(1−β))'
-claim: 'Light from something rushing toward you shifts bluer; light from something racing away shifts redder — and how much is fixed entirely by its speed.'
+claim: 'For source and observer moving directly toward or away from each other in special relativity, their local relative speed fixes the light-frequency shift.'
 defaults:
   beta: 0.5
 terms:
@@ -20,7 +20,7 @@ terms:
     effect: 'sets the baseline the shift is measured against'
   - symbol: '\beta'
     name: 'beta: Greek lowercase beta, the speed as a fraction of c, v over c'
-    role: 'the closing speed as a fraction of the speed of light'
+    role: 'the local longitudinal closing speed as a fraction of the speed of light'
     effect: 'positive shifts the frequency up (bluer), negative shifts it down (redder)'
   - symbol: '\sqrt{\dfrac{1+\beta}{1-\beta}}'
     name: 'the square root of one plus beta over one minus beta: the Doppler factor'
@@ -35,8 +35,8 @@ presets:
     caption: 'Racing away at half light speed: the frequency drops, the light looks redder.'
     values:
       beta: -0.5
-  - label: 'Galaxy redshift'
-    caption: 'Distant galaxies recede as space expands, so their light reddens — the redshift astronomers measure.'
+  - label: 'Galaxy peculiar motion'
+    caption: 'A galaxy moving locally away at 0.1 c has this special-relativistic redshift from its peculiar velocity. Redshift from expanding space follows a separate cosmological model.'
     values:
       beta: -0.1
 limits:
@@ -70,14 +70,16 @@ history:
       Albert Einstein derived the relativistic version in his 1905 paper on
       special relativity. By fixing the speed of light for every observer and
       folding in time dilation, he replaced the medium-based picture with one
-      that depends only on the relative speed of source and observer, which is
-      why the two agree symmetrically.
+       that, for longitudinal motion in a local inertial frame, depends only on
+       the relative speed of source and observer, which is why the two agree
+       symmetrically.
     - >-
       The prediction was confirmed directly in 1938, when Herbert Ives and
       G. R. Stilwell measured the shift in light from fast ion beams and found
       the extra time-dilation term Einstein's formula demanded. Today the same
-      relation lets astronomers read a galaxy's recession speed straight from
-      the redshift of its light.
+       relation lets astronomers infer local line-of-sight velocities from
+       spectral shifts. Distant-galaxy redshift also includes the expansion of
+       space and must be interpreted with a cosmological model.
   references:
     - label: 'Wikipedia: Relativistic Doppler effect'
       url: https://en.wikipedia.org/wiki/Relativistic_Doppler_effect
@@ -121,10 +123,16 @@ frequency drops, and the colour slides toward red. The number in the readout is
 the observed frequency written as a multiple of the source's: `2×` means twice as
 high, `0.5×` means half.
 
-This is the **longitudinal** version, the shift along the line of sight — the
-source coming straight at you or going straight away. It is the shift that lets
-astronomers read how fast a galaxy is receding straight from the reddening of its
-light.
+This is the **longitudinal** special-relativistic version, for a source and
+observer moving along their line of sight in a local inertial setting. It can
+describe the redshift or blueshift from a galaxy's peculiar velocity, meaning its
+local motion relative to the surrounding cosmic flow.
+
+The redshift of a distant galaxy is not generally a special-relativistic speed
+reading. Much of it comes from space expanding while the light travels, and its
+relation to distance or recession rate depends on how the cosmological scale
+factor evolved. Separating that cosmological redshift from peculiar motion
+requires a cosmological model; the slider does not perform that conversion.
 
 ## What about moving sideways?
 
@@ -141,7 +149,9 @@ is combined with the crest-piling of ordinary motion.
   It is the same idea — approaching raises the pitch, receding lowers it — but not
   the same formula. The siren travels through air, a medium, so the shift depends
   on whether it is the source or the listener that moves relative to that air.
-  Light in a vacuum has no medium, so only the *relative* speed matters and the
-  two observers agree symmetrically. The relativistic formula also folds in time
-  dilation, which the everyday sound version has no reason to include.
+  Light in a vacuum has no medium, so in this local inertial, longitudinal setup
+  only the *relative* speed matters and the two observers agree symmetrically.
+  The relativistic formula also folds in time dilation, which the everyday sound
+  version has no reason to include. Cosmological redshift from expanding space is
+  a separate effect and is not an ambulance-style Doppler shift.
 </details>

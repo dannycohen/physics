@@ -1,5 +1,13 @@
+import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { dopplerFactor, observedFrequency } from '../src/lib/physics/doppler';
+
+const contentPath = new URL(
+  '../src/content/viz/relativity/relativistic-doppler.mdx',
+  import.meta.url,
+);
+const componentPath = new URL('../src/components/viz/DopplerShift.astro', import.meta.url);
+const modulePath = new URL('../src/lib/physics/doppler.ts', import.meta.url);
 
 describe('dopplerFactor', () => {
   it('is 1 at rest', () => {
@@ -43,5 +51,22 @@ describe('observedFrequency', () => {
 
   it('leaves the source frequency unchanged at rest', () => {
     expect(observedFrequency(440, 0)).toBe(440);
+  });
+});
+
+describe('Doppler model scope', () => {
+  it('separates local longitudinal motion from cosmological redshift', async () => {
+    const [content, component, moduleSource] = await Promise.all([
+      readFile(contentPath, 'utf8'),
+      readFile(componentPath, 'utf8'),
+      readFile(modulePath, 'utf8'),
+    ]);
+
+    expect(content).toContain('Galaxy peculiar motion');
+    expect(content).toContain("galaxy's peculiar velocity");
+    expect(content).toContain('requires a cosmological model');
+    expect(component).toContain('does not represent cosmological redshift from expanding space');
+    expect(moduleSource).toContain('This is not a cosmological-redshift model');
+    expect(content).not.toContain("read a galaxy's recession speed straight from");
   });
 });

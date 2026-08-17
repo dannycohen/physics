@@ -1,6 +1,7 @@
-// Longitudinal (line-of-sight) relativistic Doppler effect. beta = v/c is the
-// closing speed: beta > 0 means source and observer approach (blueshift, factor
-// > 1); beta < 0 means they recede (redshift, factor < 1).
+// Longitudinal (line-of-sight) relativistic Doppler effect for source and
+// observer in a local inertial setting. beta = v/c is their closing speed:
+// beta > 0 means approach (blueshift, factor > 1); beta < 0 means recession
+// (redshift, factor < 1). This is not a cosmological-redshift model.
 
 /**
  * Relativistic Doppler factor sqrt((1 + beta) / (1 - beta)).
