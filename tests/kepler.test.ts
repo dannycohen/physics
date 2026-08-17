@@ -1,5 +1,8 @@
+import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { orbitalPeriodYears, semiMajorAxisAu } from '../src/lib/physics/kepler';
+
+const contentPath = new URL('../src/content/viz/classical-mechanics/kepler.mdx', import.meta.url);
 
 describe('orbitalPeriodYears', () => {
   it('gives Earth a 1-year period at 1 AU', () => {
@@ -21,9 +24,22 @@ describe('orbitalPeriodYears', () => {
     }
   });
 
+  it('makes the period eight times longer when the axis quadruples', () => {
+    expect(orbitalPeriodYears(4)).toBeCloseTo(8 * orbitalPeriodYears(1), 12);
+  });
+
   it('throws RangeError for a non-positive axis', () => {
     expect(() => orbitalPeriodYears(0)).toThrow(RangeError);
     expect(() => orbitalPeriodYears(-1)).toThrow(RangeError);
+  });
+});
+
+describe('Kepler explanation', () => {
+  it('states the fourfold path scaling consistently', async () => {
+    const content = await readFile(contentPath, 'utf8');
+    expect(content.match(/path length (?:also )?quadruples/g)).toHaveLength(2);
+    expect(content).not.toMatch(/path length only doubles/i);
+    expect(content).toContain('lower orbital speed stretches the year eightfold');
   });
 });
 
