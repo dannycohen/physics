@@ -6,35 +6,35 @@ status: live
 order: 1.9
 equationLatex: 't_{far} = \dfrac{t_{near}}{\sqrt{1 - r_s/r}}'
 equationPlain: 'rate = √(1 − r_s/r)'
-claim: 'Clocks run slower the deeper they sit in gravity. Right at a black hole, they almost freeze.'
+claim: 'For stationary clocks outside a nonrotating spherical mass, the clock deeper in the field accumulates less time relative to a clock far away.'
 defaults:
   rOverRs: 3
 terms:
   - symbol: '\text{rate}'
     name: 'rate: the clock rate, a plain English word'
-    role: "how fast a clock here ticks compared with a clock far from all gravity"
-    effect: 'between 0 and 1; smaller means slower ticking as seen from far away'
+    role: "the proper-time rate of a stationary clock held at radius r compared with a stationary clock infinitely far away"
+    effect: 'between 0 and 1 outside the Schwarzschild radius; smaller means less elapsed time relative to the far-away clock'
   - symbol: 'r'
     name: 'r: Latin letter r, the radial distance'
-    role: 'how far the clock sits from the centre of the mass'
+    role: 'the fixed radial coordinate of the stationary clock, measured from the centre of the spherical mass'
     effect: 'larger r -> weaker gravity -> rate closer to 1'
   - symbol: 'r_s'
     name: 'r-s: Latin letter r with subscript s, the Schwarzschild radius'
-    role: 'the event-horizon radius, where gravity would freeze a clock completely'
-    effect: 'fixed by the mass; the clock freezes when r reaches r_s'
+    role: 'a length scale fixed by the mass; it is an event horizon only when the body lies inside this radius'
+    effect: 'the stationary-clock rate formally tends to zero as r approaches r_s from outside, but no clock can hover at the horizon'
   - symbol: 'r_s/r'
     name: 'r-s over r: the ratio of the Schwarzschild radius to the distance'
     role: 'how deep in the gravity well you are, as a fraction'
-    effect: 'closer to 1 near the horizon, toward 0 far away'
+    effect: 'closer to 1 near a black-hole horizon, toward 0 far away'
 presets:
   - label: 'Just outside a black hole'
     icon: '🕳️'
-    caption: 'A hair above the horizon: to a distant observer, time here is nearly frozen.'
+    caption: 'A stationary clock held just above a black-hole horizon accumulates very little time relative to a stationary clock far away; holding it there requires unbounded acceleration in the horizon limit.'
     values:
       rOverRs: 1.05
   - label: 'Neutron-star surface'
     icon: '⭐'
-    caption: 'Sitting on a neutron star, clocks run noticeably slow compared with far away.'
+    caption: 'In the nonrotating spherical model, a clock stationary on a neutron-star surface runs noticeably slow relative to a stationary clock far away. The star remains larger than its Schwarzschild radius, so it has no horizon.'
     values:
       rOverRs: 2.4
   - label: 'Far away'
@@ -43,9 +43,9 @@ presets:
     values:
       rOverRs: 15
 limits:
-  - label: 'r → r_s (the horizon)'
+  - label: 'r → r_s (black-hole exterior)'
     icon: '🥶'
-    collapse: 'the clock rate falls to zero: time appears frozen'
+    collapse: 'the stationary lapse tends to zero; hovering becomes impossible, while an infalling clock does not freeze in its own proper time'
     values:
       rOverRs: 1.02
   - label: 'r → ∞'
@@ -71,8 +71,9 @@ history:
       that a clock deep in a gravitational field must run slow. He worked out a
       quantitative prediction in 1911 and folded the effect into general relativity
       in 1915. In 1916 Karl Schwarzschild solved Einstein's field equations for a
-      spherical mass, giving the exact expression that fixes the clock rate at any
-      distance and defines the horizon where it falls to zero.
+       nonrotating spherical mass, giving the exact expression for stationary
+       clocks outside it. The Schwarzschild radius is a horizon only when the mass
+       is compact enough to lie within that radius.
     - >-
       The prediction stayed hard to test until 1959, when Robert Pound and Glen
       Rebka measured the tiny frequency shift of gamma rays rising through 22.5
@@ -112,34 +113,40 @@ import ResetButton from '../../../components/ResetButton.astro';
   <ResetButton slug="relativity/gravitational-time-dilation" label="Reset to 3 r_s" />
 </div>
 
-Drag the slider inward and the clock slows. Distance is measured in Schwarzschild
-radii, so r / r_s = 1 sits right at the event horizon and larger numbers mean you
-are farther out, where gravity is weaker.
+Drag the slider inward and the stationary clock accumulates less time relative to
+a stationary clock far away. Distance is measured in Schwarzschild radii. For a
+black hole, r / r_s = 1 is the event horizon; for a larger body such as a neutron
+star or Earth, r_s lies inside the body and is not an actual horizon.
 
-## Deeper in the well, slower the clock
+## Stationary clocks deeper in the well run slower
 
-Gravity slows time. A clock deep in a gravity well ticks slower than one far
-away, and the closer it sits to the mass, the slower it runs. This is not about
-motion: the clock can be sitting perfectly still. What matters is how deep in
-the gravity it rests.
+This equation compares observers held at fixed radii outside a nonrotating,
+spherically symmetric mass. A stationary clock deeper in the gravity well
+accumulates less proper time than a stationary clock far away. Rotation, motion,
+and the interior of an extended body require different descriptions.
 
-The Schwarzschild radius r_s is the point of no return around a black hole. As
-a clock approaches it, the rate drops toward zero, so to a distant observer the
-clock appears to freeze. You never see it cross; it just fades and dims forever.
+For a black hole, the formal stationary-clock rate approaches zero as r approaches
+r_s from outside. A physical clock cannot remain stationary at the horizon: the
+acceleration needed to hover diverges. An infalling observer instead crosses the
+horizon in finite proper time, and their own clock never freezes. A distant
+observer receives the infaller's signals ever more delayed and redshifted rather
+than receiving a signal from the horizon crossing itself.
 
-Near Earth the effect is tiny but real. A clock on the ground runs a hair slower
-than one in orbit because it sits deeper in Earth's gravity. GPS satellites
-correct for it every day. This is the opposite-sign partner to the speed effect
-on the <a href={`${import.meta.env.BASE_URL}viz/relativity/time-dilation/`}>special-relativity
+Near Earth the effect is tiny but real. Treating Earth as spherical and
+nonrotating, a clock stationary on the ground runs a hair slower than one at a
+larger fixed radius because it sits deeper in Earth's gravity. GPS calculations
+also include Earth's rotation and the satellites' motion. This is the
+opposite-sign partner to the speed effect on the{' '}
+<a href={`${import.meta.env.BASE_URL}viz/relativity/time-dilation/`}>special-relativity
 time-dilation page</a>: motion slows a satellite's clock, while its weaker gravity
 speeds it up, and engineers account for both.
 
 <details class="misconception">
   <summary>Would you feel your own clock slow down?</summary>
 
-  No. Your own clock always ticks normally to you. A second feels like a second,
-  your heartbeat feels ordinary, and every clock riding along with you agrees.
-  The slowing is what a <em>distant</em> observer measures when they compare your
-  clock with theirs. Time dilation is always a comparison between frames, never
-  something you feel happening to yourself.
+  No. Your own clock always ticks normally along your worldline. For the
+  stationary observers modeled here, the slowing is a comparison between clocks
+  held at different radii. An infalling observer is not stationary and this
+  equation does not describe their clock rate; they cross a black-hole horizon in
+  finite proper time without seeing their own clock freeze.
 </details>
