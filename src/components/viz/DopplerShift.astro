@@ -18,7 +18,7 @@ const rows = SAMPLE_BETAS.map((beta) => ({
     <div class="canvas-box">
       <canvas
         role="img"
-        aria-label="Two stacked wave trains sharing the same width. The top wave is the light as emitted at the source, at a fixed wavelength. The bottom wave is the light as observed. When the source approaches, the observed wave is squeezed to a shorter wavelength and tinted blue; when it recedes, the observed wave is stretched to a longer wavelength and tinted red. At rest the two waves match."
+        aria-label="Two stacked wave trains showing the longitudinal special-relativistic Doppler effect for local relative motion along the line of sight. The top wave is the light as emitted at the source, at a fixed wavelength. The bottom wave is the light as observed. When the source approaches, the observed wave is squeezed to a shorter wavelength and tinted blue; when it recedes, the observed wave is stretched to a longer wavelength and tinted red. At rest the two waves match. This model does not represent cosmological redshift from expanding space."
       ></canvas>
     </div>
     <p class="shift-stat" aria-hidden="true">
@@ -31,11 +31,14 @@ const rows = SAMPLE_BETAS.map((beta) => ({
   </figure>
   <details class="view-table">
     <summary>View as table</summary>
-    <p>Observed frequency as a multiple of the source frequency at different closing speeds.</p>
+    <p>
+      Observed frequency as a multiple of the source frequency at different local longitudinal
+      closing speeds. This special-relativistic table does not model expanding-space redshift.
+    </p>
     <table>
       <thead>
         <tr>
-          <th scope="col">v/c</th>
+          <th scope="col">Longitudinal v/c</th>
           <th scope="col">Observed ÷ source frequency</th>
         </tr>
       </thead>
