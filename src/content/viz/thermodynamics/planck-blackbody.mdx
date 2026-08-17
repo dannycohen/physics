@@ -37,7 +37,7 @@ terms:
   - symbol: '\lambda^5'
     name: 'lambda to the fifth: the short-wavelength factor'
     role: 'divides the radiance by wavelength raised to the fifth power'
-    effect: 'grows huge as λ shrinks, forcing the curve back toward zero in the ultraviolet'
+    effect: 'makes the prefactor grow as λ shrinks, but the exponential denominator grows faster and drives the ultraviolet radiance to zero'
   - symbol: 'e^{hc/\lambda k_B T}'
     name: 'the exponential factor'
     role: 'how rare a photon of that energy is at temperature T'
@@ -156,8 +156,11 @@ Classical physics predicted that a hot object should pour out ever more energy
 at shorter and shorter wavelengths, without limit. It does not. The exponential
 denominator, `e^{hc/λk_BT}`, blows up as the wavelength shrinks, so the radiance
 falls back to zero on the short-wavelength side instead of running away. The
-`λ⁵` in the front pushes it down further. Planck had to assume light comes in
-discrete quanta to get this right, and that assumption started quantum physics.
+inverse fifth-power prefactor actually grows there, but the exponential grows
+faster and wins. At long wavelengths the law approaches the Rayleigh-Jeans
+result, falling in proportion to `T/λ⁴`. Planck had to assume light comes in
+discrete quanta to get both limits right, and that assumption started quantum
+physics.
 
 ## Brightness climbs steeply
 

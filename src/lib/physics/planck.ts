@@ -2,9 +2,11 @@ import { PLANCK_CONSTANT, BOLTZMANN, C, WIEN_WAVELENGTH_B } from './constants';
 
 // Planck's law for blackbody radiation, expressed per unit WAVELENGTH. A body
 // in thermal equilibrium at temperature T emits a smooth spectrum whose shape
-// is fixed by T alone: the lambda^5 term forces the radiance to zero at short
-// wavelengths (no ultraviolet catastrophe), while the exponential denominator
-// caps the long-wavelength tail. The peak sits at Wien's displacement wavelength.
+// is fixed by T alone. As lambda shrinks, the inverse fifth-power prefactor
+// grows, but the exponential denominator grows faster and drives the radiance
+// to zero (no ultraviolet catastrophe). At long wavelengths the law approaches
+// the Rayleigh-Jeans form, proportional to T/lambda^4. The peak sits at Wien's
+// displacement wavelength.
 
 function assertPositive(lambdaMeters: number, tempK: number): void {
   if (!(lambdaMeters > 0) || !(tempK > 0)) {
