@@ -27,7 +27,7 @@ const rows = SAMPLE_SPEEDS.map((vs) => ({
       ></canvas>
     </div>
     <p class="pitch-stat" aria-hidden="true">
-      Source {freqText(DEFAULT_FREQ)} → heard as <b class="observed-val">{freqText(defaultObserved)}</b>
+      Source <span class="source-val">{freqText(DEFAULT_FREQ)}</span> → heard as <b class="observed-val">{freqText(defaultObserved)}</b>
       <span class="pitch-word">({pitchWord(DEFAULT_SPEED)})</span>
     </p>
     <span class="visually-hidden" aria-live="polite">
@@ -101,6 +101,7 @@ const rows = SAMPLE_SPEEDS.map((vs) => ({
       const canvas = this.querySelector('canvas');
       if (!canvas) return;
 
+      const sourceVal = this.querySelector('.source-val');
       const observedVal = this.querySelector('.observed-val');
       const pitchSpan = this.querySelector('.pitch-word');
       const live = this.querySelector('.visually-hidden');
@@ -215,6 +216,7 @@ const rows = SAMPLE_SPEEDS.map((vs) => ({
         const sourceFreq = num(values, 'sourceFreq', DEFAULT_FREQ);
         const sourceSpeed = num(values, 'sourceSpeed', DEFAULT_SPEED);
         const observed = observedFrequency(sourceFreq, sourceSpeed);
+        if (sourceVal) sourceVal.textContent = freqText(sourceFreq);
         if (observedVal) observedVal.textContent = freqText(observed);
         if (pitchSpan) pitchSpan.textContent = `(${pitchWord(sourceSpeed)})`;
         canvas.setAttribute('aria-label', canvasDescription(sourceSpeed));

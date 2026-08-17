@@ -31,6 +31,16 @@ export function getVizStore(
   const values = map<Record<string, number>>({ ...initial });
   const listeners = new Set<SettledListener>();
 
+  const scheduleSettled = () => {
+    for (const listener of listeners) {
+      if (listener.timer !== undefined) clearTimeout(listener.timer);
+      listener.timer = setTimeout(() => {
+        listener.timer = undefined;
+        listener.cb(values.get());
+      }, listener.delayMs);
+    }
+  };
+
   const store: VizStore = {
     values,
     set(key, value) {
@@ -39,16 +49,11 @@ export function getVizStore(
       } else {
         values.setKey(key, value);
       }
-      for (const l of listeners) {
-        if (l.timer !== undefined) clearTimeout(l.timer);
-        l.timer = setTimeout(() => {
-          l.timer = undefined;
-          l.cb(values.get());
-        }, l.delayMs);
-      }
+      scheduleSettled();
     },
     reset() {
       values.set({ ...initial });
+      scheduleSettled();
     },
     onSettled(cb, delayMs = 350) {
       const listener: SettledListener = { cb, delayMs, timer: undefined };
