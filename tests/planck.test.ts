@@ -31,6 +31,16 @@ describe('spectral radiance (Planck law)', () => {
     expect(atPeak).toBeGreaterThan(spectralRadiance(peak * 5, SUN_K)); // infrared
   });
 
+  it('falls at short wavelengths despite the growing inverse fifth-power prefactor', () => {
+    expect(spectralRadiance(100e-9, SUN_K)).toBeLessThan(spectralRadiance(200e-9, SUN_K));
+  });
+
+  it('approaches the inverse fourth-power Rayleigh-Jeans tail', () => {
+    const radiance = spectralRadiance(0.01, SUN_K);
+    const doubledWavelengthRadiance = spectralRadiance(0.02, SUN_K);
+    expect(radiance / doubledWavelengthRadiance).toBeCloseTo(16, 2);
+  });
+
   it('gives a higher peak radiance for a hotter body', () => {
     const cold = spectralRadiance(peakWavelength(3000), 3000);
     const hot = spectralRadiance(peakWavelength(6000), 6000);
