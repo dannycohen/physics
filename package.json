@@ -19,19 +19,19 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.3",
-    "@astrojs/sitemap": "^3.7.3",
-    "astro": "^7.2.1",
-    "katex": "^0.18.4",
-    "nanostores": "^1.4.2",
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.3.3",
+    "katex": "^0.18.7",
+    "nanostores": "^1.5.3",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "^1.63.0",
     "@vitest/coverage-v8": "^4.1.10",
-    "eslint": "^10.8.1",
-    "eslint-plugin-sonarjs": "^4.2.0",
+    "eslint": "^10.11.0",
+    "eslint-plugin-sonarjs": "^4.2.1",
     "globals": "^17.11.0",
     "jscpd": "^4.2.5",
     "knip": "^5.88.1",
@@ -39,9 +39,9 @@
     "stylelint": "^16.26.1",
     "stylelint-config-standard": "^39.0.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.67.0",
+    "typescript-eslint": "^8.70.0",
     "vitest": "^4.1.10",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   },
   "overrides": {
     "minimatch": "^10.2.3"
